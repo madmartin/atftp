@@ -39,10 +39,10 @@ atftpd_SOURCES   = tftpd.c logger.c options.c stats.c tftp_io.c tftp_def.c \
 		   tftpd_mtftp.c
 
 install-exec-hook:
-	(cd $(DESTDIR)$(sbindir) && ln -s atftpd in.tftpd)
+	(cd $(DESTDIR)$(sbindir) && ln -sf atftpd in.tftpd)
 
 install-data-hook:
-	(cd $(DESTDIR)$(mandir)/man8 && ln -s atftpd.8 in.tftpd.8)
+	(cd $(DESTDIR)$(mandir)/man8 && ln -sf atftpd.8 in.tftpd.8)
 
 uninstall-local:
 	rm -f $(DESTDIR)$(sbindir)/in.tftpd $(DESTDIR)$(mandir)/man8/in.tftpd.8
