@@ -1,0 +1,96 @@
+atftp (0.7-1) unstable; urgency=low
+
+  * New release
+
+ -- J-P <helix@ste[p.polymtl.ca>  Fri, 21 Feb 2003 00:17:31 -0500
+
+atftp (0.6.2) unstable; urgency=low
+
+  * Fixed local and remote buffer overflow (Closes: #196304)
+
+ -- Remi Lefebvre <remi@debian.org>  Sun, 15 Jun 2003 16:26:13 -0400
+
+atftp (0.6.1.1) unstable; urgency=low
+
+  * NMU
+  * New config.guess, config.sub.  Add libwrap-dev to build-depends.
+    Closes: #142949
+
+ -- LaMont Jones <lamont@debian.org>  Wed, 24 Apr 2002 00:23:52 -0600
+
+atftp (0.6.1) unstable; urgency=low
+
+  * Fixed French translations for real this time (Closes: #136339).
+
+ -- Remi Lefebvre <remi@debian.org>  Sun, 13 Apr 2002 14:09:23 -0500
+ 
+atftp (0.6) unstable; urgency=low
+
+  * Update of German translations (Thanks to Christian Neumair)
+    (Closes: #139080)
+  * Update of French translations (Thanks to Denis Barbier) (Closes: #136339).
+  * Fix autoconf issue related to RedHat
+  * Fix bug associated with very small value of blksize
+  * Fix server to allow logging to stdout and stderr in daemon mode
+  * Add --no-fork option for use in conjonction with --daemon
+  * Add command line option to overide the default nobody.nogroup user
+  * Fix bug where server segfault if nobody.nogroup doesn't exist
+  * Fix grave bug with libwrap support causing server to segfault
+
+ -- Remi Lefebvre <remi@debian.org>  Sun, 31 Mar 2002 13:55:54 -0500
+
+atftp (0.5) unstable; urgency=low
+
+  * Filename length limit increased (Closes: #124052).
+  * General bug fixes.
+  * Autoconf enhancement.
+  * Libwrap support (for spawned thread).
+  * Multicast support (not tested thoroughly).
+  * Be less picky about removing existing tftp entries in inetd.conf
+    (Closes: #107053).
+  * General spelling fixes in the english templates (Closes: #109475).
+  * Swedish templates (Thanks to Martin Sjögren) (Closes: #109523).
+  * Portuguese templates (Thanks to Andre Luis Lopes) (Closes: #107042).
+
+ -- Remi Lefebvre <remi@debian.org>  Sat, 18 Aug 2001 23:13:25 -0400
+
+atftp (0.4) unstable; urgency=low
+
+  * Now handle SIGINT and SIGTERM in the client and server.
+  * Improved readline support.
+  * Added status info in the client.
+  * Added daemon mode.
+  * Added spanish templates (Thanks to Carlos Valdivia Yagüe) (Closes: #103043).
+  * Added "Provides: tftpd" (Closes: #100676).
+  * Added french templates.
+  * Added german templates (Thanks to Sebastian Feltel) (Closes: #100066).
+  * Fixed config script (Closes: #93398).
+  * Moved over to autoconf (Thanks to Jeffrey Fulmer).
+
+ -- Remi Lefebvre <remi@debian.org>  Sat, 16 Jun 2001 01:27:27 -0500
+
+atftp (0.3) unstable; urgency=low
+
+  * Fixed format string bug.
+  * Fixed an uninitialised variable bug.
+  * Fixed name resolution.
+
+ -- Remi Lefebvre <remi@debian.org>  Sun, 11 Feb 2001 13:08:34 -0500
+
+atftp (0.2) unstable; urgency=low
+
+  * Add statistics collecting functions to the server.
+  * Added support for debconf.
+  * Bugfixes.
+
+ -- Remi Lefebvre <remi@debian.org>  Wed, 27 Dec 2000 11:44:02 -0500
+
+atftp (0.1) unstable; urgency=low
+
+  * Initial Release (Closes: #69486).
+
+ -- Remi Lefebvre <remi@debian.org>  Fri, 30 Jun 2000 14:32:15 -0400
+
+Local variables:
+mode: debian-changelog
+End:

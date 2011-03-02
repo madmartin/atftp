@@ -1,0 +1,38 @@
+atftp (0.7)
+  * Fixed typo (Debian bug: #147218).
+  * Fixed French translations for real this time (Debian bug: #136339).
+  * Add DESTDIR to install rules in Makefile.am, used when building RPM.
+    (from Jose Pedro Oliveira)
+  * Fix make dist problem where not all files get in the archives
+    (from Joshua Aune)
+  * add dist-hook to remove CVS files
+  * Fix bad timeout behaviour. (Debian bug: #155300) (Debian bug: #180461)
+  * Fix description in control file (Debian bug: #162836)
+  * Client can now compile without libreadline. This is also a configure
+    option (based on Leif Lindholm patch)
+  * Copy argz function from libc (provided by Leif Lindholm). Configure
+    use this local copy if argz functions not found in libc.
+  * Incorporate proposed enhencement (failing multicast client and fixes)
+    from Leif Lindholm and Bojan Pisler, with some modifications in the
+    implementation.
+  * Incorporate PCRE support from Jeff Miller.
+  * Add mtftp support (as defined in PXE specification)
+  * Fixed type (Debian bug: #181796)
+  * Fix (from Steve Kemp) security issue reported here:
+       http://www.securitytracker.com/alerts/2002/Sep/1005231.html
+       http://www.netric.org/advisories/netric-adv010.txt
+  * Make atftp reply on the same interface as the received request
+  * Add --bind-address option for atftpd to bind to a particular IP 
+    address only (from Thomas Anders <thomas.anders(at)blue-cable.de>)
+  * Implement netascii support
+  * Implement --pidfile option (see man page)
+  * Update debian files
+
+ -- J-P <helix@step.polymtl.ca>  Fri, 21 Feb 2003 00:17:31 -0500
+
+
+Prior versions of atftp where using the Debian changelog as the main
+changelog file. This was easier since my brother was the maintainer.
+From now on, I'm using a separate file (this file). Debian related
+changes will be maintained by the maintainer and not reflected in this
+source tree.

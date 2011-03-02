@@ -1,0 +1,84 @@
+The simplest way to install atftp is using either the Debian package
+or one provided by your distribution if any. If you need to install
+atftp from source, here's the procedure.
+
+
+1) Needed libraries
+   ----------------
+
+  libpthread     Needed for the atftpd server.
+  libwrap        Optional if you need host access control.
+  libpcre        Optional if you want to perform file name
+                 substitution. See README.PCRE.
+  libreadline    Optional. Used by the atftp client for better command
+                 line input and history.
+
+
+2) Needed tools
+   ------------
+
+  At least, you need these programs:
+    make
+    gcc
+  You may also need these:
+    cvs
+    automake	(tested using version 1.7 and 1.8)
+    autoconf 	(tested with version 2.50)
+
+
+3) How to compile
+   --------------
+
+ 3.1) From tarball
+
+  ./configure [options]         (this generates makefiles)
+  make                          (actually build the programs)
+  su -c 'make install'          (install files (default location is /usr)
+
+ 3.2) From cvs checkout
+
+  ./autogen.sh                  (this generate the configure script)
+  ./configure [options]         (this generate makefiles)
+  make                          (actually build the programs)
+  su -c 'make install'          (install files (default location is /usr)
+
+
+4) How to start atftpd server
+   --------------------------
+
+4.1) Using the inetd super server
+
+  Add this line to the /etc/inetd.conf file:
+
+    tftp dgram udp wait nobody /usr/sbin/tcpd /usr/sbin/in.tftpd /tftpboot
+
+  You can add needed option to atftpd as you which at the end of the
+  line.
+
+4.2) Using xinetd
+
+  Add this to the /etc/xinetd.conf file, or create /etc/xinetd.d/tftp-udp file
+  with the following content:
+
+  # tftp-udp
+  service tftp
+  {
+        id = tftp-udp
+        disable = no
+        socket_type = dgram
+        protocol = udp
+        wait = no
+        user = nobody
+        nice = 5
+        server = /usr/local/sbin/atftpd
+        server_args = /tftpboot  # add other server argument as necessary
+  }
+  # eof
+
+4.3) As a stand alone server from init.d scripts
+
+  You need to add the proper init script in you boot sequence. The
+  Debian package automatically does that. I'm not aware if any rpm based
+  distribution include init scripts. If you absolutely need this on rpm
+  based distribution or on other systems, start with the Debian
+  scripts and adapt it to your particular system.

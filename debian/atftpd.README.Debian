@@ -1,0 +1,12 @@
+atftpd for Debian
+-----------------
+
+atftpd uses /tftpboot by default as base directory. You can change
+that by editing /etc/inetd.conf. Remember that you must give the
+directory appropriate permissions in order to be able to read/write
+files according to your needs.
+
+The /tftpboot directory is not created by the package. You need to
+create it and give appropriate permissions by hand.
+
+ -- Remi Lefebvre <remi@debian.org>, Sun, 20 Aug 2000 14:32:15 -0400

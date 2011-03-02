@@ -1,0 +1,8 @@
+#!/bin/sh -e
+
+if [ "$1" = "purge" ]; then
+    update-inetd --group BOOT --remove "tftp.*/usr/sbin/in.tftpd.*"
+    rm -f /etc/logorotate.d/atftpd
+fi
+
+#DEBHELPER#

@@ -1,0 +1,14 @@
+The development for atftp is done using CVS. It is possible to access the
+repository read-only by using the following CVSROOT with a null password:
+
+ :pserver:anonymous@heimlich.syspark.com:/var/cvs/atftp
+
+It is also possible to grant write access to the CVS repository for people
+wishing to participate in the development. Please address such requests to
+either of us.
+
+Thanks
+
+--
+Remi Lefebvre <remi@debian.org>
+Jean-Pierre Lefebvre <helix@step.polymtl.ca>
