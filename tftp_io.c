@@ -42,7 +42,7 @@
  * <  OptN  |   0   | ValueN |   0   |
  *  >--------------------------------
  */
-int tftp_send_request(int socket, struct sockaddr_in *sa, short type,
+int tftp_send_request(int socket, struct sockaddr_storage *sa, short type,
                       char *data_buffer, int data_buffer_size,
                       struct tftp_opt *tftp_options)
 {
@@ -94,7 +94,7 @@ int tftp_send_request(int socket, struct sockaddr_in *sa, short type,
  *| Opcode  | Block # |
  * -------------------
  */
-int tftp_send_ack(int socket, struct sockaddr_in *sa, short block_number)
+int tftp_send_ack(int socket, struct sockaddr_storage *sa, short block_number)
 {
      struct tftphdr tftphdr;
      int result;
@@ -115,7 +115,7 @@ int tftp_send_ack(int socket, struct sockaddr_in *sa, short block_number)
  *| Opcode  | Opt1  |   0   | Value1 |   0   | OptN  |   0   | ValueN |   0   |
  * ---------------------------------------------------------------------------
  */
-int tftp_send_oack(int socket, struct sockaddr_in *sa, struct tftp_opt *tftp_options,
+int tftp_send_oack(int socket, struct sockaddr_storage *sa, struct tftp_opt *tftp_options,
                    char *buffer, int buffer_size)
 {
      
@@ -154,7 +154,7 @@ int tftp_send_oack(int socket, struct sockaddr_in *sa, struct tftp_opt *tftp_opt
  *| Opcode  | ErrorCode | ErrMsg |    0   |
  * ---------------------------------------
  */
-int tftp_send_error(int socket, struct sockaddr_in *sa, short err_code,
+int tftp_send_error(int socket, struct sockaddr_storage *sa, short err_code,
                     char *buffer, int buffer_size)
 {
      int size;
@@ -182,7 +182,7 @@ int tftp_send_error(int socket, struct sockaddr_in *sa, short err_code,
  *| Opcode  | Block # | Data   |
  * ----------------------------
  */
-int tftp_send_data(int socket, struct sockaddr_in *sa, short block_number,
+int tftp_send_data(int socket, struct sockaddr_storage *sa, short block_number,
                    int size, char *data)
 {
      struct tftphdr *tftphdr = (struct tftphdr *)data;
@@ -202,19 +202,20 @@ int tftp_send_data(int socket, struct sockaddr_in *sa, short block_number,
  * Wait for a packet. This function can listen on 2 sockets. This is
  * needed by the multicast tftp client.
  */
-int tftp_get_packet(int sock1, int sock2, int *sock, struct sockaddr_in *sa,
-                    struct sockaddr_in *sa_from, struct sockaddr_in *sa_to,
+int tftp_get_packet(int sock1, int sock2, int *sock, struct sockaddr_storage *sa,
+                    struct sockaddr_storage *sa_from, struct sockaddr_storage *sa_to,
                     int timeout, int *size, char *data)
 {
      int result;
      struct timeval tv;
      fd_set rfds;
-     struct sockaddr_in from;
+     struct sockaddr_storage from;
      struct tftphdr *tftphdr = (struct tftphdr *)data;
 
      struct msghdr msg;         /* used to get client's packet info */
      struct cmsghdr *cmsg;
-     struct in_pktinfo *pktinfo;
+     struct in_pktinfo *pktinfo4;
+     struct in6_pktinfo *pktinfo6;
      struct iovec iov;
      char cbuf[1024];
 
@@ -288,10 +289,22 @@ int tftp_get_packet(int sock1, int sock2, int *sock, struct sockaddr_in *sa,
                     if (cmsg->cmsg_level == SOL_IP
                         && cmsg->cmsg_type == IP_PKTINFO)
                     {
-                         pktinfo = (struct in_pktinfo *)CMSG_DATA(cmsg);
-                         sa_to->sin_addr = pktinfo->ipi_addr;
+                         pktinfo4 = (struct in_pktinfo *)CMSG_DATA(cmsg);
+                         sa_to->ss_family = AF_INET;
+                         ((struct sockaddr_in *)sa_to)->sin_addr =
+                              pktinfo4->ipi_addr;
                     }
 #endif                    
+#if defined(SOL_IPV6) && defined(IPV6_PKTINFO)
+                    if (cmsg->cmsg_level == SOL_IPV6
+                        && cmsg->cmsg_type == IPV6_PKTINFO)
+                    {
+                         pktinfo6 = (struct in6_pktinfo *)CMSG_DATA(cmsg);
+                         sa_to->ss_family = AF_INET6;
+                         ((struct sockaddr_in6 *)sa_to)->sin6_addr =
+                              pktinfo6->ipi6_addr;
+                    }
+#endif
                     break;
                }
           }
@@ -303,8 +316,8 @@ int tftp_get_packet(int sock1, int sock2, int *sock, struct sockaddr_in *sa,
           if (sa_from != NULL)
                memcpy(sa_from, &from, sizeof(from));
 
-          /* if sa as never been initialised, sa->sin_port is still 0 */
-          if (sa->sin_port == htons(0))
+          /* if sa as never been initialised, port is still 0 */
+          if (sockaddr_get_port(&sa) == 0)
                memcpy(sa, &from, sizeof(from));
 
 

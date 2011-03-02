@@ -173,8 +173,7 @@ int tftpd_list_find_multicast_server_and_add(struct thread_data **thread,
 
                          while (1)
                          {
-                              if ((tmp->client.sin_port == client->client.sin_port) &&
-                                  (tmp->client.sin_addr.s_addr == client->client.sin_addr.s_addr) &&
+                              if (sockaddr_equal(&tmp->client, &client->client) &&
                                   (tmp->done == 0))
                               {
                                    /* unlock mutex and exit */
@@ -249,7 +248,7 @@ void tftpd_clientlist_free(struct thread_data *thread)
  */
 int tftpd_clientlist_done(struct thread_data *thread,
                           struct client_info *client,
-                          struct sockaddr_in *sock)
+                          struct sockaddr_storage *sock)
 {
      struct client_info *head = thread->client_info;
 
@@ -266,7 +265,7 @@ int tftpd_clientlist_done(struct thread_data *thread,
           /* walk the list to find this client */
           while (head)
           {
-               if (memcmp(sock, &head->client, sizeof(struct sockaddr_in)) == 0)
+               if (sockaddr_equal(sock, &head->client))
                {
                     head->done = 1;
                     pthread_mutex_unlock(&thread->client_mutex);

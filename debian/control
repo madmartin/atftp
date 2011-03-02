@@ -2,12 +2,12 @@ Source: atftp
 Section: net
 Priority: extra
 Maintainer: Ludovic Drolez <ldrolez@debian.org>
-Build-Depends: libreadline5-dev, debhelper (>= 4.1.16), po-debconf, libwrap0-dev, libpcre3-dev
-Standards-Version: 3.8.0
+Build-Depends: libreadline-dev, debhelper (>= 5), po-debconf, libwrap0-dev, libpcre3-dev
+Standards-Version: 3.8.4
 
 Package: atftp
 Architecture: any
-Depends: ${shlibs:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: advanced TFTP client
  Interactive client for the Trivial File Transfer Protocol (TFTP). Its
  usage is mainly for testing and debugging the Atftp server. TFTP client 
@@ -17,7 +17,8 @@ Description: advanced TFTP client
 
 Package: atftpd
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, inet-superserver
+Depends: ${shlibs:Depends}, ${misc:Depends}, update-inetd
+Recommends: inet-superserver
 Conflicts: tftpd
 Suggests: logrotate
 Description: advanced TFTP server

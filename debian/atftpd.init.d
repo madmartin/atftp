@@ -4,8 +4,8 @@
 #
 ### BEGIN INIT INFO
 # Provides:          atftpd
-# Required-Start:    $syslog $network
-# Required-Stop:     $syslog $network
+# Required-Start:    $syslog $network $remote_fs
+# Required-Stop:     $syslog $network $remote_fs
 # Should-Start:      $local_fs
 # Should-Stop:       $local_fs
 # Default-Start:     2 3 4 5
@@ -33,6 +33,9 @@ fi
 if [ "$USE_INETD" = "true" ]; then
     exit 0;
 fi
+
+# Make sure we have --daemon when not using inetd
+echo "$OPTIONS"|grep -q -- --daemon || OPTIONS="--daemon $OPTIONS"
 
 case "$1" in
   start)

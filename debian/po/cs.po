@@ -16,18 +16,19 @@ msgstr ""
 "Project-Id-Version: atftp\n"
 "Report-Msgid-Bugs-To: ldrolez@debian.org\n"
 "POT-Creation-Date: 2006-10-02 00:46+0200\n"
-"PO-Revision-Date: 2004-12-31 11:29+0100\n"
+"PO-Revision-Date: 2009-06-27 12:30+0200\n"
 "Last-Translator: Miroslav Kure <kurem@debian.cz>\n"
-"Language-Team: Czech <provoz@debian.cz>\n"
+"Language-Team: Czech <debian-l10n-czech@lists.debian.org>\n"
+"Language: cs\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=ISO-8859-2\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Type: boolean
 #. Description
 #: ../atftpd.templates:1001
 msgid "Should the server be started by inetd?"
-msgstr "Má se server spou¹tìt pøes inetd?"
+msgstr "MÃ¡ se server spouÅ¡tÄ›t pÅ™es inetd?"
 
 #. Type: boolean
 #. Description
@@ -37,51 +38,51 @@ msgid ""
 "incoming connections by itself. The latter is only recommend for very high "
 "usage server."
 msgstr ""
-"atftpd mù¾e bì¾et jako samostatnı daemon a sám zpracovávat pøíchozí "
-"po¾adavky, nebo mù¾e bıt spou¹tìn z metaserveru inetd. První mo¾nost je "
-"doporuèená pouze pro velmi vytí¾ené servery."
+"atftpd mÅ¯Å¾e bÄ›Å¾et jako samostatnÃ½ daemon a sÃ¡m zpracovÃ¡vat pÅ™Ã­chozÃ­ "
+"poÅ¾adavky, nebo mÅ¯Å¾e bÃ½t spouÅ¡tÄ›n z metaserveru inetd. PrvnÃ­ moÅ¾nost je "
+"doporuÄenÃ¡ pouze pro velmi vytÃ­Å¾enÃ© servery."
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:2001
 msgid "Server timeout:"
-msgstr "Èasovı limit serveru:"
+msgstr "ÄŒasovÃ½ limit serveru:"
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:2001
 msgid "How many seconds the main thread waits before exiting."
-msgstr "Kolik sekund má hlavní vlákno èekat, ne¾ se ukonèí."
+msgstr "Kolik sekund mÃ¡ hlavnÃ­ vlÃ¡kno Äekat, neÅ¾ se ukonÄÃ­."
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:3001
 msgid "Retry timeout:"
-msgstr "Èasovı limit opakování:"
+msgstr "ÄŒasovÃ½ limit opakovÃ¡nÃ­:"
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:3001
 msgid "How many seconds to wait for a reply before retransmitting a packet."
-msgstr "Kolik sekund má server èekat na odpovìï, ne¾ paket ode¹le znovu."
+msgstr "Kolik sekund mÃ¡ server Äekat na odpovÄ›Ä, neÅ¾ paket odeÅ¡le znovu."
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:4001
 msgid "Maximum number of threads:"
-msgstr "Maximální poèet vláken:"
+msgstr "MaximÃ¡lnÃ­ poÄet vlÃ¡ken:"
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:4001
 msgid "Maximum number of concurrent threads that can be running."
-msgstr "Maximální poèet souèasnì bì¾ících vláken."
+msgstr "MaximÃ¡lnÃ­ poÄet souÄasnÄ› bÄ›Å¾Ã­cÃ­ch vlÃ¡ken."
 
 #. Type: select
 #. Description
 #: ../atftpd.templates:5001
 msgid "Verbosity level:"
-msgstr "Míra upovídanosti:"
+msgstr "MÃ­ra upovÃ­danosti:"
 
 #. Type: select
 #. Description
@@ -90,26 +91,26 @@ msgid ""
 "Level of logging. 7 logs everything including debug logs. 1 will log only "
 "the system critical logs. 5 (LOG_NOTICE) is the default value."
 msgstr ""
-"7 zaznamená v¹e vèetnì ladicích hlá¹ení. 1 zaznamená pouze kritické záznamy, "
-"5 (LOG_NOTICE) je vıchozí hodnota."
+"7 zaznamenÃ¡ vÅ¡e vÄetnÄ› ladicÃ­ch hlÃ¡Å¡enÃ­. 1 zaznamenÃ¡ pouze kritickÃ© zÃ¡znamy, "
+"5 (LOG_NOTICE) je vÃ½chozÃ­ hodnota."
 
 #. Type: boolean
 #. Description
 #: ../atftpd.templates:6001
 msgid "Enable 'timeout' support?"
-msgstr "Povolit podporu 'timeout'?"
+msgstr "Povolit podporu â€timeoutâ€œ?"
 
 #. Type: boolean
 #. Description
 #: ../atftpd.templates:7001
 msgid "Enable 'tsize' support?"
-msgstr "Povolit podporu  'tsize'?"
+msgstr "Povolit podporu  â€tsizeâ€œ?"
 
 #. Type: boolean
 #. Description
 #: ../atftpd.templates:8001
 msgid "Enable 'block size' support?"
-msgstr "Povolit podporu 'block size'?"
+msgstr "Povolit podporu â€block sizeâ€œ?"
 
 #. Type: boolean
 #. Description
@@ -120,21 +121,20 @@ msgstr "Povolit podporu multicastu?"
 #. Type: string
 #. Description
 #: ../atftpd.templates:10001
-#, fuzzy
 msgid "TTL for multicast packets:"
-msgstr "TTL pro multicastové pakety"
+msgstr "TTL pro multicastovÃ© pakety:"
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:11001
 msgid "Port to listen for tftp request:"
-msgstr "Port, na kterém se má naslouchat tftp po¾adavkùm:"
+msgstr "Port, na kterÃ©m se mÃ¡ naslouchat tftp poÅ¾adavkÅ¯m:"
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:12001
 msgid "Port range for multicast file transfer:"
-msgstr "Rozsah portù pro hromadnı (multicast) pøenos souborù:"
+msgstr "Rozsah portÅ¯ pro hromadnÃ½ (multicast) pÅ™enos souborÅ¯:"
 
 #. Type: string
 #. Description
@@ -143,14 +143,14 @@ msgid ""
 "Multicast transfer will use any available port in a given set. For example, "
 "\"2000-2003, 3000\" allow atftpd to use port 2000 to 2003 and 3000."
 msgstr ""
-"Pro hromadnı pøenos pou¾ijí libovolné porty ze zadané mno¾iny. Napøíklad "
-"\"2000-2003, 3000\" dovolí atftpd pou¾ít porty 2000 a¾ 2003 a port 3000."
+"Pro hromadnÃ½ pÅ™enos pouÅ¾ijÃ­ libovolnÃ© porty ze zadanÃ© mnoÅ¾iny. NapÅ™Ã­klad "
+"â€2000-2003, 3000â€œ dovolÃ­ atftpd pouÅ¾Ã­t porty 2000 aÅ¾ 2003 a port 3000."
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:13001
 msgid "Address range for multicast transfer:"
-msgstr "Rozsah adres pro hromadné pøenosy:"
+msgstr "Rozsah adres pro hromadnÃ© pÅ™enosy:"
 
 #. Type: string
 #. Description
@@ -159,14 +159,14 @@ msgid ""
 "Multicast transfer will use any available addresses from a given set of "
 "addresses. Syntax is \"a.b.c.d-d,a.b.c.d,...\""
 msgstr ""
-"Pro hromadnı pøenos pou¾ijí libovolné adresy ze zadané mno¾iny adres. "
-"Syntaxe je následující: \"a.b.c.d-d,a.b.c.d,...\""
+"Pro hromadnÃ½ pÅ™enos pouÅ¾ijÃ­ libovolnÃ© adresy ze zadanÃ© mnoÅ¾iny adres. "
+"Syntaxe je nÃ¡sledujÃ­cÃ­: â€a.b.c.d-d,a.b.c.d,...â€œ"
 
 #. Type: boolean
 #. Description
 #: ../atftpd.templates:14001
 msgid "Log to file instead of syslog?"
-msgstr "Nepou¾ívat pro záznamy syslog, ale samostatnı soubor?"
+msgstr "NepouÅ¾Ã­vat pro zÃ¡znamy syslog, ale samostatnÃ½ soubor?"
 
 #. Type: boolean
 #. Description
@@ -175,15 +175,15 @@ msgid ""
 "If your server does intensive tftp file serving, it is a good idea to  "
 "accept here. That will avoid cluttering your syslog with tftpd logs."
 msgstr ""
-"Pokud bude vá¹ server nabízet tftp soubory mnoha klientùm, je dobré tuto "
-"mo¾nost povolit, proto¾e se pak záznamy tftpd nebudou míchat se záznamy "
+"Pokud bude vÃ¡Å¡ server nabÃ­zet tftp soubory mnoha klientÅ¯m, je dobrÃ© tuto "
+"moÅ¾nost povolit, protoÅ¾e se pak zÃ¡znamy tftpd nebudou mÃ­chat se zÃ¡znamy "
 "syslogu."
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:15001
 msgid "Log file:"
-msgstr "Soubor pro záznamy:"
+msgstr "Soubor pro zÃ¡znamy:"
 
 #. Type: string
 #. Description
@@ -192,15 +192,15 @@ msgid ""
 "A file where atftpd will write its logs. This file will be made writable for "
 "the user 'nobody' and group 'nogroup'."
 msgstr ""
-"Soubor, do kterého bude atftpd zapisovat své záznamy. Práva souboru budou "
-"nastavena tak, aby do nìj mohl zapisovat u¾ivatel 'nobody' a skupina "
-"'nogroup'."
+"Soubor, do kterÃ©ho bude atftpd zapisovat svÃ© zÃ¡znamy. PrÃ¡va souboru budou "
+"nastavena tak, aby do nÄ›j mohl zapisovat uÅ¾ivatel â€nobodyâ€œ a skupina "
+"â€nogroupâ€œ."
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:16001
 msgid "Base directory:"
-msgstr "Základní adresáø:"
+msgstr "ZÃ¡kladnÃ­ adresÃ¡Å™:"
 
 #. Type: string
 #. Description
@@ -209,5 +209,5 @@ msgid ""
 "The directory tree from where atftpd can serve files. That directory must be "
 "world readable."
 msgstr ""
-"Adresáøovı strom, ze kterého atftpd nabízí soubory. Adresáø musí bıt èitelnı "
-"pro v¹echny."
+"AdresÃ¡Å™ovÃ½ strom, ze kterÃ©ho atftpd nabÃ­zÃ­ soubory. AdresÃ¡Å™ musÃ­ bÃ½t ÄitelnÃ½ "
+"pro vÅ¡echny."

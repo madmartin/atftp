@@ -408,8 +408,8 @@ int process_cmd(int argc, char **argv)
  */
 int set_peer(int argc, char **argv)
 {
-     struct hostent *host;      /* for host name lookup */
-     struct servent *sp;        /* server entry for tftp service */
+     struct addrinfo hints, *addrinfo;
+     int err;
 
      /* sanity check */
      if ((argc < 2) || (argc > 3))
@@ -418,47 +418,40 @@ int set_peer(int argc, char **argv)
           return ERR;
      }
 
-     /* get the server entry */
-     sp = getservbyname("tftp", "udp");
-     if (sp == 0) {
-          fprintf(stderr, "tftp: udp/tftp, unknown service.\n");
-          return ERR;
-     }
-
-     /* look up the host */
-     host = gethostbyname(argv[1]);
+     /* look up the service and host */
+     memset(&hints, 0, sizeof(hints));
+     hints.ai_socktype = SOCK_DGRAM;
+     hints.ai_flags = AI_CANONNAME;
+     err = getaddrinfo(argv[1], argc == 3 ? argv[2] : "tftp",
+                       &hints, &addrinfo);
      /* if valid, update s_inn structure */
-     if (host)
+     if (err == 0)
+          err = sockaddr_set_addrinfo(&data.sa_peer, addrinfo);
+     if (err == 0)
      {
-          data.sa_peer.sin_family = host->h_addrtype;
-          if (host->h_length > sizeof(data.sa_peer.sin_addr))
-               host->h_length = sizeof(data.sa_peer.sin_addr);
-          memcpy(&data.sa_peer.sin_addr, host->h_addr, host->h_length);
-          Strncpy(data.hostname, host->h_name,
+          Strncpy(data.hostname, addrinfo->ai_canonname,
                   sizeof(data.hostname));
           data.hostname[sizeof(data.hostname)-1] = 0;
-          data.sa_peer.sin_port = sp->s_port;
+          freeaddrinfo(addrinfo);
      } 
      else
      {
-          fprintf(stderr, "tftp: unknown host %s.\n", argv[1]);
+          if (err == EAI_SERVICE)
+          {
+               if (argc == 3)
+                    fprintf(stderr, "%s: bad port number.\n", argv[2]);
+               else
+                    fprintf(stderr, "tftp: udp/tftp, unknown service.\n");
+          }
+          else
+          {
+               fprintf(stderr, "tftp: unknown host %s.\n", argv[1]);
+          }
           data.connected = 0;
           return ERR;
      }
-     /* get the server port */
-     if (argc == 3)
-     {
-          sp->s_port = htons(atoi(argv[2]));
-          if (sp->s_port < 0)
-          {
-               fprintf(stderr, "%s: bad port number.\n", argv[2]);
-               data.connected = 0;
-               return ERR;
-          }
-          data.sa_peer.sin_port = sp->s_port;
-     }
      /* copy port number to data structure */
-     data.port = ntohs(sp->s_port);
+     data.port = sockaddr_get_port(&data.sa_peer);
 
      data.connected = 1;
      return OK;
@@ -602,7 +595,7 @@ int put_file(int argc, char **argv)
      }
      
      /* open a UDP socket */
-     data.sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+     data.sockfd = socket(data.sa_peer.ss_family, SOCK_DGRAM, 0);
      if (data.sockfd < 0) {
           perror("tftp: ");
           exit(ERR);
@@ -706,7 +699,7 @@ int get_file(int argc, char **argv)
      }
 
      /* open a UDP socket */
-     data.sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+     data.sockfd = socket(data.sa_peer.ss_family, SOCK_DGRAM, 0);
      if (data.sockfd < 0) {
           perror("tftp: ");
           exit(ERR);

@@ -1,7 +1,7 @@
 atftpd for Debian
 -----------------
 
-atftpd uses /var/lib/tftpboot by default as base directory. You can change
+atftpd uses /srv/tftp by default as base directory. You can change
 that by editing /etc/inetd.conf or with 'dpkg-reconfigure atftpd'. 
 
 Please note that inetd.conf will not be modified by a dpkg-reconfigure, if
@@ -13,6 +13,6 @@ you want 'dpkg-reconfigure atftpd' to create /etc/default/atftpd or
 Remember that you must give the directory appropriate permissions in order 
 to be able to read/write files according to your needs (owner=nobody).
 
-The /var/lib/tftpboot directory is not created by the package. You need to
+The /srv/tftp directory is not created by the package. You need to
 create it and give appropriate permissions by hand.
 

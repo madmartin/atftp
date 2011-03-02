@@ -39,8 +39,8 @@ struct client_data {
      char hostname[MAXLEN];     /* peer's hostname */
      short port;                /* tftp port for the server, 69 by default */
 
-     struct sockaddr_in sa_peer; /* peer address and port */
-     struct sockaddr_in sa_local; /* local address and port */
+     struct sockaddr_storage sa_peer; /* peer address and port */
+     struct sockaddr_storage sa_local; /* local address and port */
      int sockfd;
 
      int connected;             /* we are 'connected' */

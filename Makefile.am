@@ -16,6 +16,7 @@ SUBDIRS          = . test
 DIST_SUBDIRS     = $(SUBDIRS)
 CLEANFILES       = *~
 DISTCLEANFILES   = libtool config.status
+AM_CPPFLAGS      = -D_GNU_SOURCE
 
 man_MANS         = atftp.1 atftpd.8
 dist_scripts     = autogen.sh

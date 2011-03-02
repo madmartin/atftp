@@ -3,7 +3,7 @@
 # TODO:
 #  - error checking on values provided by debconf frontend
 
-BASEDIR=/var/lib/tftpboot
+BASEDIR=/srv/tftp
 DAEMON="--daemon"
 
 . /usr/share/debconf/confmodule

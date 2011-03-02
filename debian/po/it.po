@@ -11,6 +11,7 @@ msgstr ""
 "PO-Revision-Date: 2007-05-04 20:31+0200\n"
 "Last-Translator: Luca Monducci <luca.mo@tiscali.it>\n"
 "Language-Team: Italian <debian-l10n-italian@lists.debian.org>\n"
+"Language: it\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -43,7 +44,7 @@ msgstr "Timeout del server:"
 #. Description
 #: ../atftpd.templates:2001
 msgid "How many seconds the main thread waits before exiting."
-msgstr 
+msgstr ""
 "Quanti secondi attendere la chiusura del thread principale prima di uscire."
 
 #. Type: string
@@ -69,8 +70,7 @@ msgstr "Numero massimo di thread:"
 #. Description
 #: ../atftpd.templates:4001
 msgid "Maximum number of concurrent threads that can be running."
-msgstr ""
-"Numero massimo di thread concorrenti che possono essere in esecuzione."
+msgstr "Numero massimo di thread concorrenti che possono essere in esecuzione."
 
 #. Type: select
 #. Description
@@ -139,8 +139,8 @@ msgid ""
 "\"2000-2003, 3000\" allow atftpd to use port 2000 to 2003 and 3000."
 msgstr ""
 "I trasferimenti in multicast usano tutte le porte disponibili "
-"nell'intervallo. Per esempio \"2000-2003, 3000\" indica a atftpd di usare "
-"le porte dalla 2000 alla 2003 e la porta 3000."
+"nell'intervallo. Per esempio \"2000-2003, 3000\" indica a atftpd di usare le "
+"porte dalla 2000 alla 2003 e la porta 3000."
 
 #. Type: string
 #. Description

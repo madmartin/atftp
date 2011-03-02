@@ -16,10 +16,12 @@
 
 #include "config.h"
 
+#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <arpa/inet.h>
 #include "tftp_def.h"
 #include "options.h"
 #include "logger.h"
@@ -140,8 +142,10 @@ int print_eng(double value, char *string, int size, char *format)
  */
 inline char *Strncpy(char *to, const char *from, size_t size)
 {
-     to[size-1] = '\000';
-     return strncpy(to, from, size - 1);
+     strncpy(to, from, size);
+     if (size>0) 
+          to[size-1] = '\000';
+     return to;
 }
 
 
@@ -181,4 +185,136 @@ int Gethostbyname(char *addr, struct hostent *host)
      }
 
      return OK;
+}
+
+char *
+sockaddr_print_addr(const struct sockaddr_storage *ss, char *buf, size_t len)
+{
+     const void *addr;
+     if (ss->ss_family == AF_INET)
+          addr = &((const struct sockaddr_in *)ss)->sin_addr;
+     else if (ss->ss_family == AF_INET6)
+          addr = &((const struct sockaddr_in6 *)ss)->sin6_addr;
+     else
+          assert(!"sockaddr_print: unsupported address family");
+     return (char *)inet_ntop(ss->ss_family, addr, buf, len);
+}
+
+uint16_t sockaddr_get_port(const struct sockaddr_storage *ss)
+{
+     if (ss->ss_family == AF_INET)
+          return ntohs(((const struct sockaddr_in *)ss)->sin_port);
+     if (ss->ss_family == AF_INET6)
+          return ntohs(((const struct sockaddr_in6 *)ss)->sin6_port);
+     return 0;
+}
+
+void sockaddr_set_port(struct sockaddr_storage *ss, uint16_t port)
+{
+     if (ss->ss_family == AF_INET)
+          ((struct sockaddr_in *)ss)->sin_port = htons(port);
+     else if (ss->ss_family == AF_INET6)
+          ((struct sockaddr_in6 *)ss)->sin6_port = htons(port);
+     else
+          assert(!"sockaddr_set_port: unsupported address family");
+}
+
+int sockaddr_equal(const struct sockaddr_storage *left,
+                   const struct sockaddr_storage *right)
+{
+     if (left->ss_family != right->ss_family)
+          return 0;
+     if (left->ss_family == AF_INET)
+     {
+          const struct sockaddr_in
+               *sa_left = (const struct sockaddr_in *)left,
+               *sa_right = (const struct sockaddr_in *)right;
+          return (sa_left->sin_port == sa_right->sin_port &&
+                  sa_left->sin_addr.s_addr == sa_right->sin_addr.s_addr);
+     }
+     if (left->ss_family == AF_INET6)
+     {
+          const struct sockaddr_in6
+               *sa_left = (const struct sockaddr_in6 *)left,
+               *sa_right = (const struct sockaddr_in6 *)right;
+          return (sa_left->sin6_port == sa_right->sin6_port &&
+                  memcmp(&sa_left->sin6_addr, &sa_right->sin6_addr,
+                         sizeof(sa_left->sin6_addr)) == 0 &&
+                  sa_left->sin6_scope_id == sa_right->sin6_scope_id);
+     }
+     assert(!"sockaddr_equal: unsupported address family");
+}
+
+int sockaddr_equal_addr(const struct sockaddr_storage *left,
+                        const struct sockaddr_storage *right)
+{
+     if (left->ss_family != right->ss_family)
+          return 0;
+     if (left->ss_family == AF_INET)
+     {
+          const struct sockaddr_in
+               *sa_left = (const struct sockaddr_in *)left,
+               *sa_right = (const struct sockaddr_in *)right;
+          return sa_left->sin_addr.s_addr == sa_right->sin_addr.s_addr;
+     }
+     if (left->ss_family == AF_INET6)
+     {
+          const struct sockaddr_in6
+               *sa_left = (const struct sockaddr_in6 *)left,
+               *sa_right = (const struct sockaddr_in6 *)right;
+          return (memcmp(&sa_left->sin6_addr, &sa_right->sin6_addr,
+                         sizeof(sa_left->sin6_addr)) == 0 &&
+                  sa_left->sin6_scope_id == sa_right->sin6_scope_id);
+     }
+     assert(!"sockaddr_equal_addr: unsupported address family");
+}
+
+int sockaddr_is_multicast(const struct sockaddr_storage *ss)
+{
+     if (ss->ss_family == AF_INET)
+          return IN_MULTICAST(ntohl(((const struct sockaddr_in *)ss)
+                                    ->sin_addr.s_addr));
+     if (ss->ss_family == AF_INET6)
+          return IN6_IS_ADDR_MULTICAST(&((const struct sockaddr_in6 *)ss)
+                                       ->sin6_addr);
+     return 0;
+}
+
+void sockaddr_get_mreq(const struct sockaddr_storage *ss,
+                       union ip_mreq_storage *mreq)
+{
+     if (ss->ss_family == AF_INET)
+     {
+          const struct sockaddr_in *sa = (const struct sockaddr_in *)ss;
+          mreq->v4.imr_multiaddr = sa->sin_addr;
+          mreq->v4.imr_interface.s_addr = htonl(INADDR_ANY); 
+     }
+     else if (ss->ss_family == AF_INET6)
+     {
+          const struct sockaddr_in6 *sa = (const struct sockaddr_in6 *)ss;
+          mreq->v6.ipv6mr_multiaddr = sa->sin6_addr;
+          mreq->v6.ipv6mr_interface = 0; /* ??? */
+     }
+     else
+     {
+          assert(!"sockaddr_get_mreq: unsupported address family");
+     }
+}
+
+int
+sockaddr_set_addrinfo(struct sockaddr_storage *ss, const struct addrinfo *ai)
+{
+     while (ai->ai_family != AF_INET && ai->ai_family != AF_INET6)
+     {
+          ai = ai->ai_next;
+          if (!ai)
+          {
+               errno = EAFNOSUPPORT;
+               return -1;
+          }
+     }
+
+     assert(sizeof(*ss) >= ai->ai_addrlen);
+     memcpy(ss, ai->ai_addr, ai->ai_addrlen);
+     return 0;
 }

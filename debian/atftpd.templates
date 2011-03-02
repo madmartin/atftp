@@ -92,7 +92,7 @@ _Description: Log file:
 
 Template: atftpd/basedir
 Type: string
-Default: /var/lib/tftpboot
+Default: /srv/tftp
 _Description: Base directory:
  The directory tree from where atftpd can serve files. That directory must
  be world readable.
