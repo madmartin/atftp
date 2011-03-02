@@ -1,12 +1,24 @@
 #! /bin/sh
 #
-# atftpd - Script to launch atftpd server. Based on Skeleton.
+# atftpd - Script to launch atftpd server.
 #
+### BEGIN INIT INFO
+# Provides:          atftpd
+# Required-Start:    $syslog $network
+# Required-Stop:     $syslog $network
+# Should-Start:      $local_fs
+# Should-Stop:       $local_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Launch atftpd server
+# Description:       Launch atftpd server, a TFTP server useful
+#                    for network boot (PXE).
+### END INIT INFO
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 DAEMON=/usr/sbin/atftpd
 NAME=atftpd
-DESC="Advanced Trivial FTP server"
+DESC="Advanced TFTP server"
 USE_INETD=true
 OPTIONS=""
 

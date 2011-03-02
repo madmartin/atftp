@@ -284,12 +284,14 @@ int tftp_get_packet(int sock1, int sock2, int *sock, struct sockaddr_in *sa,
                     cmsg != NULL && cmsg->cmsg_len >= sizeof(*cmsg);
                     cmsg = CMSG_NXTHDR(&msg, cmsg))
                {
+#if defined(SOL_IP) && defined(IP_PKTINFO)
                     if (cmsg->cmsg_level == SOL_IP
                         && cmsg->cmsg_type == IP_PKTINFO)
                     {
                          pktinfo = (struct in_pktinfo *)CMSG_DATA(cmsg);
                          sa_to->sin_addr = pktinfo->ipi_addr;
                     }
+#endif                    
                     break;
                }
           }

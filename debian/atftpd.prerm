@@ -1,5 +1,14 @@
-#!/bin/sh -e
+#!/bin/sh
 
-update-inetd --group BOOT --disable tftp
+# Stops daemon if it is running under our control
+if [ -x /etc/init.d/atftpd ]; then 
+    if [ -x /usr/sbin/invoke-rc.d ]; then
+	invoke-rc.d --quiet atftpd stop
+    else
+	/etc/init.d/atftpd stop
+    fi
+fi	
 
 #DEBHELPER#
+
+exit 0

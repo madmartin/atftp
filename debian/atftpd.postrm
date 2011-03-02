@@ -1,8 +1,19 @@
 #!/bin/sh -e
 
 if [ "$1" = "purge" ]; then
-    update-inetd --group BOOT --remove "tftp.*/usr/sbin/in.tftpd.*"
+    # If netbase is not installed, then we don't need to do the remove.
+    if command -v update-inetd >/dev/null 2>&1;
+    then
+	    update-inetd --group BOOT --remove "tftp.*/usr/sbin/in.tftpd.*"
+    fi
+
+    # logrotate 
     rm -f /etc/logorotate.d/atftpd
+
+    # init.d config file
+    if [ -r /etc/default/atftpd ]; then
+	rm -f /etc/default/atftpd
+    fi
 fi
 
 #DEBHELPER#

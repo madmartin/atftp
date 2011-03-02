@@ -211,9 +211,9 @@ int tftpd_pcre_makesub(struct tftpd_pcre_pattern *pat,
                chp++; /* point to value indicating substring */
                rc = pcre_get_substring(str, ovector, matches, *chp - 0x30, &tmpstr);
                /* found string */
-               if (rc > 0)
+               if (rc > 0 && outchp - outstr + rc+1 < outsize)
                {
-                    Strncpy(outchp, tmpstr, rc);
+                    Strncpy(outchp, tmpstr, rc+1);
                     outchp += rc;
                     pcre_free_substring(tmpstr);
                     continue;

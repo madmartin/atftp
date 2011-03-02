@@ -354,7 +354,7 @@ char *command_generator(const char *text, int state)
 void make_arg(char *string, int *argc, char ***argv)
 {
      static char *tmp = NULL;
-     int argz_len;
+     size_t argz_len;
 
      /* split the string to an argz vector */
      if (argz_create_sep(string, ' ', &tmp, &argz_len) != 0)
@@ -731,7 +731,7 @@ int get_file(int argc, char **argv)
      fsync(data.sockfd);
      close(data.sockfd);
 
-     return OK;
+     return tftp_result;
 }
 
 #ifdef HAVE_MTFTP

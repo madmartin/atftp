@@ -157,6 +157,7 @@ int main(int argc, char **argv)
      struct servent *serv;
      struct passwd *user;
      struct group *group;
+     pthread_t tid;
 
 #ifdef HAVE_MTFTP
      pthread_t mtftp_thread;
@@ -300,11 +301,13 @@ int main(int argc, char **argv)
           open_logger("atftpd", log_file, logging_level);
      }
 
+#if defined(SOL_IP) && defined(IP_PKTINFO)
      /* We need to retieve some information from incomming packets */
      if (setsockopt(0, SOL_IP, IP_PKTINFO, &one, sizeof(one)) != 0)
      {
           logger(LOG_WARNING, "Failed to set socket option: %s", strerror(errno));
      }
+#endif
 
      /* save main thread ID for proper signal handling */
      main_thread_id = pthread_self();
@@ -387,10 +390,18 @@ int main(int argc, char **argv)
              packets */
           if (!tftpd_cancel)
           {
+               int rv;
+
                if ((tftpd_timeout == 0) || (tftpd_daemon))
-                    select(FD_SETSIZE, &rfds, NULL, NULL, NULL);
+                    rv = select(FD_SETSIZE, &rfds, NULL, NULL, NULL);
                else
-                    select(FD_SETSIZE, &rfds, NULL, NULL, &tv);
+                    rv = select(FD_SETSIZE, &rfds, NULL, NULL, &tv);
+               if (rv < 0) {
+                    logger(LOG_ERR, "%s: %d: select: %s",
+                           __FILE__, __LINE__, strerror(errno));
+                    /* Clear the bits, they are undefined! */
+                    FD_ZERO(&rfds);
+	       }
           }
 
 #ifdef RATE_CONTROL
@@ -466,7 +477,7 @@ int main(int argc, char **argv)
                new->client_info->next = NULL;
                
                /* Start a new server thread. */
-               if (pthread_create(&new->tid, NULL, tftpd_receive_request,
+               if (pthread_create(&tid, NULL, tftpd_receive_request,
                                   (void *)new) != 0)
                {
                     logger(LOG_ERR, "Failed to start new thread");
@@ -567,7 +578,8 @@ void *tftpd_receive_request(void *arg)
 
      /* Detach ourself. That way the main thread does not have to
       * wait for us with pthread_join. */
-     pthread_detach(pthread_self());
+     data->tid = pthread_self();
+     pthread_detach(data->tid);
 
      /* Read the first packet from stdin. */
      data_size = data->data_buffer_size;     
@@ -732,8 +744,8 @@ void *tftpd_receive_request(void *arg)
      tftpd_clientlist_free(data);
 
      /* free the thread structure */
-     free(data);
-     
+     free(data);    
+
      logger(LOG_INFO, "Server thread exiting");
      pthread_exit(NULL);
 }

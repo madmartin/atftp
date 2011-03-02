@@ -40,7 +40,7 @@
 #define OPT_TIMEOUT   3
 #define OPT_BLKSIZE   4
 #define OPT_MULTICAST 5
-#define OPT_NUMBER    7
+#define OPT_NUMBER    6
 
 #define OPT_SIZE     12
 #define VAL_SIZE     MAXLEN

@@ -1,29 +1,28 @@
 Source: atftp
 Section: net
-Priority: optional
-Maintainer: Debian QA Group <packages@qa.debian.org>
-Build-Depends: libreadline4-dev, debhelper (>= 4.1.16), po-debconf, libwrap-dev, libpcre3-dev
-Standards-Version: 3.6.1
+Priority: extra
+Maintainer: Ludovic Drolez <ldrolez@debian.org>
+Build-Depends: libreadline5-dev, debhelper (>= 4.1.16), po-debconf, libwrap0-dev, libpcre3-dev
+Standards-Version: 3.8.0
 
 Package: atftp
 Architecture: any
 Depends: ${shlibs:Depends}
-Description: Advanced TFTP client.
+Description: advanced TFTP client
  Interactive client for the Trivial File Transfer Protocol (TFTP). Its
  usage is mainly for testing and debugging the Atftp server. TFTP client 
- is usually implemented in BIOS and bootstrap programs like pxelinux when
- booting from LAN. Atftp also support non-interactive invocation for
+ is usually implemented in BIOS and bootstraps programs like pxelinux when
+ booting from LAN. Atftp also supports non-interactive invocation for
  easy use in scripts.
 
 Package: atftpd
 Architecture: any
-Depends: ${shlibs:Depends}, netkit-inetd, debconf
+Depends: ${shlibs:Depends}, ${misc:Depends}, inet-superserver
 Conflicts: tftpd
 Suggests: logrotate
-Provides: tftpd
-Description: Advanced TFTP server.
+Description: advanced TFTP server
  Multi-threaded TFTP server implementing all options (option extension and
  multicast) as specified in RFC1350, RFC2090, RFC2347, RFC2348 and RFC2349.
- Atftpd also support multicast protocol known as mtftp, defined in the PXE
+ Atftpd also supports multicast protocol known as mtftp, defined in the PXE
  specification. The server supports being started from inetd(8) as well as
  in daemon mode using init scripts.

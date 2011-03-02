@@ -1,36 +1,34 @@
-# translation of po-debconf template to German
 #
 #    Translators, if you are not familiar with the PO format, gettext
 #    documentation is worth reading, especially sections dedicated to
 #    this format, e.g. by running:
 #         info -n '(gettext)PO Files'
 #         info -n '(gettext)Header Entry'
+#
 #    Some information specific to po-debconf are available at
 #            /usr/share/doc/po-debconf/README-trans
-#         or http://www.debian.org/intl/l10n/po-debconf/README-trans#
+#         or http://www.debian.org/intl/l10n/po-debconf/README-trans
+#
 #    Developers do not need to manually edit POT or PO files.
 #
-# Jens Nachtigall <nachtigall@web.de>, 2004.
-# Matthias Julius <mdeb@julius-net.net>, 2006.
+#
 msgid ""
 msgstr ""
 "Project-Id-Version: atftp 0.7.dfsg-1\n"
 "Report-Msgid-Bugs-To: ldrolez@debian.org\n"
 "POT-Creation-Date: 2006-10-02 00:46+0200\n"
-"PO-Revision-Date: 2006-11-23 01:10-0500\n"
-"Last-Translator: Matthias Julius <mdeb@julius-net.net>\n"
-"Language-Team: German <debian-l10n-german@lists.debian.org>\n"
+"PO-Revision-Date: 2006-12-12 01:47+0900\n"
+"Last-Translator: Atsushi Shimono <shimono@mozilla.gr.jp>\n"
+"Language-Team: Japanese <debian-japanese@lists.debian.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: KBabel 1.11.4\n"
-"Plural-Forms:  nplurals=2; plural=(n != 1);\n"
 
 #. Type: boolean
 #. Description
 #: ../atftpd.templates:1001
 msgid "Should the server be started by inetd?"
-msgstr "Soll der Server von inetd gestartet werden?"
+msgstr "inetd をサーバの起動に利用しますか？"
 
 #. Type: boolean
 #. Description
@@ -40,55 +38,50 @@ msgid ""
 "incoming connections by itself. The latter is only recommend for very high "
 "usage server."
 msgstr ""
-"atftpd kann durch den Hauptserver inetd oder als Daemon gestartet werden, um "
-"so selbst externe Verbindungsaufnahmen zu verwalten. Letzteres ist nur bei "
-"sehr stark genutzten Servern empfehlenswert."
+"atftpd は、inetd から起動するか、もしくはデーモンとして動作し接続を自分で処理"
+"することもできます。後者は、高負荷のサーバで推奨されます。"
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:2001
 msgid "Server timeout:"
-msgstr "Server-Limit für Zeitüberschreitung (engl. »server timeout«)."
+msgstr "サーバのタイムアウト値 :"
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:2001
 msgid "How many seconds the main thread waits before exiting."
-msgstr "Die Zeit in Sekunden, die der Haupt-Thread vor einem Abbruch abwartet."
+msgstr "メインのスレッドを終了するまで何秒待機させるか。"
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:3001
 msgid "Retry timeout:"
-msgstr ""
-"Server-Limit für Zeitüberschreitung bei neuerlichem Versuch (engl. »Retry "
-"timeout«)."
+msgstr "リトライ時のタイムアウト値 :"
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:3001
 msgid "How many seconds to wait for a reply before retransmitting a packet."
-msgstr ""
-"Die Zeit in Sekunden, die der Server verstreichen lässt, bevor das zuletzt "
-"gesendete Paket erneut übertragen wird."
+msgstr "パケットの再送まで何秒待つか。"
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:4001
 msgid "Maximum number of threads:"
-msgstr "Maximale Thread-Anzahl:"
+msgstr "最大スレッド数 :"
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:4001
 msgid "Maximum number of concurrent threads that can be running."
-msgstr "Die maximale Anzahl gleichzeitig laufender Threads."
+msgstr "同時に動作させる最大のスレッド数。"
 
 #. Type: select
 #. Description
 #: ../atftpd.templates:5001
 msgid "Verbosity level:"
-msgstr "Niveau der Redseligkeit:"
+msgstr "冗長レベル :"
 
 #. Type: select
 #. Description
@@ -97,51 +90,50 @@ msgid ""
 "Level of logging. 7 logs everything including debug logs. 1 will log only "
 "the system critical logs. 5 (LOG_NOTICE) is the default value."
 msgstr ""
-"Intensität des Protokollierens. 7 protokolliert alles inklusive der »debug«-"
-"Meldungen. 1 protokolliert lediglich die systemkritischen Meldungen. 5 "
-"(LOG_NOTICE) ist der Standardwert."
+"ログ出力のレベル。7 ではデバッグログを含むすべてのログを出力。1 では、システ"
+"ムの重大なログのみを出力。 5 (LOG_NOTICE) がデフォルト値。"
 
 #. Type: boolean
 #. Description
 #: ../atftpd.templates:6001
 msgid "Enable 'timeout' support?"
-msgstr "Aktivieren der Zeitüberschreitungs-Unterstützung (engl. »timeout«)?"
+msgstr "'タイムアウト'を有効にしますか？"
 
 #. Type: boolean
 #. Description
 #: ../atftpd.templates:7001
 msgid "Enable 'tsize' support?"
-msgstr "Aktivieren der »tsize«-Unterstützung?"
+msgstr "'tsize'を有効にしますか？"
 
 #. Type: boolean
 #. Description
 #: ../atftpd.templates:8001
 msgid "Enable 'block size' support?"
-msgstr "Aktivieren der »block size«-Unterstützung?"
+msgstr "'ブロックサイズ'を有効にしますか？"
 
 #. Type: boolean
 #. Description
 #: ../atftpd.templates:9001
 msgid "Enable multicast support?"
-msgstr "Multicast-Unterstützung aktivieren?"
+msgstr "マルチキャストを有効にしますか？"
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:10001
 msgid "TTL for multicast packets:"
-msgstr "TTL für Multicast-Pakete:"
+msgstr "マルチキャストパケットの TTL 値"
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:11001
 msgid "Port to listen for tftp request:"
-msgstr "Port, der für tftp-Anfragen überwacht werden soll:"
+msgstr "tftp のリクエストを待ち受けるポート番号 :"
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:12001
 msgid "Port range for multicast file transfer:"
-msgstr "Portbereich für Multicast-Dateiübertragungen:"
+msgstr "マルチキャスト転送に利用するポート番号の範囲 :"
 
 #. Type: string
 #. Description
@@ -150,15 +142,15 @@ msgid ""
 "Multicast transfer will use any available port in a given set. For example, "
 "\"2000-2003, 3000\" allow atftpd to use port 2000 to 2003 and 3000."
 msgstr ""
-"Multicast-Transfers werden jeden verfügbaren Port aus der angegebenen "
-"Auswahl verwenden. Die Angabe »2000-2003, 3000« erlaubt atftpd "
-"beispielsweise, die Ports 2000 bis 2003 sowie 3000 zu benutzen."
+"マルチキャスト転送は設定された番号のうち利用できるポートを利用します。例えば"
+"\"2000-2003, 3000\"を設定すると、atftpd は、2000 から 2003 と 3000 番を利用し"
+"ます。"
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:13001
 msgid "Address range for multicast transfer:"
-msgstr "Adressbereich für den Multicast-Transfer:"
+msgstr "マルチキャスト転送先のアドレス範囲:"
 
 #. Type: string
 #. Description
@@ -167,14 +159,14 @@ msgid ""
 "Multicast transfer will use any available addresses from a given set of "
 "addresses. Syntax is \"a.b.c.d-d,a.b.c.d,...\""
 msgstr ""
-"Multicast-Transfers werden jede verfügbare Adresse aus der angegebenen "
-"Auswahl verwenden. Die Syntax lautet »a.b.c.d-d,a.b.c.d,...«"
+"マルチキャスト転送は送信先のアドレスに設定されたアドレスを利用します。設定可"
+"能なシンタックスは、\"a.b.c.d-d,a.b.c.d,...\"です。"
 
 #. Type: boolean
 #. Description
 #: ../atftpd.templates:14001
 msgid "Log to file instead of syslog?"
-msgstr "In eine Datei anstatt über syslog protokollieren?"
+msgstr "ログを syslog でなくファイルに書き出しますか？"
 
 #. Type: boolean
 #. Description
@@ -183,15 +175,14 @@ msgid ""
 "If your server does intensive tftp file serving, it is a good idea to  "
 "accept here. That will avoid cluttering your syslog with tftpd logs."
 msgstr ""
-"Falls Ihr Server viel bzw. oft Dateien mittels tftp bereitstellt, ist es "
-"eine gute Idee, hier zuzustimmen. Dadurch wird Ihr syslog nicht mit tftp-"
-"Meldungen überladen."
+"サーバが大量の tftp 転送を行う場合、これを有効にするのはよいアイデアです。"
+"tftpd のログによって syslog が乱雑になることがなくなります。"
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:15001
 msgid "Log file:"
-msgstr "Logdatei:"
+msgstr "ログファイル名 :"
 
 #. Type: string
 #. Description
@@ -200,15 +191,14 @@ msgid ""
 "A file where atftpd will write its logs. This file will be made writable for "
 "the user 'nobody' and group 'nogroup'."
 msgstr ""
-"Eine Datei, in die atftpd seine Log-Meldungen schreibt. Diese Datei wird für "
-"den Benutzer »nobody« und die Gruppe »nogroup« mit Schreibzugriff versehen "
-"werden."
+"aftpd がログを書き出すファイルです。このファイルは、'nobody' ユーザと "
+"'nobody' グループに対して書き込み可能な状態で作成されます。"
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:16001
 msgid "Base directory:"
-msgstr "Basisverzeichnis:"
+msgstr "ベースディレクトリ:"
 
 #. Type: string
 #. Description
@@ -217,5 +207,5 @@ msgid ""
 "The directory tree from where atftpd can serve files. That directory must be "
 "world readable."
 msgstr ""
-"Der Verzeichnisbaum, aus dem atftpd Dateien zur Verfügung stellen kann. "
-"Dieses Verzeichnis muss für alle Benutzer lesbar sein."
+"aftpd がファイルを提供するディレクトリです。このディレクトリは誰からでも読め"
+"るようにする必要があります。"

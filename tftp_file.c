@@ -59,7 +59,7 @@ int tftp_find_bitmap_hole(int prev_hole, unsigned int *bitmap)
      unsigned int next_word;
 
      /* initial stuff */
-     next_hole = prev_hole + 1;
+     next_hole = 0; /*prev_hole + 1;*/
      next_word_no = next_hole / 32;
      next_bit_no  = next_hole % 32;
      next_word = bitmap[next_word_no];
