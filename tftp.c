@@ -23,6 +23,7 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <string.h>
+#include <stdarg.h>
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -30,7 +31,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-#include <signal.h> 
+#include <signal.h>
 
 #if HAVE_READLINE
 #include <readline/readline.h>
@@ -139,7 +140,7 @@ int main(int argc, char **argv)
      data.data_buffer_size = SEGSIZE + 4;
 
      /* Allocate memory for tftp option structure. */
-     if ((data.tftp_options = 
+     if ((data.tftp_options =
           malloc(sizeof(tftp_default_options))) == NULL)
      {
           fprintf(stderr, "tftp: memory allocation failed.\n");
@@ -147,10 +148,10 @@ int main(int argc, char **argv)
      }
      /* Copy default options. */
      memcpy(data.tftp_options, tftp_default_options,
-            sizeof(tftp_default_options));   
+            sizeof(tftp_default_options));
 
      /* Allocate memory for tftp option reply from server. */
-     if ((data.tftp_options_reply = 
+     if ((data.tftp_options_reply =
           malloc(sizeof(tftp_default_options))) == NULL)
      {
           fprintf(stderr, "tftp: memory allocation failed.\n");
@@ -187,13 +188,13 @@ int main(int argc, char **argv)
      return OK;
 }
 
-/* 
+/*
  * When we receive a signal, we set tftp_cancel in order to
  * abort ongoing transfer.
  */
 void signal_handler(int signal)
 {
-     /* 
+     /*
       * if receiving or sending files, we should abort
       * and send and error ACK
       */
@@ -300,9 +301,9 @@ int getc_func(FILE *fp)
 char **completion(const char *text, int start, int end)
 {
      char **matches;
-     
+
      matches = (char **)NULL;
-     
+
      /* If this word is at the start of the line, then it is a command
         to complete.  Otherwise it is the name of a file in the current
         directory. */
@@ -323,7 +324,7 @@ char *command_generator(const char *text, int state)
 {
      static int list_index, len;
      char *name;
-     
+
      /* If this is a new word to complete, initialize now.  This
         includes saving the length of TEXT for efficiency, and
         initializing the index variable to 0. */
@@ -337,16 +338,41 @@ char *command_generator(const char *text, int state)
      while ((name = (char *)cmdtab[list_index].name))
      {
           list_index++;
-          
+
           if (strncmp (name, text, len) == 0)
                return strdup(name);
      }
-     
+
      /* If no names matched, then return NULL. */
      return NULL;
 }
 # endif
 #endif
+
+/*
+ * set argc/argv from variadic string arguments
+*/
+void make_arg_vector(int *argc, char***argv, ...)
+{
+  char **p;
+  char *s;
+  va_list argp;
+
+  // how many args?
+  *argc = 0;
+  va_start(argp, argv);
+  while ( (s=va_arg(argp, char*)) )
+    ++*argc;
+
+  // allocate storage
+  *argv = malloc(*argc * sizeof (char*));
+
+  // store args
+  p = *argv;
+  va_start(argp, argv);
+  while ( (s=va_arg(argp, char*)) )
+    *p++ = s;
+}
 
 /*
  * Split a string into args.
@@ -372,7 +398,7 @@ void make_arg(char *string, int *argc, char ***argv)
      }
      /* extract arguments */
      argz_extract(tmp, argz_len, *argv);
-     
+
      /* if the last argument is an empty string ... it happens
         when some extra space are added at the end of string :( */
      if (strlen((*argv)[*argc - 1]) == 0)
@@ -433,7 +459,7 @@ int set_peer(int argc, char **argv)
                   sizeof(data.hostname));
           data.hostname[sizeof(data.hostname)-1] = 0;
           freeaddrinfo(addrinfo);
-     } 
+     }
      else
      {
           if (err == EAI_SERVICE)
@@ -593,7 +619,7 @@ int put_file(int argc, char **argv)
           Strncpy(data.local_file, argv[1], VAL_SIZE);
           Strncpy(data.tftp_options[OPT_FILENAME].value, argv[2], VAL_SIZE);
      }
-     
+
      /* open a UDP socket */
      data.sockfd = socket(data.sa_peer.ss_family, SOCK_DGRAM, 0);
      if (data.sockfd < 0) {
@@ -728,7 +754,7 @@ int get_file(int argc, char **argv)
 }
 
 #ifdef HAVE_MTFTP
-/* 
+/*
  * Set ot get mtftp variable value
  */
 int mtftp_opt(int argc, char **argv)
@@ -888,7 +914,7 @@ int status(int argc, char **argv)
                fprintf(stderr, "%s", string);
           }
           else
-               fprintf(stderr, "  Transfer aborted\n"); 
+               fprintf(stderr, "  Transfer aborted\n");
      }
      return OK;
 }
@@ -951,8 +977,8 @@ int tftp_cmd_line_options(int argc, char **argv)
      int ac;                    /* to format arguments for process_cmd */
      char **av = NULL;          /* same */
      char string[MAXLEN];
-     char local_file[MAXLEN] = " ";
-     char remote_file[MAXLEN] = " ";
+     char local_file[MAXLEN] = "";
+     char remote_file[MAXLEN] = "";
      int action = 0;
 
      int option_index = 0;
@@ -1082,12 +1108,12 @@ int tftp_cmd_line_options(int argc, char **argv)
           case 'v':
                snprintf(string, sizeof(string), "verbose on");
                make_arg(string, &ac, &av);
-               process_cmd(ac, av);            
+               process_cmd(ac, av);
                break;
           case 'd':
                snprintf(string, sizeof(string), "trace on");
                make_arg(string, &ac, &av);
-               process_cmd(ac, av);            
+               process_cmd(ac, av);
                break;
 #if DEBUG
           case 'D':
@@ -1126,24 +1152,38 @@ int tftp_cmd_line_options(int argc, char **argv)
           make_arg(string, &ac, &av);
           process_cmd(ac, av);
      }
-     
+
      if (!interactive)
      {
           if (action == PUT)
-               snprintf(string, sizeof(string), "put %s %s", local_file,
-                        remote_file);
+          {
+               if(strlen(remote_file) == 0)
+               {
+                   strncpy(remote_file, local_file, MAXLEN);
+               }
+               make_arg_vector(&ac,&av,"put",local_file,remote_file,NULL);
+          }
           else if (action == GET)
-               snprintf(string, sizeof(string), "get %s %s", remote_file,
-                        local_file);
+          {
+               if(strlen(local_file) == 0)
+               {
+                   strncpy(local_file, remote_file, MAXLEN);
+               }
+               make_arg_vector(&ac,&av,"get",remote_file,local_file,NULL);
+          }
           else if (action == MGET)
-               snprintf(string, sizeof(string), "mget %s %s", remote_file,
-                        local_file);
+          {
+               if(strlen(local_file) == 0)
+               {
+                   strncpy(local_file, remote_file, MAXLEN);
+               }
+               make_arg_vector(&ac,&av,"mget",remote_file,local_file,NULL);
+          }
           else
           {
                fprintf(stderr, "No action specified in batch mode!\n");
                exit(ERR);
           }
-          make_arg(string, &ac, &av);
           if (process_cmd(ac, av) == ERR)
                exit(ERR);
      }
@@ -1184,6 +1224,6 @@ void tftp_usage(void)
              "  -h, --help               : print this help\n"
              "\n"
              " [host] is the tftp server name\n"
-             " [port] is the port to use\n" 
-             "\n");     
+             " [port] is the port to use\n"
+             "\n");
 }
