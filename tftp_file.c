@@ -63,7 +63,7 @@ int tftp_find_bitmap_hole(int prev_hole, unsigned int *bitmap)
      next_word_no = next_hole / 32;
      next_bit_no  = next_hole % 32;
      next_word = bitmap[next_word_no];
-    
+
      /* Check if there is a remainder of the current word to traverse */
      if (next_bit_no != 0)
      {
@@ -76,14 +76,14 @@ int tftp_find_bitmap_hole(int prev_hole, unsigned int *bitmap)
                next_word = bitmap[next_word_no];
           }
      }
-    
+
      /* travserse whole words */
      while ((next_word == 0xffffffff) && (next_word_no < NB_BLOCK))
      {
           next_word_no++;
           next_word = bitmap[next_word_no];
      }
-    
+
      /* find the bit */
      next_word >>= next_bit_no;
      while (next_word & 1)
@@ -218,7 +218,7 @@ int tftp_receive_file(struct client_data *data)
                             data->tftp_options[OPT_MODE].value,
                             string);
                }
-               
+
                sockaddr_set_port(&sa, sockaddr_get_port(&data->sa_peer));
                /* send request packet */
                if (tftp_send_request(sockfd, &sa, RRQ, data->data_buffer,
@@ -473,7 +473,7 @@ int tftp_receive_file(struct client_data *data)
                                    exit(1);
                               }
                               freeaddrinfo(addrinfo);
-                         } 
+                         }
                          else
                          {
                               fprintf(stderr, "tftp: bad multicast address %s",
@@ -484,22 +484,22 @@ int tftp_receive_file(struct client_data *data)
                          if ((mcast_sockfd = socket(sa_mcast_group.ss_family,
                                                     SOCK_DGRAM, 0))<0)
                               exit(1);
-                         
+
                          memset(&sa_mcast, 0, sizeof(sa_mcast));
                          sa_mcast.ss_family = sa_mcast_group.ss_family;
                          sockaddr_set_port(&sa_mcast, mc_port);
-                         
+
                          if (bind(mcast_sockfd, (struct sockaddr *)&sa_mcast,
                                   sizeof(sa_mcast)) < 0)
                          {
                               perror("bind"); /* FIXME */
                               exit(1);
                          }
-                         
+
                          sockaddr_get_mreq(&sa_mcast_group, &mreq);
                          if (sa_mcast_group.ss_family == AF_INET)
                               err = setsockopt(mcast_sockfd, IPPROTO_IP,
-                                               IP_ADD_MEMBERSHIP, 
+                                               IP_ADD_MEMBERSHIP,
                                                &mreq.v4, sizeof(mreq.v4));
                          else
                               err = setsockopt(mcast_sockfd, IPPROTO_IPV6,
@@ -535,7 +535,7 @@ int tftp_receive_file(struct client_data *data)
                                    data_size - 4, convert, &prev_block_number, &temp)
                    != data_size - 4)
                {
-                    
+
                     fprintf(stderr, "tftp: error writing to file %s\n",
                             data->local_file);
                     tftp_send_error(sockfd, &sa, ENOSPACE, data->data_buffer,
@@ -573,7 +573,7 @@ int tftp_receive_file(struct client_data *data)
                {
                     if (sa_mcast_group.ss_family == AF_INET)
                          err = setsockopt(mcast_sockfd, IPPROTO_IP,
-                                          IP_DROP_MEMBERSHIP, 
+                                          IP_DROP_MEMBERSHIP,
                                           &mreq.v4, sizeof(mreq.v4));
                     else
                          err = setsockopt(mcast_sockfd, IPPROTO_IPV6,
@@ -679,7 +679,7 @@ int tftp_send_file(struct client_data *data)
      fstat(fileno(fp), &file_stat);
      if (opt_get_tsize(data->tftp_options) > -1)
           opt_set_tsize(file_stat.st_size, data->tftp_options);
-               
+
      while (1)
      {
 #ifdef DEBUG
@@ -747,7 +747,7 @@ int tftp_send_file(struct client_data *data)
                break;
           case S_WAIT_PACKET:
                data_size = data->data_buffer_size;
-               result = tftp_get_packet(sockfd, -1, NULL, &sa, &from, NULL, 
+               result = tftp_get_packet(sockfd, -1, NULL, &sa, &from, NULL,
                                         data->timeout, &data_size,
                                         data->data_buffer);
                /* check that source port match */
@@ -855,25 +855,22 @@ int tftp_send_file(struct client_data *data)
                {
                     if (data->trace)
                          fprintf(stderr, "blksize: %d, ", result);
-                    if (result > SEGSIZE)
+                    data->data_buffer = realloc(data->data_buffer,
+                                                result + 4);
+                    tftphdr = (struct tftphdr *)data->data_buffer;
+                    if (data->data_buffer == NULL)
                     {
-                         data->data_buffer = realloc(data->data_buffer,
-                                                     result + 4);
-                         tftphdr = (struct tftphdr *)data->data_buffer;
-                         if (data->data_buffer == NULL)
-                         {
-                              fprintf(stderr,
-                                      "tftp: memory allocation failure.\n");
-                              exit(1);
-                         }
-                         data->data_buffer_size = result + 4;
+                        fprintf(stderr,
+                                "tftp: memory allocation failure.\n");
+                        exit(1);
                     }
+                    data->data_buffer_size = result + 4;
                }
                /* multicast: yish, it's more complex. If we are a master,
                   we are responsible to ask packet with an ACK. If we are
                   not master, then just receive packets. Missing packets
                   will be asked when we become a master client */
-               
+
                if (data->trace)
                     fprintf(stderr, "\b\b>\n");
                state = S_SEND_DATA;
@@ -887,8 +884,8 @@ int tftp_send_file(struct client_data *data)
                if (fp)
                     fclose(fp);
                fprintf(stderr, "tftp: aborting\n");
-          default:             
-               return ERR;             
+          default:
+               return ERR;
           }
      }
 }
