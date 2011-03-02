@@ -180,7 +180,7 @@ extern char *argz_next (__const char *__restrict __argz, size_t __argz_len,
 #ifdef __USE_EXTERN_INLINES
 extern inline char *
 __argz_next (__const char *__argz, size_t __argz_len,
-	     __const char *__entry) __THROW
+	     __const char *__entry)
 {
   if (__entry)
     {
@@ -194,7 +194,7 @@ __argz_next (__const char *__argz, size_t __argz_len,
 }
 extern inline char *
 argz_next (__const char *__argz, size_t __argz_len,
-	   __const char *__entry) __THROW
+	   __const char *__entry)
 {
   return __argz_next (__argz, __argz_len, __entry);
 }

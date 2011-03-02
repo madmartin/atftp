@@ -44,8 +44,8 @@ struct thread_data {
      /* multicast stuff */
      short mc_port;             /* multicast port */
      char *mc_addr;             /* multicast address */
-     struct sockaddr_in sa_mcast;
-     struct ip_mreq mcastaddr;
+     struct sockaddr_storage sa_mcast;
+     union ip_mreq_storage mcastaddr;
      u_char mcast_ttl;
      
      /*
@@ -69,7 +69,7 @@ struct thread_data {
 };
 
 struct client_info {
-     struct sockaddr_in client;
+     struct sockaddr_storage client;
      int done;                  /* that client as receive it's file */
      struct client_info *next;
 };
@@ -99,7 +99,7 @@ void tftpd_clientlist_remove(struct thread_data *thread,
 void tftpd_clientlist_free(struct thread_data *thread);
 int tftpd_clientlist_done(struct thread_data *thread,
                           struct client_info *client,
-                          struct sockaddr_in *sock);
+                          struct sockaddr_storage *sock);
 int tftpd_clientlist_next(struct thread_data *thread,
                           struct client_info **client);
 void tftpd_list_kill_threads(void);

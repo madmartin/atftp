@@ -57,8 +57,11 @@
 int tftpd_max_thread = 100;     /* number of concurent thread allowed */
 int tftpd_timeout = 300;        /* number of second of inactivity
                                    before exiting */
-char directory[MAXLEN] = "/tftpboot/";
+char directory[MAXLEN] = "/srv/tftp/";
 int retry_timeout = S_TIMEOUT;
+
+int on = 1;
+int listen_local = 0;
 
 int tftpd_daemon = 0;           /* By default we are started by inetd */
 int tftpd_daemon_no_fork = 0;   /* For who want a false daemon mode */
@@ -153,10 +156,10 @@ int main(int argc, char **argv)
      int run = 1;               /* while (run) loop */
      struct thread_data *new;   /* for allocation of new thread_data */
      int sockfd;                /* used in daemon mode */
-     struct sockaddr_in sa;     /* used in daemon mode */
-     struct servent *serv;
+     struct sockaddr_storage sa; /* used in daemon mode */
      struct passwd *user;
      struct group *group;
+     pthread_t tid;
 
 #ifdef HAVE_MTFTP
      pthread_t mtftp_thread;
@@ -228,32 +231,44 @@ int main(int argc, char **argv)
                     exit(2);
           }
 
-          /* find the port */
-          if (tftpd_port == 0)
+          /* find the port; initialise sockaddr_storage structure */
+          if (strlen(tftpd_addr) > 0 || tftpd_port == 0)
           {
-               if ((serv = getservbyname("tftp", "udp")) == NULL)
+               struct addrinfo hints, *result;
+               int err;
+
+               /* look up the service and host */
+               memset(&hints, 0, sizeof(hints));
+               hints.ai_socktype = SOCK_DGRAM;
+               hints.ai_flags = AI_NUMERICHOST;
+               err = getaddrinfo(tftpd_addr, tftpd_port ? NULL : "tftp",
+                                 &hints, &result);
+               if (err == EAI_SERVICE)
                {
                     logger(LOG_ERR, "atftpd: udp/tftp, unknown service");
                     exit(1);
                }
-               tftpd_port = ntohs(serv->s_port);
-          }
-          /* initialise sockaddr_in structure */
-          memset(&sa, 0, sizeof(sa));
-          sa.sin_family = AF_INET;
-          sa.sin_port = htons(tftpd_port);
-          if (strlen(tftpd_addr) > 0)
-          {
-               if (inet_aton(tftpd_addr, &(sa.sin_addr)) == 0)
+               if (err || sockaddr_set_addrinfo(&sa, result))
                {
                     logger(LOG_ERR, "atftpd: invalid IP address %s", tftpd_addr);
                     exit(1);
                }
+
+               if (!tftpd_port)
+                    tftpd_port = sockaddr_get_port(&sa);
+
+               freeaddrinfo(result);
           }
-          else
-               sa.sin_addr.s_addr = htonl(INADDR_ANY);
+
+          if (strlen(tftpd_addr) == 0)
+          {
+               memset(&sa, 0, sizeof(sa));
+               sa.ss_family = AF_INET;
+               sockaddr_set_port(&sa, tftpd_port);
+          }
+
           /* open the socket */
-          if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) == 0)
+          if ((sockfd = socket(sa.ss_family, SOCK_DGRAM, 0)) == 0)
           {
                logger(LOG_ERR, "atftpd: can't open socket");
                exit(1);
@@ -300,11 +315,13 @@ int main(int argc, char **argv)
           open_logger("atftpd", log_file, logging_level);
      }
 
+#if defined(SOL_IP) && defined(IP_PKTINFO)
      /* We need to retieve some information from incomming packets */
      if (setsockopt(0, SOL_IP, IP_PKTINFO, &one, sizeof(one)) != 0)
      {
           logger(LOG_WARNING, "Failed to set socket option: %s", strerror(errno));
      }
+#endif
 
      /* save main thread ID for proper signal handling */
      main_thread_id = pthread_self();
@@ -387,10 +404,18 @@ int main(int argc, char **argv)
              packets */
           if (!tftpd_cancel)
           {
+               int rv;
+
                if ((tftpd_timeout == 0) || (tftpd_daemon))
-                    select(FD_SETSIZE, &rfds, NULL, NULL, NULL);
+                    rv = select(FD_SETSIZE, &rfds, NULL, NULL, NULL);
                else
-                    select(FD_SETSIZE, &rfds, NULL, NULL, &tv);
+                    rv = select(FD_SETSIZE, &rfds, NULL, NULL, &tv);
+               if (rv < 0) {
+                    logger(LOG_ERR, "%s: %d: select: %s",
+                           __FILE__, __LINE__, strerror(errno));
+                    /* Clear the bits, they are undefined! */
+                    FD_ZERO(&rfds);
+	       }
           }
 
 #ifdef RATE_CONTROL
@@ -466,7 +491,7 @@ int main(int argc, char **argv)
                new->client_info->next = NULL;
                
                /* Start a new server thread. */
-               if (pthread_create(&new->tid, NULL, tftpd_receive_request,
+               if (pthread_create(&tid, NULL, tftpd_receive_request,
                                   (void *)new) != 0)
                {
                     logger(LOG_ERR, "Failed to start new thread");
@@ -558,16 +583,15 @@ void *tftpd_receive_request(void *arg)
      int num_of_threads;
      int abort = 0;             /* 1 if we need to abort because the maximum
                                    number of threads have been reached*/ 
-     struct sockaddr_in to;     /* destination of client's packet */
-     socklen_t len = sizeof(struct sockaddr);
+     struct sockaddr_storage to; /* destination of client's packet */
+     socklen_t len = sizeof(to);
 
-#ifdef HAVE_WRAP
-     char client_addr[16];
-#endif
+     char addr_str[SOCKADDR_PRINT_ADDR_LEN];
 
      /* Detach ourself. That way the main thread does not have to
       * wait for us with pthread_join. */
-     pthread_detach(pthread_self());
+     data->tid = pthread_self();
+     pthread_detach(data->tid);
 
      /* Read the first packet from stdin. */
      data_size = data->data_buffer_size;     
@@ -591,12 +615,12 @@ void *tftpd_receive_request(void *arg)
      {
           /* Verify the client has access. We don't look for the name but
              rely only on the IP address for that. */
-          inet_ntop(AF_INET, &data->client_info->client.sin_addr,
-                    client_addr, sizeof(client_addr));
-          if (hosts_ctl("in.tftpd", STRING_UNKNOWN, client_addr,
+          sockaddr_print_addr(&data->client_info->client,
+                              addr_str, sizeof(addr_str));
+          if (hosts_ctl("in.tftpd", STRING_UNKNOWN, addr_str,
                         STRING_UNKNOWN) == 0)
           {
-               logger(LOG_ERR, "Connection refused from %s", client_addr);
+               logger(LOG_ERR, "Connection refused from %s", addr_str);
                abort = 1;
           }
      }
@@ -612,9 +636,27 @@ void *tftpd_receive_request(void *arg)
      else
      {
           /* open a socket for client communication */
-          data->sockfd = socket(PF_INET, SOCK_DGRAM, 0);
-          to.sin_family = AF_INET;
-          to.sin_port = 0;
+          data->sockfd = socket(data->client_info->client.ss_family,
+                                SOCK_DGRAM, 0);
+          memset(&to, 0, sizeof(to));
+          to.ss_family = data->client_info->client.ss_family;
+          /* Force socket to listen on local address. Do not listen on broadcast address 255.255.255.255. 
+             If the socket listens on the broadcast address, Linux tells the remote client the port
+             is unreachable. This happens even if SO_BROADCAST is set in setsockopt for this socket.
+             I was unable to find a kernel option or /proc/sys flag to make the kernel pay attention to 
+             these requests, so the workaround is to force listening on the local address. */
+          if (listen_local == 1)
+          { 
+               logger(LOG_INFO, "forcing socket to listen on local address");
+               if (setsockopt(data->sockfd, SOL_SOCKET, SO_BROADCAST, &on, sizeof(on)) != 0) {
+                  logger(LOG_ERR, "setsockopt: %s", strerror(errno));
+               }
+          }
+          else
+          {
+               logger(LOG_INFO, "socket may listen on any address, including broadcast");
+          }
+
           if (data->sockfd > 0)
           {
                /* bind the socket to the interface */
@@ -624,7 +666,7 @@ void *tftpd_receive_request(void *arg)
                     retval = ABORT;
                }
                /* read back assigned port */
-               len = sizeof(struct sockaddr);
+               len = sizeof(to);
                if (getsockname(data->sockfd, (struct sockaddr *)&to, &len) == -1)
                {
                     logger(LOG_ERR, "getsockname: %s", strerror(errno));
@@ -639,7 +681,8 @@ void *tftpd_receive_request(void *arg)
                     retval = ABORT;
                }
                logger(LOG_DEBUG, "Creating new socket: %s:%d",
-                      inet_ntoa(to.sin_addr), ntohs(to.sin_port));
+                      sockaddr_print_addr(&to, addr_str, sizeof(addr_str)),
+                      sockaddr_get_port(&to));
                
                /* read options from request */
                opt_parse_request(data->data_buffer, data_size,
@@ -657,8 +700,9 @@ void *tftpd_receive_request(void *arg)
           case GET_RRQ:
                logger(LOG_NOTICE, "Serving %s to %s:%d",
                       data->tftp_options[OPT_FILENAME].value,
-                      inet_ntoa(data->client_info->client.sin_addr),
-                      ntohs(data->client_info->client.sin_port));
+                      sockaddr_print_addr(&data->client_info->client,
+                                          addr_str, sizeof(addr_str)),
+                      sockaddr_get_port(&data->client_info->client));
                if (data->trace)
                     logger(LOG_DEBUG, "received RRQ <%s>", string);
                if (tftpd_send_file(data) == OK)
@@ -668,7 +712,8 @@ void *tftpd_receive_request(void *arg)
                break;
           case GET_WRQ:
                logger(LOG_NOTICE, "Fetching from %s to %s",
-                      inet_ntoa(data->client_info->client.sin_addr),
+                      sockaddr_print_addr(&data->client_info->client,
+                                          addr_str, sizeof(addr_str)),
                       data->tftp_options[OPT_FILENAME].value);
                if (data->trace)
                     logger(LOG_DEBUG, "received WRQ <%s>", string);
@@ -693,7 +738,9 @@ void *tftpd_receive_request(void *arg)
                break;
           default:
                logger(LOG_NOTICE, "Invalid request <%d> from %s",
-                      retval, inet_ntoa(data->client_info->client.sin_addr));
+                      retval,
+                      sockaddr_print_addr(&data->client_info->client,
+                                          addr_str, sizeof(addr_str)));
                tftp_send_error(data->sockfd, &data->client_info->client,
                                EBADOP, data->data_buffer, data->data_buffer_size);
                if (data->trace)
@@ -732,8 +779,8 @@ void *tftpd_receive_request(void *arg)
      tftpd_clientlist_free(data);
 
      /* free the thread structure */
-     free(data);
-     
+     free(data);    
+
      logger(LOG_INFO, "Server thread exiting");
      pthread_exit(NULL);
 }
@@ -811,6 +858,7 @@ int tftpd_cmd_line_options(int argc, char **argv)
           { "no-multicast", 0, NULL, 'M' },
           { "logfile", 1, NULL, 'L' },
           { "pidfile", 1, NULL, 'I'},
+          { "listen-local", 0, NULL, 'F'},
           { "daemon", 0, NULL, 'D' },
           { "no-fork", 0, NULL, 'N'},
           { "user", 1, NULL, 'U'},
@@ -887,6 +935,9 @@ int tftpd_cmd_line_options(int argc, char **argv)
                break;
           case 'I':
                pidfile = strdup(optarg);
+               break;
+          case 'F':
+               listen_local = 1;
                break;
           case 'D':
                tftpd_daemon = 1;
@@ -1015,6 +1066,10 @@ void tftpd_log_options(void)
      logger(LOG_INFO, "  log file: %s", (log_file==NULL) ? "syslog":log_file);
      if (pidfile)
           logger(LOG_INFO, "  pid file: %s", pidfile);
+     if (listen_local == 1)
+          logger(LOG_INFO, "  forcing to listen on local interfaces: on.");
+     else
+          logger(LOG_INFO, "  not forcing to listen on local interfaces.");
      if (tftpd_daemon == 1)
           logger(LOG_INFO, "  server timeout: Not used");
      else
@@ -1111,11 +1166,12 @@ void tftpd_usage(void)
             " output messages\n"
             "  --trace                    : log all sent and received packets\n"
             "  --no-timeout               : disable 'timeout' from RFC2349\n"
-            "  --no-tisize                : disable 'tsize' from RFC2349\n"
+            "  --no-tsize                 : disable 'tsize' from RFC2349\n"
             "  --no-blksize               : disable 'blksize' from RFC2348\n"
             "  --no-multicast             : disable 'multicast' from RFC2090\n"
             "  --logfile <file>           : logfile to log logs to ;-)\n"
             "  --pidfile <file>           : write PID to this file\n"
+            "  --listen-local             : force listen on local network address\n"
             "  --daemon                   : run atftpd standalone (no inetd)\n"
             "  --no-fork                  : run as a daemon, don't fork\n"
             "  --user <user[.group]>      : default is nobody\n"

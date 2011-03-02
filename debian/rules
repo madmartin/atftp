@@ -7,15 +7,13 @@
 # package.
 
 # Uncomment this to turn on verbose mode. 
-#export DH_VERBOSE=1
-
-# This is the debhelper compatability version to use.
-export DH_COMPAT=2
+export DH_VERBOSE=1
 
 # This has to be exported to make some magic below work.
 export DH_OPTIONS
 
 configure: configure-stamp
+
 configure-stamp:
 	dh_testdir
 	# Add here commands to configure the package.
@@ -29,17 +27,21 @@ build-stamp:
 
 	# Add here commands to compile the package.
 	$(MAKE)
-
+	# For the woody backport
+	#$(MAKE) LDFLAGS="--static" LIBREADLINE="-lreadline -lncurses -lpthread" LIBWRAP="-lwrap -lnsl"
 	touch build-stamp
 
-clean:
+clean: clean-patched
+
+clean-patched:
 	dh_testdir
 	dh_testroot
+	debconf-updatepo
 	rm -f build-stamp configure-stamp
-
 	# Add here commands to clean up after the build process.
-	-$(MAKE) clean
-	-$(MAKE) distclean
+	[ ! -f Makefile ] || $(MAKE) clean
+	[ ! -f Makefile ] || $(MAKE) distclean
+
 
 	dh_clean
 
@@ -56,7 +58,7 @@ install: build
 
 	dh_movefiles
 	dh_installdocs -patftp
-	dh_installdocs -patftpd docs/*.html
+	dh_installdocs -patftpd
 
 # Build architecture-independent files here.
 # Pass -i to all debhelper commands in this target to reduce clutter.
@@ -88,4 +90,14 @@ binary-arch: build install
 	dh_builddeb
 
 binary: binary-indep binary-arch
+
+#patch: patch-stamp
+#patch-stamp:
+#	dpatch apply-all
+#	dpatch call-all -a=pkg-info >patch-stamp
+#
+#unpatch:
+#	dpatch deapply-all
+#	rm -rf patch-stamp debian/patched
+
 .PHONY: build clean binary-indep binary-arch binary install

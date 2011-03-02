@@ -84,8 +84,9 @@ Log to a specific file instead of only syslog. 'nobody' (or any user
 used to run the server) must have permissions on the given
 file. Assuming the file is /var/log/atftpd.log, simply run: "touch
 /var/log/atftpd.log" and then "chown nobody.nogroup
-/var/log/atftpd.log". When the server is ran in daemon mode,
-/dev/stdout or /dev/stderr can be used.
+/var/log/atftpd.log". When the server is run in daemon mode,
+/dev/stdout or /dev/stderr can be used.  Specifying a single dash as
+the filename will send logs to stdout (file descriptor 1).
 
 .TP
 .B \-\-pidfile

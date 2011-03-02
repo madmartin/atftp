@@ -1,22 +1,14 @@
-#
-#    Translators, if you are not familiar with the PO format, gettext
-#    documentation is worth reading, especially sections dedicated to
-#    this format, e.g. by running:
-#         info -n '(gettext)PO Files'
-#         info -n '(gettext)Header Entry'
-#
-#    Some information specific to po-debconf are available at
-#            /usr/share/doc/po-debconf/README-trans
-#         or http://www.debian.org/intl/l10n/po-debconf/README-trans
-#
-#    Developers do not need to manually edit POT or PO files.
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-02-17 18:54-0500\n"
+"Report-Msgid-Bugs-To: ldrolez@debian.org\n"
+"POT-Creation-Date: 2006-10-02 00:46+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -26,28 +18,13 @@ msgstr ""
 
 #. Type: boolean
 #. Description
-#: ../atftpd.templates:4
-msgid "Do you want to configure the server?"
-msgstr ""
-
-#. Type: boolean
-#. Description
-#: ../atftpd.templates:4
-msgid ""
-"atftpd can have various parameters passed to it. These parameters can "
-"optimize performances for servers that do heavy work. The default values are "
-"suitable for most purposes."
-msgstr ""
-
-#. Type: boolean
-#. Description
-#: ../atftpd.templates:12
+#: ../atftpd.templates:1001
 msgid "Should the server be started by inetd?"
 msgstr ""
 
 #. Type: boolean
 #. Description
-#: ../atftpd.templates:12
+#: ../atftpd.templates:1001
 msgid ""
 "atftpd can be started by the inetd superserver or as a daemon and handle "
 "incoming connections by itself. The latter is only recommend for very high "
@@ -55,74 +32,50 @@ msgid ""
 msgstr ""
 
 #. Type: string
-#. Default
-#: ../atftpd.templates:19
-msgid "300"
+#. Description
+#: ../atftpd.templates:2001
+msgid "Server timeout:"
 msgstr ""
 
 #. Type: string
 #. Description
-#: ../atftpd.templates:20
-msgid "Server timeout."
-msgstr ""
-
-#. Type: string
-#. Description
-#: ../atftpd.templates:20
+#: ../atftpd.templates:2001
 msgid "How many seconds the main thread waits before exiting."
 msgstr ""
 
 #. Type: string
-#. Default
-#: ../atftpd.templates:25
-msgid "5"
+#. Description
+#: ../atftpd.templates:3001
+msgid "Retry timeout:"
 msgstr ""
 
 #. Type: string
 #. Description
-#: ../atftpd.templates:26
-msgid "Retry timeout."
-msgstr ""
-
-#. Type: string
-#. Description
-#: ../atftpd.templates:26
+#: ../atftpd.templates:3001
 msgid "How many seconds to wait for a reply before retransmitting a packet."
 msgstr ""
 
 #. Type: string
-#. Default
-#: ../atftpd.templates:31
-msgid "100"
+#. Description
+#: ../atftpd.templates:4001
+msgid "Maximum number of threads:"
 msgstr ""
 
 #. Type: string
 #. Description
-#: ../atftpd.templates:32
-msgid "Maximum number of threads."
-msgstr ""
-
-#. Type: string
-#. Description
-#: ../atftpd.templates:32
+#: ../atftpd.templates:4001
 msgid "Maximum number of concurrent threads that can be running."
 msgstr ""
 
 #. Type: select
-#. Choices
-#: ../atftpd.templates:37
-msgid "7 (LOG_DEBUG), 6 (LOG_INFO), 5 (LOG_NOTICE), 4 (LOG_WARNING)"
+#. Description
+#: ../atftpd.templates:5001
+msgid "Verbosity level:"
 msgstr ""
 
 #. Type: select
 #. Description
-#: ../atftpd.templates:39
-msgid "Verbosity level."
-msgstr ""
-
-#. Type: select
-#. Description
-#: ../atftpd.templates:39
+#: ../atftpd.templates:5001
 msgid ""
 "Level of logging. 7 logs everything including debug logs. 1 will log only "
 "the system critical logs. 5 (LOG_NOTICE) is the default value."
@@ -130,75 +83,63 @@ msgstr ""
 
 #. Type: boolean
 #. Description
-#: ../atftpd.templates:46
-msgid "Enable 'timeout' support"
+#: ../atftpd.templates:6001
+msgid "Enable 'timeout' support?"
 msgstr ""
 
 #. Type: boolean
 #. Description
-#: ../atftpd.templates:51
-msgid "Enable 'tsize' support"
+#: ../atftpd.templates:7001
+msgid "Enable 'tsize' support?"
 msgstr ""
 
 #. Type: boolean
 #. Description
-#: ../atftpd.templates:56
-msgid "Enable 'block size' support"
+#: ../atftpd.templates:8001
+msgid "Enable 'block size' support?"
 msgstr ""
 
 #. Type: boolean
 #. Description
-#: ../atftpd.templates:61
-msgid "Enable 'multicast' support"
-msgstr ""
-
-#. Type: string
-#. Default
-#: ../atftpd.templates:65
-msgid "69"
+#: ../atftpd.templates:9001
+msgid "Enable multicast support?"
 msgstr ""
 
 #. Type: string
 #. Description
-#: ../atftpd.templates:66
-msgid "Port to listen for tftp request"
-msgstr ""
-
-#. Type: string
-#. Default
-#: ../atftpd.templates:70
-msgid "1758"
+#: ../atftpd.templates:10001
+msgid "TTL for multicast packets:"
 msgstr ""
 
 #. Type: string
 #. Description
-#: ../atftpd.templates:71
-msgid "Port range for multicast file transfer"
+#: ../atftpd.templates:11001
+msgid "Port to listen for tftp request:"
 msgstr ""
 
 #. Type: string
 #. Description
-#: ../atftpd.templates:71
+#: ../atftpd.templates:12001
+msgid "Port range for multicast file transfer:"
+msgstr ""
+
+#. Type: string
+#. Description
+#: ../atftpd.templates:12001
 msgid ""
 "Multicast transfer will use any available port in a given set. For example, "
 "\"2000-2003, 3000\" allow atftpd to use port 2000 to 2003 and 3000."
 msgstr ""
 
 #. Type: string
-#. Default
-#: ../atftpd.templates:77
-msgid "239.255.0.0-255"
+#. Description
+#: ../atftpd.templates:13001
+msgid "Address range for multicast transfer:"
 msgstr ""
 
 #. Type: string
 #. Description
-#: ../atftpd.templates:78
-msgid "Address range for multicast transfer"
-msgstr ""
-
-#. Type: string
-#. Description
-#: ../atftpd.templates:78
+#: ../atftpd.templates:13001
 msgid ""
 "Multicast transfer will use any available addresses from a given set of "
 "addresses. Syntax is \"a.b.c.d-d,a.b.c.d,...\""
@@ -206,53 +147,41 @@ msgstr ""
 
 #. Type: boolean
 #. Description
-#: ../atftpd.templates:85
+#: ../atftpd.templates:14001
 msgid "Log to file instead of syslog?"
 msgstr ""
 
 #. Type: boolean
 #. Description
-#: ../atftpd.templates:85
+#: ../atftpd.templates:14001
 msgid ""
-"If your server does intensive tftp file serving, it is a good idea to say "
-"yes. That will avoid to clutter your syslog with tftpd logs."
-msgstr ""
-
-#. Type: string
-#. Default
-#: ../atftpd.templates:91
-msgid "/var/log/atftpd.log"
+"If your server does intensive tftp file serving, it is a good idea to  "
+"accept here. That will avoid cluttering your syslog with tftpd logs."
 msgstr ""
 
 #. Type: string
 #. Description
-#: ../atftpd.templates:92
-msgid "Log file."
+#: ../atftpd.templates:15001
+msgid "Log file:"
 msgstr ""
 
 #. Type: string
 #. Description
-#: ../atftpd.templates:92
+#: ../atftpd.templates:15001
 msgid ""
-"A file where atftpd write its logs. This file will be made writable for the "
-"user 'nobody' and group 'nogroup'."
-msgstr ""
-
-#. Type: string
-#. Default
-#: ../atftpd.templates:98
-msgid "/tftpboot"
+"A file where atftpd will write its logs. This file will be made writable for "
+"the user 'nobody' and group 'nogroup'."
 msgstr ""
 
 #. Type: string
 #. Description
-#: ../atftpd.templates:99
-msgid "Base directory."
+#: ../atftpd.templates:16001
+msgid "Base directory:"
 msgstr ""
 
 #. Type: string
 #. Description
-#: ../atftpd.templates:99
+#: ../atftpd.templates:16001
 msgid ""
 "The directory tree from where atftpd can serve files. That directory must be "
 "world readable."

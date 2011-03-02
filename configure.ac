@@ -62,6 +62,7 @@ AC_ARG_ENABLE(debug,
 
 dnl Check for programs
 AC_PROG_CC
+AC_GNU_SOURCE
 
 dnl Check for AIX
 AC_AIX

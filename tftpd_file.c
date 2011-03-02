@@ -110,8 +110,9 @@ int tftpd_receive_file(struct thread_data *data)
      int block_number = 0;
      int data_size;
      int sockfd = data->sockfd;
-     struct sockaddr_in *sa = &data->client_info->client;
-     struct sockaddr_in from;
+     struct sockaddr_storage *sa = &data->client_info->client;
+     struct sockaddr_storage from;
+     char addr_str[SOCKADDR_PRINT_ADDR_LEN];
      struct tftphdr *tftphdr = (struct tftphdr *)data->data_buffer;
      FILE *fp;
      char filename[MAXLEN];
@@ -269,7 +270,8 @@ int tftpd_receive_file(struct thread_data *data)
                     if (number_of_timeout > NB_OF_RETRY)
                     {
                          logger(LOG_INFO, "client (%s) not responding",
-                                inet_ntoa(data->client_info->client.sin_addr));
+                                sockaddr_print_addr(&data->client_info->client,
+                                                    addr_str, sizeof(addr_str)));
                          state = S_END;
                     }
                     else
@@ -290,12 +292,13 @@ int tftpd_receive_file(struct thread_data *data)
                      * **** test since the port number is the TID. Use this
                      * **** only if you know what you're doing.
                      */
-                    if (sa->sin_port != from.sin_port)
+                    if (sockaddr_get_port(sa) != sockaddr_get_port(&from))
                     {
                          if (data->checkport)
                          {
                               logger(LOG_WARNING, "packet discarded <%s>",
-                                     inet_ntoa(from.sin_addr));
+                                     sockaddr_print_addr(&from, addr_str,
+                                                         sizeof(addr_str)));
                               break;
                          }
                          else
@@ -311,12 +314,13 @@ int tftpd_receive_file(struct thread_data *data)
                     break;
                case GET_DATA:
                     /* Check that source port match */
-                    if (sa->sin_port != from.sin_port)
+                    if (sockaddr_get_port(sa) != sockaddr_get_port(&from))
                     {
                          if (data->checkport)
                          {
                               logger(LOG_WARNING, "packet discarded <%s>",
-                                     inet_ntoa(from.sin_addr));
+                                     sockaddr_print_addr(&from, addr_str,
+                                                         sizeof(addr_str)));
                               break;
                          }
                          else
@@ -328,7 +332,8 @@ int tftpd_receive_file(struct thread_data *data)
                case GET_DISCARD:
                     /* FIXME: should we increment number_of_timeout */
                     logger(LOG_WARNING, "packet discarded <%s>",
-                           inet_ntoa(from.sin_addr));
+                           sockaddr_print_addr(&from, addr_str,
+                                               sizeof(addr_str)));
                     break;
                case ERR:
                     logger(LOG_ERR, "%s: %d: recvfrom: %s",
@@ -405,8 +410,9 @@ int tftpd_send_file(struct thread_data *data)
      int block_number = 0;
      int last_block = -1;
      int data_size;
-     struct sockaddr_in *sa = &data->client_info->client;
-     struct sockaddr_in from;
+     struct sockaddr_storage *sa = &data->client_info->client;
+     struct sockaddr_storage from;
+     char addr_str[SOCKADDR_PRINT_ADDR_LEN];
      int sockfd = data->sockfd;
      struct tftphdr *tftphdr = (struct tftphdr *)data->data_buffer;
      FILE *fp;
@@ -618,6 +624,8 @@ int tftpd_send_file(struct thread_data *data)
           }
           else
           {
+               struct addrinfo hints, *result;
+
                /* configure socket, get an IP address */
                if (tftpd_mcast_get_tid(&data->mc_addr, &data->mc_port) != OK)
                {
@@ -629,29 +637,37 @@ int tftpd_send_file(struct thread_data *data)
                       data->mc_addr, data->mc_port);
 
                /* convert address */
-               if (inet_aton(data->mc_addr, &data->sa_mcast.sin_addr) == 0)
+               memset(&hints, 0, sizeof(hints));
+               hints.ai_socktype = SOCK_DGRAM;
+               hints.ai_flags = AI_NUMERICHOST;
+               if (getaddrinfo(data->mc_addr, NULL, &hints, &result) ||
+                   sockaddr_set_addrinfo(&data->sa_mcast, result))
                {
                     logger(LOG_ERR, "bad address %s\n",data->mc_addr);
                     fclose(fp);
                     return ERR;
                }
-               data->sa_mcast.sin_family = AF_INET; /* FIXME: IPv6 */
-               data->sa_mcast.sin_port = htons(data->mc_port);
+               freeaddrinfo(result);
+               sockaddr_set_port(&data->sa_mcast, data->mc_port);
+
                /* verify address is multicast */
-               if (!IN_MULTICAST(ntohl(data->sa_mcast.sin_addr.s_addr)))
+               if (!sockaddr_is_multicast(&data->sa_mcast))
                {
                     logger(LOG_ERR, "bad multicast address %s\n",
-                           inet_ntoa(data->sa_mcast.sin_addr));
+                           sockaddr_print_addr(&data->sa_mcast,
+                                               addr_str, sizeof(addr_str)));
                     fclose(fp);
                     return ERR;
                }
 
                /* initialise multicast address structure */
-               data->mcastaddr.imr_multiaddr.s_addr =
-                    data->sa_mcast.sin_addr.s_addr;
-               data->mcastaddr.imr_interface.s_addr = htonl(INADDR_ANY); 
-               setsockopt(data->sockfd, IPPROTO_IP, IP_MULTICAST_TTL, 
-                          &data->mcast_ttl, sizeof(data->mcast_ttl));
+               sockaddr_get_mreq(&data->sa_mcast, &data->mcastaddr);
+               if (data->sa_mcast.ss_family == AF_INET)
+                    setsockopt(data->sockfd, IPPROTO_IP, IP_MULTICAST_TTL,
+                               &data->mcast_ttl, sizeof(data->mcast_ttl));
+               else
+                    setsockopt(data->sockfd, IPPROTO_IPV6, IPV6_MULTICAST_HOPS,
+                               &data->mcast_ttl, sizeof(data->mcast_ttl));
                
                /* set options data for OACK */
                opt_set_multicast(data->tftp_options, data->mc_addr,
@@ -660,8 +676,8 @@ int tftpd_send_file(struct thread_data *data)
                       data->mc_port, 1);
             
                /* the socket must be unconnected for multicast */
-               sa->sin_family = AF_UNSPEC;
-               connect(sockfd, (struct sockaddr *)sa, sizeof(sa));
+               sa->ss_family = AF_UNSPEC;
+               connect(sockfd, (struct sockaddr *)sa, sizeof(*sa));
 
                /* set multicast flag */
                multicast = 1;
@@ -689,7 +705,9 @@ int tftpd_send_file(struct thread_data *data)
                     if (data->trace)
                     {
                          logger(LOG_DEBUG, "sent ERROR <code: %d, msg: %s> to %s", EUNDEF,
-                                tftp_errmsg[EUNDEF], inet_ntoa(client_info->client.sin_addr));
+                                tftp_errmsg[EUNDEF],
+                                sockaddr_print_addr(&client_info->client,
+                                                    addr_str, sizeof(addr_str)));
                     }
                } while (tftpd_clientlist_next(data, &client_info) == 1);
                state = S_ABORT;
@@ -751,7 +769,8 @@ int tftpd_send_file(struct thread_data *data)
                     if (number_of_timeout > NB_OF_RETRY)
                     {
                          logger(LOG_INFO, "client (%s) not responding",
-                                inet_ntoa(client_info->client.sin_addr));
+                                sockaddr_print_addr(&client_info->client,
+                                                    addr_str, sizeof(addr_str)));
                          state = S_END;
                     }
                     else
@@ -780,8 +799,11 @@ int tftpd_send_file(struct thread_data *data)
                                       going to OACK state */
                                    logger(LOG_INFO,
                                           "Serving next client: %s:%d",
-                                          inet_ntoa(client_info->client.sin_addr),
-                                          ntohs(client_info->client.sin_port));
+                                          sockaddr_print_addr(
+                                               &client_info->client,
+                                               addr_str, sizeof(addr_str)),
+                                          sockaddr_get_port(
+                                               &client_info->client));
                                    sa = &client_info->client;
                                    state = S_SEND_OACK;
                                    break;
@@ -804,8 +826,7 @@ int tftpd_send_file(struct thread_data *data)
                     /* handle case where packet come from un unexpected client */
                     if (multicast)
                     {
-                         if ((sa->sin_port != from.sin_port) ||
-                             (sa->sin_addr.s_addr != from.sin_addr.s_addr))
+                         if (!sockaddr_equal(sa, &from))
                          {
                               /* We got an ACK from a client that is not the master client.
                                * If this is an ACK for the last block, mark this client as
@@ -815,10 +836,15 @@ int tftpd_send_file(struct thread_data *data)
                               {
                                    if (tftpd_clientlist_done(data, NULL, &from) == 1)
                                         logger(LOG_DEBUG, "client done <%s>",
-                                               inet_ntoa(client_info->client.sin_addr));
+                                               sockaddr_print_addr(
+                                                    &from, addr_str,
+                                                    sizeof(addr_str)));
                                    else
                                         logger(LOG_WARNING, "packet discarded <%s:%d>",
-                                               inet_ntoa(from.sin_addr), ntohs(from.sin_port));
+                                               sockaddr_print_addr(
+                                                    &from, addr_str,
+                                                    sizeof(addr_str)),
+                                               sockaddr_get_port(&from));
                               }
                               else
                                    /* If not, send and OACK with mc=0 to shut it up. */
@@ -837,12 +863,14 @@ int tftpd_send_file(struct thread_data *data)
                     else
                     {
                          /* check that the packet is from the current client */
-                         if (sa->sin_port != from.sin_port)
+                         if (sockaddr_get_port(sa) != sockaddr_get_port(&from))
                          {
                               if (data->checkport)
                               {
                                    logger(LOG_WARNING, "packet discarded <%s:%d>",
-                                          inet_ntoa(from.sin_addr), ntohs(from.sin_port));
+                                          sockaddr_print_addr(&from, addr_str,
+                                                              sizeof(addr_str)),
+                                          sockaddr_get_port(&from));
                                    break;
                               }
                               else
@@ -868,19 +896,21 @@ int tftpd_send_file(struct thread_data *data)
                     if (multicast)
                     {
                          /* if packet is not from the current master client */
-                         if ((sa->sin_port != from.sin_port) ||
-                              (sa->sin_addr.s_addr != from.sin_addr.s_addr))
+                         if (!sockaddr_equal(sa, &from))
                          {
                               /* mark this client done */
                               if (tftpd_clientlist_done(data, NULL, &from) == 1)
                               {
                                    if (data->trace)
                                         logger(LOG_DEBUG, "client sent ERROR, mark as done <%s>",
-                                               inet_ntoa(client_info->client.sin_addr));
+                                               sockaddr_print_addr(
+                                                    &from, addr_str,
+                                                    sizeof(addr_str)));
                               }
                               else
                                    logger(LOG_WARNING, "packet discarded <%s>",
-                                          inet_ntoa(from.sin_addr));
+                                          sockaddr_print_addr(&from, addr_str,
+                                                              sizeof(addr_str)));
                               /* current state is unchanged */
                               break;
                          }
@@ -888,12 +918,13 @@ int tftpd_send_file(struct thread_data *data)
                     else
                     {
                          /* check that the packet is from the current client */
-                         if (sa->sin_port != from.sin_port)
+                         if (sockaddr_get_port(sa) != sockaddr_get_port(&from))
                          {
                               if (data->checkport)
                               {
                                    logger(LOG_WARNING, "packet discarded <%s>",
-                                          inet_ntoa(from.sin_addr));
+                                          sockaddr_print_addr(&from, addr_str,
+                                                              sizeof(addr_str)));
                                    break;
                               }
                               else
@@ -919,7 +950,8 @@ int tftpd_send_file(struct thread_data *data)
                case GET_DISCARD:
                     /* FIXME: should we increment number_of_timeout */
                     logger(LOG_WARNING, "packet discarded <%s>",
-                           inet_ntoa(from.sin_addr));
+                           sockaddr_print_addr(&from, addr_str,
+                                               sizeof(addr_str)));
                     break;
                case ERR:
                     logger(LOG_ERR, "%s: %d: recvfrom: %s",
@@ -944,8 +976,9 @@ int tftpd_send_file(struct thread_data *data)
                     {
                          logger(LOG_INFO,
                                 "Serving next client: %s:%d",
-                                inet_ntoa(client_info->client.sin_addr),
-                                ntohs(client_info->client.sin_port));
+                                sockaddr_print_addr(&client_info->client,
+                                                    addr_str, sizeof(addr_str)),
+                                sockaddr_get_port(&client_info->client));
                          /* client is a new client structure */
                          sa =  &client_info->client;
                          /* nedd to send an oack to that client */

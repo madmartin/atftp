@@ -40,7 +40,7 @@
 #define OPT_TIMEOUT   3
 #define OPT_BLKSIZE   4
 #define OPT_MULTICAST 5
-#define OPT_NUMBER    7
+#define OPT_NUMBER    6
 
 #define OPT_SIZE     12
 #define VAL_SIZE     MAXLEN
@@ -51,5 +51,26 @@ int timeval_diff(struct timeval *res, struct timeval *t1, struct timeval *t0);
 int print_eng(double value, char *string, int size, char *format);
 inline char *Strncpy(char *to, const char *from, size_t size);
 int Gethostbyname(char *addr, struct hostent *host);
+
+char *sockaddr_print_addr(const struct sockaddr_storage *, char *, size_t);
+#define SOCKADDR_PRINT_ADDR_LEN INET6_ADDRSTRLEN
+uint16_t sockaddr_get_port(const struct sockaddr_storage *);
+void sockaddr_set_port(struct sockaddr_storage *, uint16_t);
+int sockaddr_equal(const struct sockaddr_storage *,
+                   const struct sockaddr_storage *);
+int sockaddr_equal_addr(const struct sockaddr_storage *,
+                        const struct sockaddr_storage *);
+int sockaddr_is_multicast(const struct sockaddr_storage *);
+
+union ip_mreq_storage
+{
+     struct ip_mreq v4;
+     struct ipv6_mreq v6;
+};
+void
+sockaddr_get_mreq(const struct sockaddr_storage *, union ip_mreq_storage *);
+
+int
+sockaddr_set_addrinfo(struct sockaddr_storage *ss, const struct addrinfo *ai);
 
 #endif

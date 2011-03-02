@@ -112,18 +112,20 @@ int tftp_mtftp_receive_file(struct client_data *data)
      int data_size;             /* size of data received */
      int sockfd = data->sockfd; /* just to simplify calls */
      int sock;
-     struct sockaddr_in sa;     /* a copy of data.sa_peer */
-     struct sockaddr_in from;
+     struct sockaddr_storage sa; /* a copy of data.sa_peer */
+     struct sockaddr_storage from;
+     char from_str[SOCKADDR_PRINT_ADDR_LEN];
      struct tftphdr *tftphdr = (struct tftphdr *)data->data_buffer;
      FILE *fp = NULL;           /* the local file pointer */
      int number_of_timeout = 0;
      int timeout = 0;
 
-     struct in_addr mcast_addr;
+     struct sockaddr_storage sa_mcast_group;
      int mcast_sockfd = 0;
-     struct sockaddr_in sa_mcast;
-     struct ip_mreq mreq;
-     struct hostent *host;
+     struct sockaddr_storage sa_mcast;
+     union ip_mreq_storage mreq;
+     struct addrinfo hints, *addrinfo;
+     int err;
 
      int mode = LISTEN;
      unsigned int file_bitmap[NB_BLOCK];
@@ -132,13 +134,13 @@ int tftp_mtftp_receive_file(struct client_data *data)
 
      data->file_size = 0;
      tftp_cancel = 0;
-     from.sin_addr.s_addr = 0;
+     memset(&from, 0, sizeof(from));
 
-     memset(&sa_mcast, 0, sizeof(struct sockaddr_in));
+     memset(&sa_mcast, 0, sizeof(struct sockaddr_storage));
      memset(&file_bitmap, 0, sizeof(file_bitmap));
 
      /* make sure the socket is not connected */
-     sa.sin_family = AF_UNSPEC;
+     sa.ss_family = AF_UNSPEC;
      connect(sockfd, (struct sockaddr *)&sa, sizeof(sa));
 
      /* copy sa_peer structure */
@@ -170,13 +172,14 @@ int tftp_mtftp_receive_file(struct client_data *data)
      }
      
      /* Configure multicast stuff,  look up the host */
-     host = gethostbyname(data->mtftp_mcast_ip);
      /* if valid, update s_inn structure */
-     if (host)
+     memset(&hints, 0, sizeof(hints));
+     hints.ai_socktype = SOCK_DGRAM;
+     if (!getaddrinfo(data->mtftp_mcast_ip, NULL, &hints, &addrinfo) &&
+         !sockaddr_set_addrinfo(&sa_mcast_group, addrinfo))
      {
-	  memcpy(&mcast_addr, host->h_addr_list[0],
-		 host->h_length);
-	  if (!IN_MULTICAST(ntohl(mcast_addr.s_addr)))
+          freeaddrinfo(addrinfo);
+          if (!sockaddr_is_multicast(&sa_mcast_group))
 	  {
 	       fprintf(stderr,
 		       "mtftp: bad multicast address %s\n",
@@ -196,9 +199,9 @@ int tftp_mtftp_receive_file(struct client_data *data)
 	  perror("atftp: socket");
 	  exit(1);
      }                   
-     sa_mcast.sin_family = AF_INET;
-     sa_mcast.sin_addr.s_addr = htonl(INADDR_ANY);
-     sa_mcast.sin_port = htons(data->mtftp_client_port);
+     memset(&sa_mcast, 0, sizeof(sa_mcast));
+     sa_mcast.ss_family = sa_mcast_group.ss_family;
+     sockaddr_set_port(&sa, data->mtftp_client_port);
                          
      if (bind(mcast_sockfd, (struct sockaddr *)&sa_mcast,
 	      sizeof(sa_mcast)) < 0)
@@ -206,13 +209,15 @@ int tftp_mtftp_receive_file(struct client_data *data)
 	  perror("atftp: bind");
 	  exit(1);
      }
-                         
-     mreq.imr_multiaddr.s_addr = mcast_addr.s_addr;
-     mreq.imr_interface.s_addr = htonl(INADDR_ANY); 
-
-     if (setsockopt(mcast_sockfd, IPPROTO_IP,
-		    IP_ADD_MEMBERSHIP, 
-		    &mreq, sizeof(mreq)) < 0)
+              
+     sockaddr_get_mreq(&sa_mcast_group, &mreq);
+     if (sa_mcast_group.ss_family == AF_INET)
+          err = setsockopt(mcast_sockfd, IPPROTO_IP, IP_ADD_MEMBERSHIP, 
+                           &mreq.v4, sizeof(mreq.v4));
+     else
+          err = setsockopt(mcast_sockfd, IPPROTO_IPV6, IPV6_ADD_MEMBERSHIP,
+                           &mreq.v6, sizeof(mreq.v6));
+     if (err < 0)
      {
 	  perror("atftp: setsockopt");
 	  exit(1);
@@ -228,7 +233,7 @@ int tftp_mtftp_receive_file(struct client_data *data)
 #endif
           if (tftp_cancel)
           {
-               if (from.sin_addr.s_addr == 0)
+               if (from.ss_family == 0)
                     state = S_ABORT;
                else
                {
@@ -298,7 +303,7 @@ int tftp_mtftp_receive_file(struct client_data *data)
                else
                     state = S_WAIT_PACKET;
 
-               sa.sin_port = 0; /* must be set to 0 before the fist call to
+               sockaddr_set_port(&sa, 0); /* must be set to 0 before the fist call to
                                    tftp_get_packet, but it was set before the
                                    call to tftp_send_request with the server port */
                break;
@@ -351,10 +356,10 @@ int tftp_mtftp_receive_file(struct client_data *data)
                          break;
                     }
                     /* Can only receive this error from unicast */
-                    if (sa.sin_addr.s_addr != from.sin_addr.s_addr)
+                    if (!sockaddr_equal_addr(&sa, &from))
                     {
                          fprintf(stderr, "mtftp: error packet discarded from <%s>.\n",
-                                 inet_ntoa(from.sin_addr));
+                                 sockaddr_print_addr(&from, from_str, sizeof(from_str)));
                          break;
                     }
                     /* packet is for us */
@@ -367,7 +372,7 @@ int tftp_mtftp_receive_file(struct client_data *data)
                     /* Specification state that server source IP must matches, but
                        port is not a requierement (anyway we may not know the source
                        port yet) */
-                    if (sa.sin_addr.s_addr == from.sin_addr.s_addr)
+                    if (sockaddr_equal_addr(&sa, &from))
                     {
                          if (mode != LISTEN)
                          {
@@ -380,7 +385,7 @@ int tftp_mtftp_receive_file(struct client_data *data)
                                         fprintf(stderr,
                                                 "mtftp: unexpected unicast packet from <%s>,"
                                                 " continuing\n",
-                                                inet_ntoa(from.sin_addr));
+                                                sockaddr_print_addr(&from, from_str, sizeof(from_str)));
                                    else
                                         mode = RECEIVE;
                               }
@@ -404,7 +409,7 @@ int tftp_mtftp_receive_file(struct client_data *data)
                               {
                                    fprintf(stderr,
                                            "mtftp: unexpected unicast packet from <%s>.\n",
-                                           inet_ntoa(from.sin_addr));
+                                           sockaddr_print_addr(&from, from_str, sizeof(from_str)));
                                    break;
                               }
                          }
@@ -412,7 +417,7 @@ int tftp_mtftp_receive_file(struct client_data *data)
                     else
                     {
                          fprintf(stderr, "mtftp: unexpected packet from <%s>\n",
-                                 inet_ntoa(from.sin_addr));
+                                 sockaddr_print_addr(&from, from_str, sizeof(from_str)));
                          break;
                     }
                     number_of_timeout = 0;
@@ -424,7 +429,7 @@ int tftp_mtftp_receive_file(struct client_data *data)
                        mcast IP or port */
                     number_of_timeout++;
                     fprintf(stderr, "mtftp: packet discard <%s>.\n",
-                            inet_ntoa(from.sin_addr));
+                            sockaddr_print_addr(&from, from_str, sizeof(from_str)));
                     if (number_of_timeout > NB_OF_RETRY)
                          state = S_ABORT;
                     break;
@@ -495,9 +500,15 @@ int tftp_mtftp_receive_file(struct client_data *data)
                if (fp)
                     fclose(fp);
                /* drop multicast membership */
-               if (setsockopt(mcast_sockfd, IPPROTO_IP,
-                              IP_DROP_MEMBERSHIP, 
-                              &mreq, sizeof(mreq)) < 0)
+               if (sa_mcast_group.ss_family == AF_INET)
+                    err = setsockopt(mcast_sockfd, IPPROTO_IP,
+                                     IP_DROP_MEMBERSHIP, 
+                                     &mreq.v4, sizeof(mreq.v4));
+               else
+                    err = setsockopt(mcast_sockfd, IPPROTO_IPV6,
+                                     IPV6_DROP_MEMBERSHIP,
+                                     &mreq.v6, sizeof(mreq.v6));
+               if (err < 0)
                {
                     perror("setsockopt");
                     exit(1);
