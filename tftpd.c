@@ -28,7 +28,7 @@
 #include <getopt.h>
 #include <unistd.h>
 #include <errno.h>
-#include <signal.h> 
+#include <signal.h>
 #include <pthread.h>
 #include <string.h>
 #include <pwd.h>
@@ -183,7 +183,7 @@ int main(int argc, char **argv)
           exit(1);
 
      /*
-      * Can't be started from the prompt without explicitely specifying 
+      * Can't be started from the prompt without explicitely specifying
       * the --daemon option.
       */
      if (isatty(0) && !(tftpd_daemon))
@@ -241,7 +241,7 @@ int main(int argc, char **argv)
                memset(&hints, 0, sizeof(hints));
                hints.ai_socktype = SOCK_DGRAM;
                hints.ai_flags = AI_NUMERICHOST;
-               err = getaddrinfo(tftpd_addr, tftpd_port ? NULL : "tftp",
+               err = getaddrinfo(strlen(tftpd_addr) ? tftpd_addr : NULL, tftpd_port ? NULL : "tftp",
                                  &hints, &result);
                if (err == EAI_SERVICE)
                {
@@ -364,7 +364,7 @@ int main(int argc, char **argv)
                          logger(LOG_ERR, "Failed to start mtftp server thread");
                          tftpd_mtftp_clean(mtftp_data);
                          mtftp_data = NULL;
-                    } 
+                    }
               }
           }
      }
@@ -387,7 +387,7 @@ int main(int argc, char **argv)
              is done reading the request. */
           pthread_mutex_lock(&stdin_mutex);
 
-#ifdef RATE_CONTROL          
+#ifdef RATE_CONTROL
           /* if we want to implement rate control, we sleep some time here
              so we cannot exceed the allowed thread/sec. */
           if (rate > 0)
@@ -458,7 +458,7 @@ int main(int argc, char **argv)
                new->data_buffer_size = SEGSIZE + 4;
 
                /* Allocate memory for tftp option structure. */
-               if ((new->tftp_options = 
+               if ((new->tftp_options =
                     malloc(sizeof(tftp_default_options))) == NULL)
                {
                     logger(LOG_ERR, "%s: %d: Memory allocation failed",
@@ -493,7 +493,7 @@ int main(int argc, char **argv)
                }
                new->client_info->done = 0;
                new->client_info->next = NULL;
-               
+
                /* Start a new server thread. */
                if (pthread_create(&tid, NULL, tftpd_receive_request,
                                   (void *)new) != 0)
@@ -506,7 +506,7 @@ int main(int argc, char **argv)
           else
           {
                pthread_mutex_unlock(&stdin_mutex);
-               
+
                /* Either select return after timeout of we've been killed. In the first case
                   we wait for server thread to finish, in the other we kill them */
                if (tftpd_cancel)
@@ -545,7 +545,7 @@ int main(int argc, char **argv)
      /* stop collecting stats and print them*/
      stats_end();
      stats_print();
-     
+
 #ifdef HAVE_PCRE
      /* remove allocated memory for tftpd_pcre */
      if (pcre_top)
@@ -569,7 +569,7 @@ int main(int argc, char **argv)
      exit(0);
 }
 
-/* 
+/*
  * This function handles the initial connection with a client. It reads
  * the request from stdin and then release the stdin_mutex, so the main
  * thread may listen for new clients. After that, we process options and
@@ -580,13 +580,13 @@ int main(int argc, char **argv)
 void *tftpd_receive_request(void *arg)
 {
      struct thread_data *data = (struct thread_data *)arg;
-     
+
      int retval;                /* hold return value for testing */
      int data_size;             /* returned size by recvfrom */
      char string[MAXLEN];       /* hold the string we pass to the logger */
      int num_of_threads;
      int abort = 0;             /* 1 if we need to abort because the maximum
-                                   number of threads have been reached*/ 
+                                   number of threads have been reached*/
      struct sockaddr_storage to; /* destination of client's packet */
      socklen_t len = sizeof(to);
 
@@ -598,7 +598,7 @@ void *tftpd_receive_request(void *arg)
      pthread_detach(data->tid);
 
      /* Read the first packet from stdin. */
-     data_size = data->data_buffer_size;     
+     data_size = data->data_buffer_size;
      retval = tftp_get_packet(0, -1, NULL, &data->client_info->client, NULL,
                               &to, data->timeout, &data_size,
                               data->data_buffer);
@@ -644,13 +644,13 @@ void *tftpd_receive_request(void *arg)
                                 SOCK_DGRAM, 0);
           memset(&to, 0, sizeof(to));
           to.ss_family = data->client_info->client.ss_family;
-          /* Force socket to listen on local address. Do not listen on broadcast address 255.255.255.255. 
+          /* Force socket to listen on local address. Do not listen on broadcast address 255.255.255.255.
              If the socket listens on the broadcast address, Linux tells the remote client the port
              is unreachable. This happens even if SO_BROADCAST is set in setsockopt for this socket.
-             I was unable to find a kernel option or /proc/sys flag to make the kernel pay attention to 
+             I was unable to find a kernel option or /proc/sys flag to make the kernel pay attention to
              these requests, so the workaround is to force listening on the local address. */
           if (listen_local == 1)
-          { 
+          {
                logger(LOG_INFO, "forcing socket to listen on local address");
                if (setsockopt(data->sockfd, SOL_SOCKET, SO_BROADCAST, &on, sizeof(on)) != 0) {
                   logger(LOG_ERR, "setsockopt: %s", strerror(errno));
@@ -691,7 +691,7 @@ void *tftpd_receive_request(void *arg)
                logger(LOG_DEBUG, "Creating new socket: %s:%d",
                       sockaddr_print_addr(&to, addr_str, sizeof(addr_str)),
                       sockaddr_get_port(&to));
-               
+
                /* read options from request */
                opt_parse_request(data->data_buffer, data_size,
                                  data->tftp_options);
@@ -756,7 +756,7 @@ void *tftpd_receive_request(void *arg)
                            tftp_errmsg[EBADOP]);
                stats_err_locked();
           }
-     }  
+     }
 
      /* make sure all data is sent to the network */
      if (data->sockfd)
@@ -787,7 +787,7 @@ void *tftpd_receive_request(void *arg)
      tftpd_clientlist_free(data);
 
      /* free the thread structure */
-     free(data);    
+     free(data);
 
      logger(LOG_INFO, "Server thread exiting");
      pthread_exit(NULL);
@@ -893,7 +893,7 @@ int tftpd_cmd_line_options(int argc, char **argv)
           { "help", 0, NULL, 'h' },
           { 0, 0, 0, 0 }
      };
-     
+
      while ((c = getopt_long(argc, argv, "t:r:m:v::Vh",
                              options, NULL)) != EOF)
      {
@@ -967,7 +967,7 @@ int tftpd_cmd_line_options(int argc, char **argv)
           case 'P':
                tftpd_port = (short)atoi(optarg);
                break;
-          case 'A': 
+          case 'A':
                Strncpy(tftpd_addr, optarg, MAXLEN);
                break;
           case OPT_MCAST_TTL:
@@ -1023,7 +1023,7 @@ int tftpd_cmd_line_options(int argc, char **argv)
                break;
 #ifdef HAVE_MTFTP
           case OPT_MTFTP:
-               Strncpy(mtftp_file, optarg, MAXLEN);         
+               Strncpy(mtftp_file, optarg, MAXLEN);
                break;
           case OPT_MTFTP_PORT:
                mtftp_sport = atoi(optarg);
@@ -1040,7 +1040,7 @@ int tftpd_cmd_line_options(int argc, char **argv)
                break;
           }
      }
-          
+
      /* verify that only one arguement is left */
      if (optind < argc)
           Strncpy(directory, argv[optind], MAXLEN);
@@ -1117,7 +1117,7 @@ void tftpd_log_options(void)
           logger(LOG_INFO, "  --no-source-port-checking turned on");
 }
 
-/* 
+/*
  *
  */
 int tftpd_pid_file(char *file, int action)
@@ -1140,7 +1140,7 @@ int tftpd_pid_file(char *file, int action)
                return ERR;
           }
           /* write it */
-          pid = getpid();     
+          pid = getpid();
           fprintf(fp, "%d\n", pid);
           fclose(fp);
           return OK;
