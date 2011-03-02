@@ -74,7 +74,7 @@ struct mtftp_data *tftpd_mtftp_init(char *filename)
 
      int line = 0;
      struct stat file_stat;
-     struct hostent host;
+     struct addrinfo hints, *addrinfo;
 
      /* open file */
      if ((fp = fopen(filename, "r")) == NULL)
@@ -208,13 +208,15 @@ struct mtftp_data *tftpd_mtftp_init(char *filename)
                continue;
           } 
           /* verify IP is valid */
-          if (Gethostbyname(thread->mcast_ip, &host) == OK)
+          memset(&hints, 0, sizeof(hints));
+          hints.ai_socktype = SOCK_DGRAM;
+          if (!getaddrinfo(thread->mcast_ip, thread->client_port,
+                           &hints, &addrinfo) &&
+              !sockaddr_set_addrinfo(&thread->sa_mcast, addrinfo))
           {
-               thread->sa_mcast.sin_family = host.h_addrtype;
-               memcpy(&thread->sa_mcast.sin_addr.s_addr,
-                      host.h_addr_list[0], host.h_length);
-               thread->sa_mcast.sin_port = htons(thread->mcast_port);
-               if (!IN_MULTICAST(ntohl(thread->sa_mcast.sin_addr.s_addr)))
+               thread->mcast_port = sockaddr_get_port(&thread->sa_mcast);
+               freeaddrinfo(addrinfo);
+               if (!sockaddr_is_multicast(&thread->sa_mcast))
                {
                     logger(LOG_WARNING, "mtftp: bad multicast address %s\n",
                            thread->mcast_ip);
@@ -345,11 +347,9 @@ void *tftpd_mtftp_server(void *arg)
      struct mtftp_thread *thread;
 
      int sockfd;
-     struct sockaddr_in sa;
+     struct sockaddr_storage sa;
      socklen_t len = sizeof(struct sockaddr);
-#ifdef HAVE_WRAP
-     char client_addr[16];
-#endif
+     char addr_str[SOCKADDR_PRINT_ADDR_LEN];
      int retval;                /* hold return value for testing */
      int data_size;             /* returned size by recvfrom */
      char filename[MAXLEN];
@@ -357,14 +357,13 @@ void *tftpd_mtftp_server(void *arg)
 
      logger(LOG_NOTICE, "mtftp main server thread started");
 
-     /* initialise sockaddr_in structure */
+     /* initialise sockaddr_storage structure */
      memset(&sa, 0, sizeof(sa));
-     sa.sin_family = AF_INET;
-     sa.sin_addr.s_addr = htonl(INADDR_ANY);
-     sa.sin_port = htons(data->server_port);
+     sa.ss_family = AF_INET; /* FIXME */
+     sockaddr_set_port(&sa, data->server_port);
 
      /* open the socket */
-     if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) == 0)
+     if ((sockfd = socket(sa.ss_family, SOCK_DGRAM, 0)) == 0)
      {
           logger(LOG_ERR, "mtftp: can't open socket");
           pthread_exit(NULL);
@@ -396,12 +395,11 @@ void *tftpd_mtftp_server(void *arg)
 #ifdef HAVE_WRAP
                /* Verify the client has access. We don't look for the name but
                   rely only on the IP address for that. */
-               inet_ntop(AF_INET, &sa.sin_addr,
-                         client_addr, sizeof(client_addr));
-               if (hosts_ctl("in.tftpd", STRING_UNKNOWN, client_addr,
+               sockaddr_print_addr(&sa, addr_str, sizeof(addr_str));
+               if (hosts_ctl("in.tftpd", STRING_UNKNOWN, addr_str,
                              STRING_UNKNOWN) == 0)
                {
-                    logger(LOG_ERR, "mtftp: connection refused from %s", client_addr);
+                    logger(LOG_ERR, "mtftp: connection refused from %s", addr_str);
                     continue;
                }
 #endif
@@ -415,7 +413,8 @@ void *tftpd_mtftp_server(void *arg)
                if (retval != GET_RRQ)
                {
                     logger(LOG_WARNING, "unsupported request <%d> from %s",
-                           retval, inet_ntoa(sa.sin_addr));
+                           retval,
+                           sockaddr_print_addr(&sa, addr_str, sizeof(addr_str)));
                     tftp_send_error(sockfd, &sa, EBADOP, data->data_buffer, data->data_buffer_size);
                     if (data->trace)
                          logger(LOG_DEBUG, "sent ERROR <code: %d, msg: %s>", EBADOP,
@@ -425,7 +424,7 @@ void *tftpd_mtftp_server(void *arg)
                else
                {
                     logger(LOG_NOTICE, "Serving %s to %s:%d", filename,
-                           inet_ntoa(sa.sin_addr), ntohs(sa.sin_port));
+                           sockaddr_print_addr(&sa, addr_str, sizeof(addr_str)));
                     if (data->trace)
                          logger(LOG_DEBUG, "received RRQ <%s>", string);
                }
@@ -453,7 +452,7 @@ void *tftpd_mtftp_server(void *arg)
                     continue;
                }
                /* copy client info for server */
-               memcpy(&thread->sa_in, &sa, sizeof(struct sockaddr_in));
+               memcpy(&thread->sa_in, &sa, sizeof(struct sockaddr_storage));
                /* open a socket for client communication */
                if ((thread->sockfd = socket(AF_INET, SOCK_DGRAM, 0)) == 0)
                {
@@ -462,7 +461,7 @@ void *tftpd_mtftp_server(void *arg)
                }
                getsockname(sockfd, (struct sockaddr *)&(sa), &len);
                //memset(&sa, 0, sizeof(sa));
-               sa.sin_port = 0;
+               sockaddr_set_port(&sa, 0);
                /* bind the socket to the tftp port  */
                if (bind(thread->sockfd, (struct sockaddr*)&sa, sizeof(sa)) < 0)
                {
@@ -472,10 +471,13 @@ void *tftpd_mtftp_server(void *arg)
                getsockname(thread->sockfd, (struct sockaddr *)&(sa), &len);
 
                /* configure multicast socket */
-               thread->mcastaddr.imr_multiaddr.s_addr = thread->sa_mcast.sin_addr.s_addr;
-               thread->mcastaddr.imr_interface.s_addr = htonl(INADDR_ANY);
-               setsockopt(thread->sockfd, IPPROTO_IP, IP_MULTICAST_TTL,
-                          &data->mcast_ttl, sizeof(data->mcast_ttl));
+               sockaddr_get_mreq(&thread->sa_mcast, &thread->mcastaddr);
+               if (thread->sa_mcast.ss_family == AF_INET)
+                    setsockopt(thread->sockfd, IPPROTO_IP, IP_MULTICAST_TTL,
+                               &data->mcast_ttl, sizeof(data->mcast_ttl));
+               else
+                    setsockopt(thread->sockfd, IPPROTO_IPV6, IPV6_MULTICAST_HOPS,
+                               &data->mcast_ttl, sizeof(data->mcast_ttl));
 
                /* give server thread access to mtftp options */
                thread->mtftp_data = data;
@@ -511,8 +513,9 @@ void *tftpd_mtftp_send_file(void *arg)
      int data_size;
 
      struct mtftp_thread *data = (struct mtftp_thread *)arg;
-     struct sockaddr_in *sa = &data->sa_in;
-     struct sockaddr_in from;
+     struct sockaddr_storage *sa = &data->sa_in;
+     struct sockaddr_storage from;
+     char addr_str[SOCKADDR_PRINT_ADDR_LEN];
      int sockfd = data->sockfd;
 
      struct tftphdr *tftphdr = (struct tftphdr *)data->data_buffer;
@@ -591,7 +594,8 @@ void *tftpd_mtftp_send_file(void *arg)
                     if (number_of_timeout > NB_OF_RETRY)
                     {
                          logger(LOG_INFO, "client (%s) not responding",
-                                inet_ntoa(data->sa_in.sin_addr));
+                                sockaddr_print_addr(&data->sa_in, addr_str,
+                                                    sizeof(addr_str)));
                          state = S_END;
                          break;
                     }
@@ -599,14 +603,13 @@ void *tftpd_mtftp_send_file(void *arg)
                     state = timeout_state;
                     break;
                case GET_ACK:
-                    if (sa->sin_port != from.sin_port)
+                    if (sockaddr_get_port(sa) != sockaddr_get_port(&from))
                     {
                          logger(LOG_WARNING, "packet discarded");
                          break;
                     }
                     /* handle case where packet come from un unexpected client */
-                    if ((sa->sin_port == from.sin_port) &&
-                        (sa->sin_addr.s_addr == from.sin_addr.s_addr))
+                    if (sockaddr_equal(sa, &from))
                     {
                          /* The ACK is from the exected client */
                          number_of_timeout = 0;
@@ -623,14 +626,13 @@ void *tftpd_mtftp_send_file(void *arg)
                     }
                     break;
                case GET_ERROR:
-                    if (sa->sin_port != from.sin_port)
+                    if (sockaddr_get_port(sa) != sockaddr_get_port(&from))
                     {
                          logger(LOG_WARNING, "packet discarded");
                          break;
                     }
                     /* handle case where packet come from un unexpected client */
-                    if ((sa->sin_port == from.sin_port) &&
-                        (sa->sin_addr.s_addr == from.sin_addr.s_addr))
+                    if (sockaddr_equal(sa, &from))
                     {
                          /* Got an ERROR from the current master client */
                          Strncpy(string, tftphdr->th_msg,

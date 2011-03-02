@@ -57,13 +57,13 @@ struct mtftp_thread {
      FILE *fp;
 
      int sockfd;
-     struct sockaddr_in sa_in;
-     struct sockaddr_in sa_client;
+     struct sockaddr_storage sa_in;
+     struct sockaddr_storage sa_client;
 
      int mcast_sockfd;
      int mcast_port;
-     struct sockaddr_in sa_mcast;
-     struct ip_mreq mcastaddr;
+     struct sockaddr_storage sa_mcast;
+     union ip_mreq_storage mcastaddr;
 
      char *data_buffer;
      int data_buffer_size;

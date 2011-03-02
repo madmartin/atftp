@@ -16,6 +16,7 @@ SUBDIRS          = . test
 DIST_SUBDIRS     = $(SUBDIRS)
 CLEANFILES       = *~
 DISTCLEANFILES   = libtool config.status
+AM_CPPFLAGS      = -D_GNU_SOURCE
 
 man_MANS         = atftp.1 atftpd.8
 dist_scripts     = autogen.sh
@@ -32,7 +33,7 @@ atftp_SOURCES    = tftp.c tftp_io.c logger.c options.c tftp_def.c tftp_file.c \
 		   argz.c tftp_mtftp.c
 
 sbin_PROGRAMS    = atftpd
-atftpd_LDADD     = $(LIBPTHREAD) $(LIBWRAP) $(LIBPCRE)
+atftpd_LDADD     = $(LIBWRAP) $(LIBPTHREAD) $(LIBPCRE)
 atftpd_SOURCES   = tftpd.c logger.c options.c stats.c tftp_io.c tftp_def.c \
                    tftpd_file.c tftpd_list.c tftpd_mcast.c argz.c tftpd_pcre.c \
 		   tftpd_mtftp.c

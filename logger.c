@@ -56,7 +56,15 @@ void open_logger(char *ident, char *filename, int priority)
           log_ident = "unset";
 
      if (filename)
+     {
           log_filename = strdup(filename);
+          if (!strcmp(filename, "-"))
+          {
+               log_fd = STDOUT_FILENO;
+               log_fp = fdopen(log_fd, "a");
+               return;
+          }
+     }
      else
      {
           openlog(log_ident, LOG_PID, LOG_DAEMON);

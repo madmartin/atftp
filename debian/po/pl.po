@@ -1,37 +1,34 @@
-# translation of po-debconf template to German
 #
 #    Translators, if you are not familiar with the PO format, gettext
 #    documentation is worth reading, especially sections dedicated to
 #    this format, e.g. by running:
 #         info -n '(gettext)PO Files'
 #         info -n '(gettext)Header Entry'
+#
 #    Some information specific to po-debconf are available at
 #            /usr/share/doc/po-debconf/README-trans
-#         or http://www.debian.org/intl/l10n/po-debconf/README-trans#
+#         or http://www.debian.org/intl/l10n/po-debconf/README-trans
+#
 #    Developers do not need to manually edit POT or PO files.
 #
-# Jens Nachtigall <nachtigall@web.de>, 2004.
-# Matthias Julius <mdeb@julius-net.net>, 2006.
 msgid ""
 msgstr ""
-"Project-Id-Version: atftp 0.7.dfsg-1\n"
+"Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: ldrolez@debian.org\n"
 "POT-Creation-Date: 2006-10-02 00:46+0200\n"
-"PO-Revision-Date: 2006-11-23 01:10-0500\n"
-"Last-Translator: Matthias Julius <mdeb@julius-net.net>\n"
-"Language-Team: German <debian-l10n-german@lists.debian.org>\n"
-"Language: de\n"
+"PO-Revision-Date: 2004-12-28 16:34+0100\n"
+"Last-Translator: Bartosz Fenski <fenio@o2.pl>\n"
+"Language-Team: Polish <pddp@debian.linux.org.pl>\n"
+"Language: pl\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=iso-8859-2\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: KBabel 1.11.4\n"
-"Plural-Forms:  nplurals=2; plural=(n != 1);\n"
 
 #. Type: boolean
 #. Description
 #: ../atftpd.templates:1001
 msgid "Should the server be started by inetd?"
-msgstr "Soll der Server von inetd gestartet werden?"
+msgstr "Czy serwer ma byæ uruchamiany przez inetd?"
 
 #. Type: boolean
 #. Description
@@ -41,55 +38,52 @@ msgid ""
 "incoming connections by itself. The latter is only recommend for very high "
 "usage server."
 msgstr ""
-"atftpd kann durch den Hauptserver inetd oder als Daemon gestartet werden, um "
-"so selbst externe Verbindungsaufnahmen zu verwalten. Letzteres ist nur bei "
-"sehr stark genutzten Servern empfehlenswert."
+"atftpd mo¿e byæ uruchamiany przez superserwer inetd lub mo¿e pracowaæ jako "
+"demon i samemu akceptowaæ po³±czenia. Drugie rozwi±zanie jest zalecane w "
+"przypadku intensywnego wykorzystywania."
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:2001
 msgid "Server timeout:"
-msgstr "Server-Limit fÃ¼r ZeitÃ¼berschreitung (engl. Â»server timeoutÂ«)."
+msgstr "Limit czasu odpowiedzi na ¿±dania:"
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:2001
 msgid "How many seconds the main thread waits before exiting."
-msgstr "Die Zeit in Sekunden, die der Haupt-Thread vor einem Abbruch abwartet."
+msgstr "Ilo¶æ sekund oczekiwania g³ównego w±tku zanim zostanie zatrzymany."
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:3001
 msgid "Retry timeout:"
-msgstr ""
-"Server-Limit fÃ¼r ZeitÃ¼berschreitung bei neuerlichem Versuch (engl. Â»Retry "
-"timeoutÂ«)."
+msgstr "Limit czasu potwierdzenia:"
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:3001
 msgid "How many seconds to wait for a reply before retransmitting a packet."
 msgstr ""
-"Die Zeit in Sekunden, die der Server verstreichen lÃ¤sst, bevor das zuletzt "
-"gesendete Paket erneut Ã¼bertragen wird."
+"Ilo¶æ sekund oczekiwania na odpowied¼ przed ponown± transmisj± pakietu."
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:4001
 msgid "Maximum number of threads:"
-msgstr "Maximale Thread-Anzahl:"
+msgstr "Maksymalna ilo¶æ w±tków:"
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:4001
 msgid "Maximum number of concurrent threads that can be running."
-msgstr "Die maximale Anzahl gleichzeitig laufender Threads."
+msgstr "Maksymalna ilo¶æ jednocze¶nie uruchomionych w±tków."
 
 #. Type: select
 #. Description
 #: ../atftpd.templates:5001
 msgid "Verbosity level:"
-msgstr "Niveau der Redseligkeit:"
+msgstr "Poziom gadatliwo¶ci:"
 
 #. Type: select
 #. Description
@@ -98,51 +92,52 @@ msgid ""
 "Level of logging. 7 logs everything including debug logs. 1 will log only "
 "the system critical logs. 5 (LOG_NOTICE) is the default value."
 msgstr ""
-"IntensitÃ¤t des Protokollierens. 7 protokolliert alles inklusive der Â»debugÂ«-"
-"Meldungen. 1 protokolliert lediglich die systemkritischen Meldungen. 5 "
-"(LOG_NOTICE) ist der Standardwert."
+"Poziom rejestrowania. 7 rejestruje wszystko, ³±cznie z komunikatami "
+"diagnostycznymi. 1 bêdzie rejestrowa³ jedynie wydarzenia krytyczne dla "
+"systemu. 5 (LOG_NOTICE) jest warto¶ci± domy¶ln±."
 
 #. Type: boolean
 #. Description
 #: ../atftpd.templates:6001
 msgid "Enable 'timeout' support?"
-msgstr "Aktivieren der ZeitÃ¼berschreitungs-UnterstÃ¼tzung (engl. Â»timeoutÂ«)?"
+msgstr "W³±czyæ obs³ugê 'limitu czasu'?"
 
 #. Type: boolean
 #. Description
 #: ../atftpd.templates:7001
 msgid "Enable 'tsize' support?"
-msgstr "Aktivieren der Â»tsizeÂ«-UnterstÃ¼tzung?"
+msgstr "W³±czyæ obs³ugê 'tsize'?"
 
 #. Type: boolean
 #. Description
 #: ../atftpd.templates:8001
 msgid "Enable 'block size' support?"
-msgstr "Aktivieren der Â»block sizeÂ«-UnterstÃ¼tzung?"
+msgstr "W³±czyæ obs³ugê 'block size'?"
 
 #. Type: boolean
 #. Description
 #: ../atftpd.templates:9001
 msgid "Enable multicast support?"
-msgstr "Multicast-UnterstÃ¼tzung aktivieren?"
+msgstr "W³±czyæ obs³ugê multiemisji?"
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:10001
+#, fuzzy
 msgid "TTL for multicast packets:"
-msgstr "TTL fÃ¼r Multicast-Pakete:"
+msgstr "TTL dla pakietów multiemisji"
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:11001
 msgid "Port to listen for tftp request:"
-msgstr "Port, der fÃ¼r tftp-Anfragen Ã¼berwacht werden soll:"
+msgstr "Port nas³uchiwania na ¿±dania tftp:"
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:12001
 msgid "Port range for multicast file transfer:"
-msgstr "Portbereich fÃ¼r Multicast-DateiÃ¼bertragungen:"
+msgstr "Zakres portów dla multiemisji plików:"
 
 #. Type: string
 #. Description
@@ -151,15 +146,15 @@ msgid ""
 "Multicast transfer will use any available port in a given set. For example, "
 "\"2000-2003, 3000\" allow atftpd to use port 2000 to 2003 and 3000."
 msgstr ""
-"Multicast-Transfers werden jeden verfÃ¼gbaren Port aus der angegebenen "
-"Auswahl verwenden. Die Angabe Â»2000-2003, 3000Â« erlaubt atftpd "
-"beispielsweise, die Ports 2000 bis 2003 sowie 3000 zu benutzen."
+"Multiemisja plików skorzysta z jakiegokolwiek wolnego portu z podanego "
+"przedzia³u. Przyk³adowo \"2000-2003, 3000\" pozwoli atftpd u¿yæ portu 3000 "
+"oraz portów z przedzia³u 2000-2003."
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:13001
 msgid "Address range for multicast transfer:"
-msgstr "Adressbereich fÃ¼r den Multicast-Transfer:"
+msgstr "Zakres adresów dla multiemisji:"
 
 #. Type: string
 #. Description
@@ -168,14 +163,14 @@ msgid ""
 "Multicast transfer will use any available addresses from a given set of "
 "addresses. Syntax is \"a.b.c.d-d,a.b.c.d,...\""
 msgstr ""
-"Multicast-Transfers werden jede verfÃ¼gbare Adresse aus der angegebenen "
-"Auswahl verwenden. Die Syntax lautet Â»a.b.c.d-d,a.b.c.d,...Â«"
+"Multiemisja plików skorzysta z jakiegokolwiek adresu spo¶ród podanych. "
+"Sk³adnia \"a.b.c.d-d,a.b.c.d,...\""
 
 #. Type: boolean
 #. Description
 #: ../atftpd.templates:14001
 msgid "Log to file instead of syslog?"
-msgstr "In eine Datei anstatt Ã¼ber syslog protokollieren?"
+msgstr "Rejestrowaæ zdarzenia do pliku zamiast do sysloga?"
 
 #. Type: boolean
 #. Description
@@ -184,15 +179,14 @@ msgid ""
 "If your server does intensive tftp file serving, it is a good idea to  "
 "accept here. That will avoid cluttering your syslog with tftpd logs."
 msgstr ""
-"Falls Ihr Server viel bzw. oft Dateien mittels tftp bereitstellt, ist es "
-"eine gute Idee, hier zuzustimmen. Dadurch wird Ihr syslog nicht mit tftp-"
-"Meldungen Ã¼berladen."
+"Je¶li Twój serwer jest mocno obci±¿ony, aktywacja tej mo¿liwo¶ci jest "
+"zalecana. Dziêki temu zdarzenia tftpd nie zapchaj± Twojego sysloga."
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:15001
 msgid "Log file:"
-msgstr "Logdatei:"
+msgstr "Plik zdarzeñ:"
 
 #. Type: string
 #. Description
@@ -201,15 +195,14 @@ msgid ""
 "A file where atftpd will write its logs. This file will be made writable for "
 "the user 'nobody' and group 'nogroup'."
 msgstr ""
-"Eine Datei, in die atftpd seine Log-Meldungen schreibt. Diese Datei wird fÃ¼r "
-"den Benutzer Â»nobodyÂ« und die Gruppe Â»nogroupÂ« mit Schreibzugriff versehen "
-"werden."
+"Plik do którego atftpd bêdzie zapisywa³ zdarzenia. Plik bêdzie posiada³ "
+"uprawnienia do zapisu przez u¿ytkownika 'nobody' i grupê 'nogroup'."
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:16001
 msgid "Base directory:"
-msgstr "Basisverzeichnis:"
+msgstr "Podstawowy katalog:"
 
 #. Type: string
 #. Description
@@ -218,5 +211,5 @@ msgid ""
 "The directory tree from where atftpd can serve files. That directory must be "
 "world readable."
 msgstr ""
-"Der Verzeichnisbaum, aus dem atftpd Dateien zur VerfÃ¼gung stellen kann. "
-"Dieses Verzeichnis muss fÃ¼r alle Benutzer lesbar sein."
+"Drzewo katalogów z których atftpd bêdzie móg³ serwowaæ pliki. Katalog musi "
+"mieæ prawa odczytu dla wszystkich."

@@ -1,37 +1,26 @@
-# translation of po-debconf template to German
+# Vietnamese translation for atftp.
+# Copyright © 2005 Free Software Foundation, Inc.
+# Clytie Siddall <clytie@riverland.net.au>, 2005.
 #
-#    Translators, if you are not familiar with the PO format, gettext
-#    documentation is worth reading, especially sections dedicated to
-#    this format, e.g. by running:
-#         info -n '(gettext)PO Files'
-#         info -n '(gettext)Header Entry'
-#    Some information specific to po-debconf are available at
-#            /usr/share/doc/po-debconf/README-trans
-#         or http://www.debian.org/intl/l10n/po-debconf/README-trans#
-#    Developers do not need to manually edit POT or PO files.
-#
-# Jens Nachtigall <nachtigall@web.de>, 2004.
-# Matthias Julius <mdeb@julius-net.net>, 2006.
 msgid ""
 msgstr ""
-"Project-Id-Version: atftp 0.7.dfsg-1\n"
+"Project-Id-Version: atftp 0.7-8\n"
 "Report-Msgid-Bugs-To: ldrolez@debian.org\n"
 "POT-Creation-Date: 2006-10-02 00:46+0200\n"
-"PO-Revision-Date: 2006-11-23 01:10-0500\n"
-"Last-Translator: Matthias Julius <mdeb@julius-net.net>\n"
-"Language-Team: German <debian-l10n-german@lists.debian.org>\n"
-"Language: de\n"
+"PO-Revision-Date: 2005-06-12 12:09+0930\n"
+"Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
+"Language-Team: Vietnamese <gnomevi-list@lists.sourceforge.net>\n"
+"Language: vi\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: KBabel 1.11.4\n"
-"Plural-Forms:  nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=1; plural=0\n"
 
 #. Type: boolean
 #. Description
 #: ../atftpd.templates:1001
 msgid "Should the server be started by inetd?"
-msgstr "Soll der Server von inetd gestartet werden?"
+msgstr "Trình inetd nên khởi chạy trình hỗ trợ này không?"
 
 #. Type: boolean
 #. Description
@@ -41,55 +30,51 @@ msgid ""
 "incoming connections by itself. The latter is only recommend for very high "
 "usage server."
 msgstr ""
-"atftpd kann durch den Hauptserver inetd oder als Daemon gestartet werden, um "
-"so selbst externe Verbindungsaufnahmen zu verwalten. Letzteres ist nur bei "
-"sehr stark genutzten Servern empfehlenswert."
+"Trình siêu hỗ trợ inetd có thể khởi chạy trình atftpd, hoặc trình atftpd có "
+"thể khởi chạy là trình nền (daemon) nên tự nó quản lý mọi kết nối đến vào. "
+"Chỉ khuyên tùy chọn thứ hai khi trình hỗ trợ bận lắm."
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:2001
 msgid "Server timeout:"
-msgstr "Server-Limit für Zeitüberschreitung (engl. »server timeout«)."
+msgstr "Thời hạn trình hỗ trợ:"
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:2001
 msgid "How many seconds the main thread waits before exiting."
-msgstr "Die Zeit in Sekunden, die der Haupt-Thread vor einem Abbruch abwartet."
+msgstr "Mạch chính sẽ đời số giây này trước khi thoát."
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:3001
 msgid "Retry timeout:"
-msgstr ""
-"Server-Limit für Zeitüberschreitung bei neuerlichem Versuch (engl. »Retry "
-"timeout«)."
+msgstr "Thời hạn thử lại:"
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:3001
 msgid "How many seconds to wait for a reply before retransmitting a packet."
-msgstr ""
-"Die Zeit in Sekunden, die der Server verstreichen lässt, bevor das zuletzt "
-"gesendete Paket erneut übertragen wird."
+msgstr "Số giây sẽ chờ trả lời trước khi truyền lại gói tin."
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:4001
 msgid "Maximum number of threads:"
-msgstr "Maximale Thread-Anzahl:"
+msgstr "Số mạch tối đa:"
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:4001
 msgid "Maximum number of concurrent threads that can be running."
-msgstr "Die maximale Anzahl gleichzeitig laufender Threads."
+msgstr "Số tối đa mạch có chạy đồng thời."
 
 #. Type: select
 #. Description
 #: ../atftpd.templates:5001
 msgid "Verbosity level:"
-msgstr "Niveau der Redseligkeit:"
+msgstr "Mức độ chi tiết:"
 
 #. Type: select
 #. Description
@@ -98,51 +83,52 @@ msgid ""
 "Level of logging. 7 logs everything including debug logs. 1 will log only "
 "the system critical logs. 5 (LOG_NOTICE) is the default value."
 msgstr ""
-"Intensität des Protokollierens. 7 protokolliert alles inklusive der »debug«-"
-"Meldungen. 1 protokolliert lediglich die systemkritischen Meldungen. 5 "
-"(LOG_NOTICE) ist der Standardwert."
+"Mức độ ghi lưu dữ liệu. Mức độ 7 sẽ ghi lưu mọi dữ liệu gồm bản ghi gỡ lỗi. "
+"Mức độ 1 sẽ chỉ ghi lưu những bản ghi hệ thống nghiệm trọng. Giá trị mặc "
+"định là 5 (LOG_NOTICE) [ghi thông báo]."
 
 #. Type: boolean
 #. Description
 #: ../atftpd.templates:6001
 msgid "Enable 'timeout' support?"
-msgstr "Aktivieren der Zeitüberschreitungs-Unterstützung (engl. »timeout«)?"
+msgstr "Hiệu lực hỗ trợ «thời hạn» không?"
 
 #. Type: boolean
 #. Description
 #: ../atftpd.templates:7001
 msgid "Enable 'tsize' support?"
-msgstr "Aktivieren der »tsize«-Unterstützung?"
+msgstr "Hiệu lực hỗ trợ «t-cỡ» không?"
 
 #. Type: boolean
 #. Description
 #: ../atftpd.templates:8001
 msgid "Enable 'block size' support?"
-msgstr "Aktivieren der »block size«-Unterstützung?"
+msgstr "Hiệu lực hỗ trợ «cỡ khối» không?"
 
 #. Type: boolean
 #. Description
 #: ../atftpd.templates:9001
 msgid "Enable multicast support?"
-msgstr "Multicast-Unterstützung aktivieren?"
+msgstr "Hiệu lực hỗ trợ «truyền một-nhiều» không?"
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:10001
+#, fuzzy
 msgid "TTL for multicast packets:"
-msgstr "TTL für Multicast-Pakete:"
+msgstr "Thời gian sóng cho gói tin truyền một-nhiều"
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:11001
 msgid "Port to listen for tftp request:"
-msgstr "Port, der für tftp-Anfragen überwacht werden soll:"
+msgstr "Cổng cần lắng nghe yêu cầu tftp:"
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:12001
 msgid "Port range for multicast file transfer:"
-msgstr "Portbereich für Multicast-Dateiübertragungen:"
+msgstr "Phạm vị cổng để truyền tập tin một-nhiều:"
 
 #. Type: string
 #. Description
@@ -151,15 +137,15 @@ msgid ""
 "Multicast transfer will use any available port in a given set. For example, "
 "\"2000-2003, 3000\" allow atftpd to use port 2000 to 2003 and 3000."
 msgstr ""
-"Multicast-Transfers werden jeden verfügbaren Port aus der angegebenen "
-"Auswahl verwenden. Die Angabe »2000-2003, 3000« erlaubt atftpd "
-"beispielsweise, die Ports 2000 bis 2003 sowie 3000 zu benutzen."
+"Truyền một-nhiều sẽ sử dụng bất cứ cổng sẵn sàng nào trong một bộ đã cho. "
+"Lấy thí dụ, «2000-2003, 3000» cho phép trình atftpd sử dụng các cổng từ 2000 "
+"đến 2003 và cổng 3000 đều."
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:13001
 msgid "Address range for multicast transfer:"
-msgstr "Adressbereich für den Multicast-Transfer:"
+msgstr "Phạm vị địa chỉ để truyền một-nhiều:"
 
 #. Type: string
 #. Description
@@ -168,14 +154,15 @@ msgid ""
 "Multicast transfer will use any available addresses from a given set of "
 "addresses. Syntax is \"a.b.c.d-d,a.b.c.d,...\""
 msgstr ""
-"Multicast-Transfers werden jede verfügbare Adresse aus der angegebenen "
-"Auswahl verwenden. Die Syntax lautet »a.b.c.d-d,a.b.c.d,...«"
+"Truyền một-nhiều sẽ sử dụng bất cứ địa chỉ sẵn sàng nào trong một bộ đã cho. "
+"Cú pháp là:\n"
+"a.b.c.d-d,a.b.c.d,..."
 
 #. Type: boolean
 #. Description
 #: ../atftpd.templates:14001
 msgid "Log to file instead of syslog?"
-msgstr "In eine Datei anstatt über syslog protokollieren?"
+msgstr "Ghi lưu vào tập tin thay vào «syslog» (bản ghi hệ thống) không?"
 
 #. Type: boolean
 #. Description
@@ -184,15 +171,15 @@ msgid ""
 "If your server does intensive tftp file serving, it is a good idea to  "
 "accept here. That will avoid cluttering your syslog with tftpd logs."
 msgstr ""
-"Falls Ihr Server viel bzw. oft Dateien mittels tftp bereitstellt, ist es "
-"eine gute Idee, hier zuzustimmen. Dadurch wird Ihr syslog nicht mit tftp-"
-"Meldungen überladen."
+"Nếu trình phục vụ của bạn cung cấp dịch vụ tập tin rất nhiều thì đệ nghị bạn "
+"chấp nhận tùy chọn này. Làm như thế sẽ tránh làm bản ghi hệ thống bừa bộn "
+"các bản ghi «tftpd»."
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:15001
 msgid "Log file:"
-msgstr "Logdatei:"
+msgstr "Tập tin bản ghi:"
 
 #. Type: string
 #. Description
@@ -201,15 +188,14 @@ msgid ""
 "A file where atftpd will write its logs. This file will be made writable for "
 "the user 'nobody' and group 'nogroup'."
 msgstr ""
-"Eine Datei, in die atftpd seine Log-Meldungen schreibt. Diese Datei wird für "
-"den Benutzer »nobody« und die Gruppe »nogroup« mit Schreibzugriff versehen "
-"werden."
+"Tập tin nơi trình «atftpd» sẽ ghi dữ liệu theo dõi của nó. Tập tin này sẽ "
+"cho phép người dùng «không ai» và nhóm «không nhóm» ghi vào nó."
 
 #. Type: string
 #. Description
 #: ../atftpd.templates:16001
 msgid "Base directory:"
-msgstr "Basisverzeichnis:"
+msgstr "Thư mục cơ bản:"
 
 #. Type: string
 #. Description
@@ -218,5 +204,5 @@ msgid ""
 "The directory tree from where atftpd can serve files. That directory must be "
 "world readable."
 msgstr ""
-"Der Verzeichnisbaum, aus dem atftpd Dateien zur Verfügung stellen kann. "
-"Dieses Verzeichnis muss für alle Benutzer lesbar sein."
+"Cây thư mục nơi trình «atftpd» có thể cung cấp dịch vụ tập tin từ nó. Thư "
+"mục ấy phải cho phép thế giới đọc nó."

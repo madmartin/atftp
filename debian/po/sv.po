@@ -1,142 +1,92 @@
+# Translators, if you are not familiar with the PO format, gettext
+# documentation is worth reading, especially sections dedicated to
+# this format, e.g. by running:
+# info -n '(gettext)PO Files'
+# info -n '(gettext)Header Entry'
+# Some information specific to po-debconf are available at
+# /usr/share/doc/po-debconf/README-trans
+# or http://www.debian.org/intl/l10n/po-debconf/README-trans
+# Developers do not need to manually edit POT or PO files.
+# , fuzzy
 #
-#    Translators, if you are not familiar with the PO format, gettext
-#    documentation is worth reading, especially sections dedicated to
-#    this format, e.g. by running:
-#         info -n '(gettext)PO Files'
-#         info -n '(gettext)Header Entry'
 #
-#    Some information specific to po-debconf are available at
-#            /usr/share/doc/po-debconf/README-trans
-#         or http://www.debian.org/intl/l10n/po-debconf/README-trans
-#
-#    Developers do not need to manually edit POT or PO files.
-#
-#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-02-17 18:54-0500\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"Project-Id-Version: atftp 0.7-9\n"
+"Report-Msgid-Bugs-To: ldrolez@debian.org\n"
+"POT-Creation-Date: 2006-10-02 00:46+0200\n"
+"PO-Revision-Date: 2008-10-25 01:31+0100\n"
+"Last-Translator: Martin Bagge <brother@bsnet.se>\n"
+"Language-Team: Swedish <sv@li.org>\n"
+"Language: sv\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=ISO-8859-1\n"
+"Content-Type: text/plain; charset=iso-8859-1\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Type: boolean
 #. Description
-#: ../atftpd.templates:4
-#, fuzzy
-msgid "Do you want to configure the server?"
-msgstr "Vill du konfigurera servern?"
-
-#. Type: boolean
-#. Description
-#: ../atftpd.templates:4
-#, fuzzy
-msgid ""
-"atftpd can have various parameters passed to it. These parameters can "
-"optimize performances for servers that do heavy work. The default values are "
-"suitable for most purposes."
-msgstr ""
-"atfptd kan använda ett antal parametrar. Dessa parametrar kan optimera "
-"prestandan för servrar som är hårt belastade. De förvalda värdena är "
-"användbara för de flesta syften."
-
-#. Type: boolean
-#. Description
-#: ../atftpd.templates:12
+#: ../atftpd.templates:1001
 msgid "Should the server be started by inetd?"
-msgstr ""
+msgstr "Ska servern startas via inetd?"
 
 #. Type: boolean
 #. Description
-#: ../atftpd.templates:12
+#: ../atftpd.templates:1001
 msgid ""
 "atftpd can be started by the inetd superserver or as a daemon and handle "
 "incoming connections by itself. The latter is only recommend for very high "
 "usage server."
 msgstr ""
-
-#. Type: string
-#. Default
-#: ../atftpd.templates:19
-msgid "300"
-msgstr ""
+"atftpd kan startas av inetd superserver eller som en daemon och hantera "
+"inkommande anslutningar på egen hand. Den senare rekommenderas för de system "
+"som kräver hög prestanda."
 
 #. Type: string
 #. Description
-#: ../atftpd.templates:20
-#, fuzzy
-msgid "Server timeout."
-msgstr "Tid till avslut."
+#: ../atftpd.templates:2001
+msgid "Server timeout:"
+msgstr "Tid till avslut:"
 
 #. Type: string
 #. Description
-#: ../atftpd.templates:20
-#, fuzzy
+#: ../atftpd.templates:2001
 msgid "How many seconds the main thread waits before exiting."
 msgstr "Hur många sekunder huvudtråden väntar innan den avslutas."
 
 #. Type: string
-#. Default
-#: ../atftpd.templates:25
-msgid "5"
-msgstr ""
+#. Description
+#: ../atftpd.templates:3001
+msgid "Retry timeout:"
+msgstr "Tid mellan försök:"
 
 #. Type: string
 #. Description
-#: ../atftpd.templates:26
-#, fuzzy
-msgid "Retry timeout."
-msgstr "Tid mellan försök."
-
-#. Type: string
-#. Description
-#: ../atftpd.templates:26
-#, fuzzy
+#: ../atftpd.templates:3001
 msgid "How many seconds to wait for a reply before retransmitting a packet."
 msgstr ""
 "Hur många sekunder vi väntar på ett svar innan vi skickar paketet igen."
 
 #. Type: string
-#. Default
-#: ../atftpd.templates:31
-msgid "100"
-msgstr ""
+#. Description
+#: ../atftpd.templates:4001
+msgid "Maximum number of threads:"
+msgstr "Maximalt antal trådar:"
 
 #. Type: string
 #. Description
-#: ../atftpd.templates:32
-#, fuzzy
-msgid "Maximum number of threads."
-msgstr "Maximalt antal trådar."
-
-#. Type: string
-#. Description
-#: ../atftpd.templates:32
-#, fuzzy
+#: ../atftpd.templates:4001
 msgid "Maximum number of concurrent threads that can be running."
 msgstr "Maximalt antal trådar som kan köras parallellt."
 
 #. Type: select
-#. Choices
-#: ../atftpd.templates:37
-msgid "7 (LOG_DEBUG), 6 (LOG_INFO), 5 (LOG_NOTICE), 4 (LOG_WARNING)"
-msgstr ""
+#. Description
+#: ../atftpd.templates:5001
+msgid "Verbosity level:"
+msgstr "Förklaringsnivå:"
 
 #. Type: select
 #. Description
-#: ../atftpd.templates:39
-#, fuzzy
-msgid "Verbosity level."
-msgstr "Förklaringsnivå."
-
-#. Type: select
-#. Description
-#: ../atftpd.templates:39
-#, fuzzy
+#: ../atftpd.templates:5001
 msgid ""
 "Level of logging. 7 logs everything including debug logs. 1 will log only "
 "the system critical logs. 5 (LOG_NOTICE) is the default value."
@@ -146,142 +96,117 @@ msgstr ""
 
 #. Type: boolean
 #. Description
-#: ../atftpd.templates:46
-msgid "Enable 'timeout' support"
-msgstr ""
+#: ../atftpd.templates:6001
+msgid "Enable 'timeout' support?"
+msgstr "Aktivera 'timeout' stöd?"
 
 #. Type: boolean
 #. Description
-#: ../atftpd.templates:51
-msgid "Enable 'tsize' support"
-msgstr ""
+#: ../atftpd.templates:7001
+msgid "Enable 'tsize' support?"
+msgstr "Aktivera 'tsize' stöd?"
 
 #. Type: boolean
 #. Description
-#: ../atftpd.templates:56
-msgid "Enable 'block size' support"
-msgstr ""
+#: ../atftpd.templates:8001
+msgid "Enable 'block size' support?"
+msgstr "Aktivera 'block size' stöd?"
 
 #. Type: boolean
 #. Description
-#: ../atftpd.templates:61
-msgid "Enable 'multicast' support"
-msgstr ""
-
-#. Type: string
-#. Default
-#: ../atftpd.templates:65
-msgid "69"
-msgstr ""
+#: ../atftpd.templates:9001
+msgid "Enable multicast support?"
+msgstr "Aktivera multicast stöd?"
 
 #. Type: string
 #. Description
-#: ../atftpd.templates:66
-msgid "Port to listen for tftp request"
-msgstr ""
-
-#. Type: string
-#. Default
-#: ../atftpd.templates:70
-msgid "1758"
-msgstr ""
+#: ../atftpd.templates:10001
+msgid "TTL for multicast packets:"
+msgstr "TTL för multicast-paket"
 
 #. Type: string
 #. Description
-#: ../atftpd.templates:71
-msgid "Port range for multicast file transfer"
-msgstr ""
+#: ../atftpd.templates:11001
+msgid "Port to listen for tftp request:"
+msgstr "Port för att lyssna på tftp anslutningar:"
 
 #. Type: string
 #. Description
-#: ../atftpd.templates:71
+#: ../atftpd.templates:12001
+msgid "Port range for multicast file transfer:"
+msgstr "Portrymd för multicast-överföringar:"
+
+#. Type: string
+#. Description
+#: ../atftpd.templates:12001
 msgid ""
 "Multicast transfer will use any available port in a given set. For example, "
 "\"2000-2003, 3000\" allow atftpd to use port 2000 to 2003 and 3000."
 msgstr ""
-
-#. Type: string
-#. Default
-#: ../atftpd.templates:77
-msgid "239.255.0.0-255"
-msgstr ""
+"Multicast-överföring kommer att använda de tillgängliga portar som angivets. "
+"Till exempel, \"2000-2003, 3000\" kommer atftpd att använda portarna 2000 "
+"till 2003 och 3000."
 
 #. Type: string
 #. Description
-#: ../atftpd.templates:78
-msgid "Address range for multicast transfer"
-msgstr ""
+#: ../atftpd.templates:13001
+msgid "Address range for multicast transfer:"
+msgstr "Adressrymd för multicast-överföring:"
 
 #. Type: string
 #. Description
-#: ../atftpd.templates:78
+#: ../atftpd.templates:13001
 msgid ""
 "Multicast transfer will use any available addresses from a given set of "
 "addresses. Syntax is \"a.b.c.d-d,a.b.c.d,...\""
 msgstr ""
+"Multicast-överföring kommer att använda adresser ur adressrymden som "
+"specificeras enligt följande, \"a.b.c.d-d,a.b.c.d,...\""
 
 #. Type: boolean
 #. Description
-#: ../atftpd.templates:85
-#, fuzzy
+#: ../atftpd.templates:14001
 msgid "Log to file instead of syslog?"
 msgstr "Logga till fil istället för syslog?"
 
 #. Type: boolean
 #. Description
-#: ../atftpd.templates:85
-#, fuzzy
+#: ../atftpd.templates:14001
 msgid ""
-"If your server does intensive tftp file serving, it is a good idea to say "
-"yes. That will avoid to clutter your syslog with tftpd logs."
+"If your server does intensive tftp file serving, it is a good idea to  "
+"accept here. That will avoid cluttering your syslog with tftpd logs."
 msgstr ""
-"Om servern är mycket intensivt trafikerad är det en god idé att säga ja. Det "
-"undviker att skräpa ner systemloggen med atftpd-loggar."
-
-#. Type: string
-#. Default
-#: ../atftpd.templates:91
-msgid "/var/log/atftpd.log"
-msgstr ""
+"Om din server utför många tftpöverföringar rekomenderas att du väljer detta "
+"alternativ för att undvika att fylla syslog med tftpd-information."
 
 #. Type: string
 #. Description
-#: ../atftpd.templates:92
-#, fuzzy
-msgid "Log file."
-msgstr "Loggfil."
+#: ../atftpd.templates:15001
+msgid "Log file:"
+msgstr "Loggfil:"
 
 #. Type: string
 #. Description
-#: ../atftpd.templates:92
-#, fuzzy
+#: ../atftpd.templates:15001
 msgid ""
-"A file where atftpd write its logs. This file will be made writable for the "
-"user 'nobody' and group 'nogroup'."
+"A file where atftpd will write its logs. This file will be made writable for "
+"the user 'nobody' and group 'nogroup'."
 msgstr ""
-"Filen som atftpd skriver sin logg till. Denna fil kommer göras skrivbar för "
+"Filen som atftpd skriver sin logg till. Filen kommer att vara skribar av "
 "användaren 'nobody' och gruppen 'nogroup'."
 
 #. Type: string
-#. Default
-#: ../atftpd.templates:98
-msgid "/tftpboot"
-msgstr ""
+#. Description
+#: ../atftpd.templates:16001
+msgid "Base directory:"
+msgstr "Hemkatalog:"
 
 #. Type: string
 #. Description
-#: ../atftpd.templates:99
-#, fuzzy
-msgid "Base directory."
-msgstr "Rotkatalog."
-
-#. Type: string
-#. Description
-#: ../atftpd.templates:99
-#, fuzzy
+#: ../atftpd.templates:16001
 msgid ""
 "The directory tree from where atftpd can serve files. That directory must be "
 "world readable."
 msgstr ""
-"Katalogträdet som atftpd tillhandahåller filer från. Katalogen måste vara "
-"läsbar för alla."
+"Katalogträdet med filer som atftpd erbjuder. Katalogen måste vara läsbar av "
+"alla."
