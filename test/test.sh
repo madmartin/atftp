@@ -5,7 +5,7 @@ ATFTPD=../atftpd
 HOST=localhost
 PORT=2001
 
-DIRECTORY=/tmp
+DIRECTORY=$(mktemp -d /tmp/atftp-test.XXXXXX)
 
 SERVER_ARGS="--daemon --no-fork --logfile=/dev/stdout --port=$PORT --verbose=6 $DIRECTORY"
 SERVER_LOG=./atftpd.log
@@ -151,6 +151,7 @@ test_blocksize 256
 test_blocksize 1428
 test_blocksize 16000
 test_blocksize 64000
+test_blocksize 65464
 test_blocksize 65465
 
 #
@@ -162,9 +163,9 @@ $ATFTP --option "tsize" --trace --get -r $READ_2K -l /dev/null $HOST $PORT 2> ou
 TSIZE=`grep "OACK <tsize:" out | sed -e "s/[^0-9]//g"`
 if [ "$TSIZE" != "2048" ]; then
     echo "ERROR (server report $TSIZE bytes but it should be 2048)"
+    ERROR=1
 else
     echo "OK"
-    ERROR=1
 fi
 
 #
@@ -287,10 +288,16 @@ fi
 stop_server
 
 # cleanup
-rm -f out*
-rm -f $SERVER_LOG $DIRECTORY/$READ_0 $DIRECTORY/$READ_511 $DIRECTORY/$READ_512
-rm -f $DIRECTORY/$READ_2K $DIRECTORY/$READ_BIG $DIRECTORY/$READ_128K $DIRECTORY/$READ_1M
-rm -f $DIRECTORY/$WRITE
+if [ "$1" == "--nocleanup" ]; then  
+    echo "No Cleanup, keep files from test in $DIRECTORY"
+else
+    echo "Cleanup test files"
+    rm -f out*
+    rm -f $SERVER_LOG $DIRECTORY/$READ_0 $DIRECTORY/$READ_511 $DIRECTORY/$READ_512
+    rm -f $DIRECTORY/$READ_2K $DIRECTORY/$READ_BIG $DIRECTORY/$READ_128K $DIRECTORY/$READ_1M
+    rm -f $DIRECTORY/$WRITE
+    rmdir $DIRECTORY
+fi
 
 # Exit with proper error status
 if [ $ERROR -eq 1 ]; then
