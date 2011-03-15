@@ -36,21 +36,21 @@ AC_ARG_ENABLE(libwrap,
 	[  --enable-libwrap        enable libwrap support in server],
 	[ case "${enableval}" in
 		yes) libwrap=true ;;
-		no) libwrap=flase ;;
+		no) libwrap=false ;;
 	  esac], [libwrap=true])
 
 AC_ARG_ENABLE(libpcre,
 	[  --enable-libpcre        enable libpcre support in server],
 	[ case "${enableval}" in
 		yes) libpcre=true ;;
-		no) libpcre=flase ;;
+		no) libpcre=false ;;
 	  esac], [libpcre=true])
 
 AC_ARG_ENABLE(mtftp,
 	[  --enable-mtftp          enable mtftp support in server],
 	[ case "${enableval}" in
 		yes) mtftp=true ;;
-		no) mtftp=flase ;;
+		no) mtftp=false ;;
 	  esac], [mtftp=true])
 
 AC_ARG_ENABLE(debug,
