@@ -39,6 +39,7 @@ struct tftp_opt tftp_default_options[OPT_NUMBER] = {
      { "timeout", "5", 0, 1 },  /* 2348, 2349, 2090.  */
      { "blksize", "512", 0, 1 }, /* This is the default option */
      { "multicast", "", 0, 1 }, /* structure */
+     { "password", "", 0, 1},   /* password */
      { "", "", 0, 0}
 };
 

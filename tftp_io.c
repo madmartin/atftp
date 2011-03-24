@@ -70,10 +70,13 @@ int tftp_send_request(int socket, struct sockaddr_storage *sa, short type,
                break;
           if (tftp_options[i].enabled && tftp_options[i].specified)
           {
-               Strncpy(data_buffer + buf_index, tftp_options[i].option,
-                       data_buffer_size - buf_index);
-               buf_index += strlen(tftp_options[i].option);
-               buf_index++;    
+               if (i != OPT_PASSWORD)
+               {
+                   Strncpy(data_buffer + buf_index, tftp_options[i].option,
+                           data_buffer_size - buf_index);
+                   buf_index += strlen(tftp_options[i].option);
+                   buf_index++;    
+               }
                Strncpy(data_buffer + buf_index, tftp_options[i].value,
                        data_buffer_size - buf_index);
                buf_index += strlen(tftp_options[i].value);

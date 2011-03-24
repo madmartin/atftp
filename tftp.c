@@ -544,6 +544,10 @@ int set_option(int argc, char **argv)
                fprintf(stderr, "  multicast: enabled\n");
           else
                fprintf(stderr, "  multicast: disabled\n");
+          if (data.tftp_options[OPT_PASSWORD].specified)
+               fprintf(stderr, "   password: enabled\n");
+          else
+               fprintf(stderr, "   password: disabled\n");
           return ERR;
      }
      /* if disabling an option */
@@ -990,6 +994,7 @@ int tftp_cmd_line_options(int argc, char **argv)
           { "put", 0, NULL, 'p'},
           { "local-file", 1, NULL, 'l'},
           { "remote-file", 1, NULL, 'r'},
+          { "password", 1, NULL, 'P'},
           { "tftp-timeout", 1, NULL, 'T'},
           { "mode", 1, NULL, 'M'},
           { "option", 1, NULL, 'O'},
@@ -1012,7 +1017,7 @@ int tftp_cmd_line_options(int argc, char **argv)
      };
 
      /* Support old argument until 0.8 */
-     while ((c = getopt_long(argc, argv, /*"gpl:r:Vh"*/ "gpl:r:Vht:b:sm",
+     while ((c = getopt_long(argc, argv, /*"gpl:r:Vh"*/ "gpl:r:Vht:b:smP:",
                              options, &option_index)) != EOF)
      {
           switch (c)
@@ -1046,6 +1051,11 @@ int tftp_cmd_line_options(int argc, char **argv)
                }
                else
                     action = PUT;
+               break;
+          case 'P':
+               snprintf(string, sizeof(string), "option password %s", optarg);
+               make_arg(string, &ac, &av);
+               process_cmd(ac, av);
                break;
           case 'l':
                interactive = 0;
@@ -1202,6 +1212,7 @@ void tftp_usage(void)
              "  -p, --put                : put file\n"
              "  -l, --local-file <file>  : local file name\n"
              "  -r, --remote-file <file> : remote file name\n"
+             "  -P, --password <password>: specify password (Linksys extension)\n"
              "  --tftp-timeout <value>   : delay before retransmission, client side\n"
 #if 0
              "  t, --timeout <value>      : delay before retransmission, "

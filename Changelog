@@ -1,4 +1,7 @@
 atftp (0.7.xx)
+  * Merged patch from Gentoo distribution: 
+    add support for proprietary password extension necessary for transferring
+    files to linksys routers (atftp client)
   * Added patch from Gentoo bug #322601: client fails for filenames containing
     spaces
   * Listening Address configuration fixed
