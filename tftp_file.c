@@ -483,7 +483,11 @@ int tftp_receive_file(struct client_data *data)
                          /* we need to open a new socket for multicast */
                          if ((mcast_sockfd = socket(sa_mcast_group.ss_family,
                                                     SOCK_DGRAM, 0))<0)
+			 {
+			      fprintf(stderr,
+				      "atftp: unable to open socket\n");
                               exit(1);
+			 }
 
                          memset(&sa_mcast, 0, sizeof(sa_mcast));
                          sa_mcast.ss_family = sa_mcast_group.ss_family;
