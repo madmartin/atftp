@@ -113,13 +113,19 @@ int tftpd_mcast_parse_opt(char *addr, char *ports)
      while (1)
      {
 	  if (parse_ip(addr, &ip) !=  OK)
+	  {
+	       printf("unable to parse IP address\n");
 	       return ERR;
+          }
 	  if (ip == NULL)
 	       return OK;
 	  while (1)
 	  {
 	       if (parse_port(ports, &port) != OK)
+               {
+		    printf("unable to parse port\n");
 		    return ERR;
+               }
 	       if (port == NULL)
 		    break;
 	       /* add this ip/port to the tid list */

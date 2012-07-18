@@ -1054,7 +1054,10 @@ int tftpd_cmd_line_options(int argc, char **argv)
           strcat(directory, "/");
      /* build multicast address/port range */
      if (tftpd_mcast_parse_opt(mcast_addr, mcast_port) != OK)
+     {
+          printf("Failed to parse multicast options\n");
           exit(1);
+     }
      return OK;
 }
 
