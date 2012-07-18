@@ -308,7 +308,12 @@ int main(int argc, char **argv)
           if (pidfile)
           {
                if (tftpd_pid_file(pidfile, 1) != OK)
+               {
+                    logger(LOG_ERR,
+                           "atftpd: can't write our pid file: %s.",
+                           pidfile);
                     exit(1);
+               }
                /* to be able to remove it later */
                chown(pidfile, user->pw_uid, group->gr_gid);
           }
