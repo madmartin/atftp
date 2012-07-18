@@ -188,6 +188,8 @@ int main(int argc, char **argv)
       */
      if (isatty(0) && !(tftpd_daemon))
      {
+	  printf("Can't be started from the prompt without explicitely "
+		 "specifying the --daemon option.\n");
           tftpd_usage();
           exit(1);
      }
