@@ -920,6 +920,9 @@ int tftpd_cmd_line_options(int argc, char **argv)
                     logging_level = atoi(optarg);
                else
                     logging_level++;
+
+	       if (logging_level > LOG_DEBUG)
+		   logging_level = LOG_DEBUG;
 #ifdef HAVE_WRAP
                allow_severity = logging_level;
                deny_severity = logging_level;
