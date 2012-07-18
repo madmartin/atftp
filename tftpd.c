@@ -180,7 +180,10 @@ int main(int argc, char **argv)
       * verify the command line arguments
       */
      if (tftpd_cmd_line_options(argc, argv) == ERR)
+     {
+          printf("Can't parse the command line options.\n");
           exit(1);
+     }
 
      /*
       * Can't be started from the prompt without explicitely specifying
