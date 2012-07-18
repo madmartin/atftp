@@ -1179,7 +1179,7 @@ void tftpd_usage(void)
             "  --no-tsize                 : disable 'tsize' from RFC2349\n"
             "  --no-blksize               : disable 'blksize' from RFC2348\n"
             "  --no-multicast             : disable 'multicast' from RFC2090\n"
-            "  --logfile <file>           : logfile to log logs to ;-)\n"
+            "  --logfile <file>           : logfile to log logs to ;-) (use - for stdout)\n"
             "  --pidfile <file>           : write PID to this file\n"
             "  --listen-local             : force listen on local network address\n"
             "  --daemon                   : run atftpd standalone (no inetd)\n"
