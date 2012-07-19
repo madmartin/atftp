@@ -2,11 +2,15 @@
 
 PLATFORM
 Makefile
+Makefile.in
+aclocal.m4
+configure
 autom4te.cache
 stamp-h1
 config.h
 config.log
 config.status
+test/Makefile.in
 
 *.o
 atftp
