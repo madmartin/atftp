@@ -1,4 +1,6 @@
 atftp (0.7.xx)
+  * Merged patches to improve debugging and warning messages
+    (from Florian Fainelli <f.fainelli@gmail.com>)
   * Merged patch from Gentoo distribution: 
     add support for proprietary password extension necessary for transferring
     files to linksys routers (atftp client)
