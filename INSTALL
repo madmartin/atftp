@@ -21,7 +21,7 @@ atftp from source, here's the procedure.
     make
     gcc
   You may also need these:
-    cvs
+    git
     automake	(tested using version 1.7 and 1.8)
     autoconf 	(tested with version 2.50)
 
@@ -35,7 +35,7 @@ atftp from source, here's the procedure.
   make                          (actually build the programs)
   su -c 'make install'          (install files (default location is /usr)
 
- 3.2) From cvs checkout
+ 3.2) From git checkout
 
   ./autogen.sh                  (this generate the configure script)
   ./configure [options]         (this generate makefiles)
