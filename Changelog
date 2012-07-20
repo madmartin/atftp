@@ -1,4 +1,5 @@
 atftp (0.7.xx)
+  * Fix missing default port from Ubuntu bug #972834 
   * Merged patches to improve debugging and warning messages
     (from Florian Fainelli <f.fainelli@gmail.com>)
   * Merged patch from Gentoo distribution: 

@@ -65,7 +65,7 @@ int listen_local = 0;
 
 int tftpd_daemon = 0;           /* By default we are started by inetd */
 int tftpd_daemon_no_fork = 0;   /* For who want a false daemon mode */
-short tftpd_port = 0;           /* Port atftpd listen to */
+short tftpd_port = 69;          /* Port atftpd listen to */
 char tftpd_addr[MAXLEN] = "";   /* IP address atftpd binds to */
 
 int tftpd_cancel = 0;           /* When true, thread must exit. pthread
