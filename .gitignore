@@ -11,7 +11,14 @@ config.h
 config.log
 config.status
 test/Makefile.in
-
+redhat/atftp.spec
 *.o
 atftp
 atftpd
+*.tar.gz
+config.guess
+config.sub
+depcomp
+install-sh
+missing
+

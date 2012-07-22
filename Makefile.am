@@ -15,7 +15,7 @@ AUTOMAKE_OPTIONS = foreign
 SUBDIRS          = . test
 DIST_SUBDIRS     = $(SUBDIRS)
 CLEANFILES       = *~
-DISTCLEANFILES   = libtool config.status
+DISTCLEANFILES   = libtool PLATFORM
 AM_CPPFLAGS      = -D_GNU_SOURCE
 
 man_MANS         = atftp.1 atftpd.8
