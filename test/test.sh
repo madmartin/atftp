@@ -104,7 +104,7 @@ function test_get_put() {
     # because in some case the server may not have time to close the file
     # before the file compare.
     sleep 1
-    check_file $DIRECTORY/$WRITE out.bin
+    check_file $DIRECTORY/${READFILE} $DIRECTORY/$WRITE
     rm -f $DIRECTORY/$WRITE out.bin
 }
 
