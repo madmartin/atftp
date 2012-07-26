@@ -1087,26 +1087,26 @@ int tftp_cmd_line_options(int argc, char **argv)
                break;
 #if 1
           case 't':
-               fprintf(stderr, "--timeout deprecate, use --option instead\n");
+               fprintf(stderr, "--timeout deprecated, use --option instead\n");
                snprintf(string, sizeof(string), "option timeout %s", optarg);
                make_arg(string, &ac, &av);
                process_cmd(ac, av);
                break;
           case 'b':
-               fprintf(stderr, "--blksize deprecate, use --option instead\n");
+               fprintf(stderr, "--blksize deprecated, use --option instead\n");
                snprintf(string, sizeof(string), "option blksize %s", optarg);
                make_arg(string, &ac, &av);
                process_cmd(ac, av);
                break;
           case 's':
-               fprintf(stderr, "--tsize deprecate, use --option instead\n");
+               fprintf(stderr, "--tsize deprecated, use --option instead\n");
                snprintf(string, sizeof(string), "option tsize");
                make_arg(string, &ac, &av);
                process_cmd(ac, av);
                break;
           case 'm':
                fprintf(stderr,
-                       "--multicast deprecate, use --option instead\n");
+                       "--multicast deprecated, use --option instead\n");
                snprintf(string, sizeof(string), "option multicast");
                make_arg(string, &ac, &av);
                process_cmd(ac, av);
