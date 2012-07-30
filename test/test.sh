@@ -250,6 +250,21 @@ else
     ERROR=1
 fi
 
+# Test the behaviour when the server is not reached
+# we assume there is no tftp server listening on 127.0.0.77
+# Returncode must be 255
+echo
+echo -n "Test returncode after timeout when server is unreachable ... "
+$ATFTP --put --local-file "$DIRECTORY/$READ_2K" 127.0.0.77 2>out
+Retval=$?
+echo -n "Returncode $Retval: "
+if [ $Retval -eq 255 ]; then
+	echo "OK"
+else
+	echo "ERROR"
+	ERROR=1
+fi
+
 # Test that timeout is well set to 1 sec and works.
 # we need atftp compiled with debug support to do that
 # Restart the server with full logging
@@ -301,8 +316,9 @@ then
     SERVER_ARGS="$OLD_ARGS"
     start_server
 else
-    echo "Detailed timeout test could not be done"
-    echo "Compile atftp with debug support for more timeout testing"
+	echo
+	echo "Detailed timeout test could not be done"
+	echo "Compile atftp with debug support for more timeout testing"
 fi
 
 #
@@ -392,3 +408,5 @@ else
     echo "OK"
     exit 0
 fi
+
+# vim: ts=4:sw=4:autoindent

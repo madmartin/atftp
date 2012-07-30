@@ -644,7 +644,7 @@ int put_file(int argc, char **argv)
      fsync(data.sockfd);
      close(data.sockfd);
 
-     return OK;
+     return tftp_result;
 }
 
 /*

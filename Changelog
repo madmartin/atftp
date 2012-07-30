@@ -1,4 +1,6 @@
 atftp (0.7.xx)
+  * Fix Debian Bug #575831
+    atftp: error return value when tftp put file
   * Fix missing default port from Ubuntu bug #972834 
   * Merged patches to improve debugging and warning messages
     (from Florian Fainelli <f.fainelli@gmail.com>)
