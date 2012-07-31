@@ -12,13 +12,21 @@ ATFTPD=../atftpd
 HOST=localhost
 PORT=2001
 
-DIRECTORY=$(mktemp -d /tmp/atftp-test.XXXXXX)
+: ${TEMPDIR:="/tmp"}
+DIRECTORY=$(mktemp -d ${TEMPDIR}/atftp-test.XXXXXX)
 
 SERVER_ARGS="--daemon --no-fork --logfile=/dev/stdout --port=$PORT --verbose=6 $DIRECTORY"
 SERVER_LOG=./atftpd.log
 
 # Number of parallel clients for high server load test
 NBSERVER=200
+
+# Some Tests need root access (e.g. to mount a tempfs filesystem)
+# and need sudo for this, so maybe the script asks for a password
+#
+# if these tests should be performed then start test.sh like this:
+#   WANT_INTERACTIVE_TESTS=yes ./test.sh
+: ${WANT_INTERACTIVE_TESTS:=no}
 
 ERROR=0
 
@@ -263,6 +271,55 @@ if [ $Retval -eq 255 ]; then
 else
 	echo "ERROR"
 	ERROR=1
+fi
+
+# Test behaviour when disk is full
+#
+# Preparation: create a small ramdisk
+# we need the "sudo" command for that
+if [[ $WANT_INTERACTIVE_TESTS = "yes" ]]; then
+	echo
+	SMALL_FS_DIR="${DIRECTORY}/small_fs"
+	echo "Start disk-out-of-space tests, prepare filesystem in ${SMALL_FS_DIR}  ..."
+	mkdir "$SMALL_FS_DIR"
+	if [[ $(id -u) -eq 0 ]]; then
+		Sudo=""
+	else
+		Sudo="sudo"
+		echo "trying to mount ramdisk, the sudo command may ask for a password on the next line!"
+	fi
+	$Sudo mount -t tmpfs shm "$SMALL_FS_DIR" -o size=500k
+	echo "disk space before test: $(LANG=C df -k -P "${SMALL_FS_DIR}" | grep "${SMALL_FS_DIR}" | awk '{print $4}') kiB"
+	echo
+	echo -n "Put 1M file to server: "
+	$ATFTP --put --local-file "$DIRECTORY/$READ_1M" --remote-file "small_fs/fillup.bin" $HOST $PORT
+	Retval=$?
+	sleep 1
+	echo -n "Returncode $Retval: "
+	if [ $Retval -ne 0 ]; then
+		echo "OK"
+	else
+		echo "ERROR"
+		ERROR=1
+	fi
+	rm "$DIRECTORY/small_fs/fillup.bin"
+	echo
+	echo -n "Get 1M file from server: "
+	$ATFTP --get --remote-file "$READ_1M" --local-file "$DIRECTORY/small_fs/fillup-put.bin" $HOST $PORT
+	Retval=$?
+	sleep 1
+	echo -n "Returncode $Retval: "
+	if [ $Retval -ne 0 ]; then
+		echo "OK"
+	else
+		echo "ERROR"
+		ERROR=1
+	fi
+	$Sudo umount "$SMALL_FS_DIR"
+	rmdir "$SMALL_FS_DIR"
+else
+	echo
+	echo "Disk-out-of-space tests not performed, start with \"WANT_INTERACTIVE_TESTS=yes ./test.sh\" if desired." 
 fi
 
 # Test that timeout is well set to 1 sec and works.

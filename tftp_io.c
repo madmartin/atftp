@@ -446,8 +446,10 @@ int tftp_file_write(FILE *fp, char *data_buffer, int data_buffer_size, int block
      if (!convert)
      {
 	  /* Simple case, just seek and write */
-          fseek(fp, (block_number - 1) * data_buffer_size, SEEK_SET);
-          data_size = fwrite(data_buffer, 1, data_size, fp);
+          if (fseek(fp, (block_number - 1) * data_buffer_size, SEEK_SET) == 0)
+              data_size = fwrite(data_buffer, 1, data_size, fp);
+          else
+              data_size = 0;
           return data_size;
      }
      else

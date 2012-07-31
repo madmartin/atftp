@@ -544,7 +544,7 @@ int tftp_receive_file(struct client_data *data)
                             data->local_file);
                     tftp_send_error(sockfd, &sa, ENOSPACE, data->data_buffer,
                                     data->data_buffer_size);
-                    state = S_END;
+                    state = S_ABORT;
                     break;
                }
                data->file_size += data_size;
