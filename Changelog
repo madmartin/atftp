@@ -1,4 +1,6 @@
 atftp (0.7.xx)
+  * atftpd.c: Fixed a potential DoS bug (introduced by the IPv6 patch)
+    thankfully taken from Debian atftpd-0.7.dfsg-11
   * Fix Debian Bug #613582 and #258998
     atftpd: does not reply properly when there's more than 1 interface
   * Fix Debian Bug #622840

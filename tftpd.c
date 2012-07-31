@@ -612,6 +612,10 @@ void *tftpd_receive_request(void *arg)
      retval = tftp_get_packet(0, -1, NULL, &data->client_info->client, NULL,
                               &to, data->timeout, &data_size,
                               data->data_buffer);
+     if (retval == ERR) {
+          logger(LOG_NOTICE, "Invalid request in 1st packet");
+          abort = 1;
+     }
 
      /* now unlock stdin */
      pthread_mutex_unlock(&stdin_mutex);
