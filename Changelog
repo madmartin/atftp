@@ -1,4 +1,6 @@
 atftp (0.7.xx)
+  * Fix Debian Bug #622840
+    atftpd: Forgets port if both --port and --bind-address are used
   * Fix Debian Bug #606969
     atftp exits with no error after a get when disk is full
   * Fix Debian Bug #575831

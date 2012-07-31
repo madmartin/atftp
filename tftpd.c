@@ -273,8 +273,8 @@ int main(int argc, char **argv)
           {
                memset(&sa, 0, sizeof(sa));
                sa.ss_family = AF_INET;
-               sockaddr_set_port(&sa, tftpd_port);
           }
+          sockaddr_set_port(&sa, tftpd_port);
 
           /* open the socket */
           if ((sockfd = socket(sa.ss_family, SOCK_DGRAM, 0)) == 0)
