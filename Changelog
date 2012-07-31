@@ -1,4 +1,6 @@
 atftp (0.7.xx)
+  * Fix Debian Bug #613582 and #258998
+    atftpd: does not reply properly when there's more than 1 interface
   * Fix Debian Bug #622840
     atftpd: Forgets port if both --port and --bind-address are used
   * Fix Debian Bug #606969

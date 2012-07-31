@@ -652,8 +652,14 @@ void *tftpd_receive_request(void *arg)
           /* open a socket for client communication */
           data->sockfd = socket(data->client_info->client.ss_family,
                                 SOCK_DGRAM, 0);
-          memset(&to, 0, sizeof(to));
+          /*memset(&to, 0, sizeof(to));*/
+          /* PSz 11 Aug 2011  http://bugs.debian.org/613582
+           * Do not nullify "to", preserve IP address from tftp_get_packet().
+           * Only set port to 0, as we used to in v6.
+           * (Why set ss_family, was not it right already??)
+           */
           to.ss_family = data->client_info->client.ss_family;
+          sockaddr_set_port(&to, 0);
           /* Force socket to listen on local address. Do not listen on broadcast address 255.255.255.255.
              If the socket listens on the broadcast address, Linux tells the remote client the port
              is unreachable. This happens even if SO_BROADCAST is set in setsockopt for this socket.
