@@ -9,17 +9,18 @@
 ATFTP=../atftp
 ATFTPD=../atftpd
 
-HOST=localhost
-PORT=2001
+#
+# set some default values for variables used in this script
+# if the variables are already set when this script is started
+# those values are used
+#
 
+: ${HOST:=localhost}
+: ${PORT:=2001}
 : ${TEMPDIR:="/tmp"}
-DIRECTORY=$(mktemp -d ${TEMPDIR}/atftp-test.XXXXXX)
-
-SERVER_ARGS="--daemon --no-fork --logfile=/dev/stdout --port=$PORT --verbose=6 $DIRECTORY"
-SERVER_LOG=./atftpd.log
 
 # Number of parallel clients for high server load test
-NBSERVER=200
+: ${NBSERVER:=200}
 
 # Some Tests need root access (e.g. to mount a tempfs filesystem)
 # and need sudo for this, so maybe the script asks for a password
@@ -28,12 +29,17 @@ NBSERVER=200
 #   WANT_INTERACTIVE_TESTS=yes ./test.sh
 : ${WANT_INTERACTIVE_TESTS:=no}
 
+
+
+#####################################################################################
+DIRECTORY=$(mktemp -d ${TEMPDIR}/atftp-test.XXXXXX)
+
+SERVER_ARGS="--daemon --no-fork --logfile=/dev/stdout --port=$PORT --verbose=6 $DIRECTORY"
+SERVER_LOG=./atftpd.log
+
 ERROR=0
 
-# changedir to where this script is
-cd $(dirname "$0")
-
-# verify that atftp and atftpd are runnable
+# verify that atftp and atftpd are executable
 if [ -x "$ATFTP" ]; then
 	echo "Using atftp from build directory"
 else
