@@ -37,7 +37,10 @@ atftp from source, here's the procedure.
 
  3.2) From git checkout
 
-  ./autogen.sh                  (this generate the configure script)
+  git clone git://atftp.git.sourceforge.net/gitroot/atftp/atftp
+                                (this creates a clone of the git repository)
+  cd atftp			(change into the newly created subdir)
+  ./autogen.sh                  (this generates the configure script)
   ./configure [options]         (this generate makefiles)
   make                          (actually build the programs)
   su -c 'make install'          (install files (default location is /usr)
@@ -82,3 +85,44 @@ atftp from source, here's the procedure.
   distribution include init scripts. If you absolutely need this on rpm
   based distribution or on other systems, start with the Debian
   scripts and adapt it to your particular system.
+
+
+5) Information for future developers of atftp
+   ------------------------------------------
+   
+5.1) Cleanup the source directory
+
+  After some work and compiling in the package sources, you can delete the 
+  files produced from the compilers by running
+
+    make clean
+
+  Note: The "Makefile" necessary for this operation is only available 
+  if the "./configure" command has been run at least once.
+
+  More cleanup is done with the command
+  
+    make distclean
+    
+  This removes all files produced by "./configure" - which includes the 
+  Makefile. If you want to use "make <target>" again, you need to run 
+  "./configure" before.
+  
+5.2) Create a release tarball
+  
+  If a new release should be created, first edit configure.ac and change the
+  AM_INIT_AUTOMAKE parameter to the new release version number.
+  Then execute "./autogen.sh" and "./configure". After that, 
+
+    make distcheck
+
+  creates a tar archive with the requested version number, unpacks it immedia-
+  tely in a temporary subdirectory, compiles the package and executes the 
+  test.sh suite and cleans all that up. If you get the final message 
+  =============================================
+  atftp-<version> archives ready for distribution: 
+  atftp-<version>.tar.gz
+  =============================================
+  then you can upload atftp-<version>.tar.gz to 
+  http://sourceforge.net/projects/atftp/files/
+
