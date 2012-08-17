@@ -59,7 +59,7 @@ char *tftp_errmsg[9] = {
 
 /*
  * Compute the difference of two timeval structs handling wrap around.
- * The result is retruned in *res.
+ * The result is returned in *res.
  * Return value are:
  *     1 if t1 > t0
  *     0 if t1 = t0
