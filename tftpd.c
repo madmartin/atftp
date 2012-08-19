@@ -982,7 +982,7 @@ int tftpd_cmd_line_options(int argc, char **argv)
                     Strncpy(user_name, tmp, MAXLEN);
                tmp = strtok(NULL, "");
                if (tmp != NULL)
-                    Strncpy(group_name, optarg, MAXLEN);
+                    Strncpy(group_name, tmp, MAXLEN);
                break;
           case 'G':
                Strncpy(group_name, optarg, MAXLEN);
