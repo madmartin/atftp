@@ -27,6 +27,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <netdb.h>
+#include <pthread.h>
 #include "logger.h"
 
 #define MAXLEN 128
