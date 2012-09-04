@@ -11,7 +11,7 @@ dnl Free Software Foundation; either version 2 of the License, or (at your
 dnl option) any later version.
 
 AC_INIT(tftp.c)
-AM_INIT_AUTOMAKE(atftp, 0.7)
+AM_INIT_AUTOMAKE(atftp, 0.7.1)
 AC_SUBST(VERSION)
 AM_CONFIG_HEADER(config.h)
 
