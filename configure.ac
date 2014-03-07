@@ -67,7 +67,7 @@ AC_GNU_SOURCE
 dnl Check for AIX
 AC_AIX
 
-CFLAGS="-g -Wall -D_REENTRANT"
+CFLAGS="$CFLAGS -g -Wall -D_REENTRANT"
 
 if test x$debug = xtrue; then
    CFLAGS="$CFLAGS -O0 -DDEBUG"
