@@ -20,6 +20,7 @@
 #include <pthread.h>
 #include <arpa/tftp.h>
 #include <arpa/inet.h>
+#include <sys/types.h>
 #include "tftp_io.h"
 
 /*

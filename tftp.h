@@ -19,6 +19,7 @@
 
 #include <sys/time.h>
 #include <sys/times.h>
+#include <sys/types.h>
 #include "tftp_def.h"
 #include "config.h"
 
