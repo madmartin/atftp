@@ -46,6 +46,22 @@
 # define __const const
 #endif
 
+#ifndef __THROW
+# define __THROW
+#endif
+
+#ifndef __BEGIN_DECLS
+# define __BEGIN_DECLS
+#endif
+
+#ifndef __END_DECLS
+# define __END_DECLS
+#endif
+
+#ifndef __attribute_pure__
+# define __attribute_pure__
+#endif
+
 #ifndef __error_t_defined
 typedef int error_t;
 #endif
