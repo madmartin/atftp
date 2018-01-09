@@ -524,6 +524,9 @@ int main(int argc, char **argv)
                                   (void *)new) != 0)
                {
                     logger(LOG_ERR, "Failed to start new thread");
+                    free(new->data_buffer);
+                    free(new->tftp_options);
+                    free(new->client_info);
                     free(new);
                     pthread_mutex_unlock(&stdin_mutex);
                }
