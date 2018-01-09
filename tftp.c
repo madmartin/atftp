@@ -711,8 +711,11 @@ int get_file(int argc, char **argv)
                     string = readline("Overwite local file [y/n]? ");
 #else
                     fprintf(stderr, "Overwite local file [y/n]? ");
-                    fgets(string, MAXLEN, stdin);
-                    string[strlen(string) - 1] = 0;
+                    if (fgets(string, MAXLEN, stdin) == NULL) {
+                         string[0] = 0;
+                    } else {
+                         string[strlen(string) - 1] = 0;
+                    }
 #endif
                     if (!(strcasecmp(string, "y") == 0))
                     {
