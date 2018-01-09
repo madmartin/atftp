@@ -23,7 +23,7 @@
 #include <unistd.h>
 #include <syslog.h>
 
-#if HAVE_ARGZ
+#if HAVE_ARGZ_H
 #include <argz.h>
 #else
 #include "argz.h"

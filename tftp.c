@@ -38,7 +38,7 @@
 #include <readline/history.h>
 #endif
 
-#if HAVE_ARGZ
+#if HAVE_ARGZ_H
 #include <argz.h>
 #else
 #include "argz.h"

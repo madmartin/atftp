@@ -17,7 +17,9 @@
  *
  */
 
-#ifndef HAVE_ARGZ
+#include "config.h"
+
+#ifndef HAVE_ARGZ_H
 
 /* Routines for dealing with '\0' separated arg vectors.
    Copyright (C) 1995, 96, 97, 98, 99, 2000 Free Software Foundation, Inc.
