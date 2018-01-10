@@ -43,6 +43,12 @@ int opt_parse_request(char *data, int data_size, struct tftp_opt *options)
      struct tftphdr *tftp_data = (struct tftphdr *)data;
      size_t size = data_size - sizeof(tftp_data->th_opcode);
 
+     /* sanity check - requests always end in a null byte,
+      * check to prevent argz_next from reading past the end of
+      * data, as it doesn't do bounds checks */
+     if (data_size == 0 || data[data_size-1] != '\0')
+          return ERR;
+
      /* read filename */
      entry = argz_next(tftp_data->th_stuff, size, entry);
      if (!entry)
@@ -78,6 +84,12 @@ int opt_parse_options(char *data, int data_size, struct tftp_opt *options)
      char *tmp;
      struct tftphdr *tftp_data = (struct tftphdr *)data;
      size_t size = data_size - sizeof(tftp_data->th_opcode);
+
+     /* sanity check - options always end in a null byte,
+      * check to prevent argz_next from reading past the end of
+      * data, as it doesn't do bounds checks */
+     if (data_size == 0 || data[data_size-1] != '\0')
+          return ERR;
 
      while ((entry = argz_next(tftp_data->th_stuff, size, entry)))
      {
