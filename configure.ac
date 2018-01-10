@@ -92,6 +92,11 @@ else
   fi
 fi
 
+case "$CC" in
+	gcc*|clang*) CFLAGS="$CFLAGS -std=gnu89"
+	;;
+esac
+
 AC_PROG_MAKE_SET
 AC_PROG_INSTALL
 
