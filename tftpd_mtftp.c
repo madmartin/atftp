@@ -550,8 +550,12 @@ void *tftpd_mtftp_send_file(void *arg)
                /* The first data packet as to be sent to the unicast address
                   of the client */
                timeout_state = state;
-               fseek(data->fp, block_number * (data->data_buffer_size - 4),
-                     SEEK_SET);
+               if (fseek(data->fp, block_number * (data->data_buffer_size - 4),
+                     SEEK_SET) != 0)
+               {
+                    state = S_ABORT;
+                    break;
+               }
                /* read data from file */
                data_size = fread(tftphdr->th_data, 1,
                                  data->data_buffer_size - 4, data->fp) + 4;
@@ -568,8 +572,12 @@ void *tftpd_mtftp_send_file(void *arg)
                break;
           case S_SEND_DATA:
                timeout_state = state;
-               fseek(data->fp, block_number * (data->data_buffer_size - 4),
-                     SEEK_SET);
+               if (fseek(data->fp, block_number * (data->data_buffer_size - 4),
+                     SEEK_SET) != 0)
+               {
+                    state = S_ABORT;
+                    break;
+               }
                /* read data from file */
                data_size = fread(tftphdr->th_data, 1,
                                  data->data_buffer_size - 4, data->fp) + 4;

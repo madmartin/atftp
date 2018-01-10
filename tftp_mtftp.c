@@ -446,9 +446,13 @@ int tftp_mtftp_receive_file(struct client_data *data)
                block_number = ntohs(tftphdr->th_block);
                if (data->trace)
                     fprintf(stderr, "received DATA <block: %ld, size: %d>\n",
-                            block_number, data_size - 4);
-               fseek(fp, (block_number - 1) * (data->data_buffer_size - 4),
-                     SEEK_SET);
+                            ntohs(tftphdr->th_block), data_size - 4);
+               if (fseek(fp, (block_number - 1) * (data->data_buffer_size - 4),
+                     SEEK_SET) != 0)
+               {
+                    state = S_ABORT;
+                    break;
+               }
                if ((int)fwrite(tftphdr->th_data, 1, data_size - 4, fp) !=
                    (data_size - 4))
                {

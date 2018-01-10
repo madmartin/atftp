@@ -391,11 +391,8 @@ int tftp_file_read(FILE *fp, char *data_buffer, int data_buffer_size, long block
 	   */
 	  if ((block_number != *prev_block_number) && (block_number != *prev_block_number + 1))
 	       return ERR;
-	  if (block_number == *prev_block_number)
-	  {
-	       if (fseek(fp, *prev_file_pos, SEEK_SET) != 0)
-		     return ERR;
-	  }
+	  if (block_number == *prev_block_number && fseek(fp, *prev_file_pos, SEEK_SET) != 0)
+          return ERR;
 
 	  *prev_file_pos = ftell(fp);
 
@@ -482,20 +479,21 @@ int tftp_file_write(FILE *fp, char *data_buffer, int data_buffer_size, long bloc
                {
                     if (c == '\n')
                     {
-                         fseek(fp, -1, SEEK_CUR); /* cr,lf to lf */
+                         if (fseek(fp, -1, SEEK_CUR) != 0) /* cr,lf to lf */
+                              return ERR;
                          if (fputc(c, fp) == EOF)
-                              break;
+                              return ERR;
                     }
                     else if (c != '\0')           /* cr,nul to cr */
                     {
                          if (fputc(c, fp) == EOF)
-                              break;
+                              return ERR;
                     }
                }
                else
                {
                     if (fputc(c, fp) == EOF)
-                         break;
+                         return ERR;
                }
                prevchar = c;
           }
