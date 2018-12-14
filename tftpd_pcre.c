@@ -245,7 +245,6 @@ int tftpd_pcre_makesub(struct tftpd_pcre_pattern *pat,
 /* if no match is found return -1 */
 int tftpd_pcre_sub(tftpd_pcre_self_t *self, char *outstr, int outlen, char *str)
 {
-     int rc;
      int ovector[OVECCOUNT];
      int matches;
      tftpd_pcre_pattern_t *pat;
@@ -276,7 +275,7 @@ int tftpd_pcre_sub(tftpd_pcre_self_t *self, char *outstr, int outlen, char *str)
           }
           /* we have a match  - carry out substitution */
           logger(LOG_DEBUG,"Pattern \"%s\" matches", pat->pattern);
-          rc = tftpd_pcre_makesub(pat,
+          tftpd_pcre_makesub(pat,
                                   outstr, outlen,
                                   str,
                                   ovector, matches);

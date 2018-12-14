@@ -63,7 +63,7 @@ extern int tftp_cancel;
  * If mode = 0, count missed packet from block 0. Else, start after first
  * received block.
  */
-int tftp_mtftp_missed_packet(int file_bitmap[], int last_block, int mode)
+int tftp_mtftp_missed_packet(unsigned int file_bitmap[], long last_block, int mode)
 {
      int missed_block = 0;
      int block_number = 0;
@@ -107,8 +107,8 @@ int tftp_mtftp_receive_file(struct client_data *data)
      int state = S_SEND_REQ;    /* current state in the state machine */
      int timeout_state = state; /* what state should we go on when timeout */
      int result;
-     int block_number = 0;
-     int last_block_number = -1;/* block number of last block for multicast */
+     long block_number = 0;
+     long last_block_number = -1;/* block number of last block for multicast */
      int data_size;             /* size of data received */
      int sockfd = data->sockfd; /* just to simplify calls */
      int sock;
@@ -316,7 +316,7 @@ int tftp_mtftp_receive_file(struct client_data *data)
                //block_number = prev_bitmap_hole;
 
                if (data->trace)
-                    fprintf(stderr, "sent ACK <block: %d>\n", block_number);
+                    fprintf(stderr, "sent ACK <block: %ld>\n", block_number);
                tftp_send_ack(sockfd, &sa, block_number);
                /* if we just ACK the last block we are done */
                if (block_number == last_block_number)
@@ -445,11 +445,11 @@ int tftp_mtftp_receive_file(struct client_data *data)
           case S_DATA_RECEIVED:
                block_number = ntohs(tftphdr->th_block);
                if (data->trace)
-                    fprintf(stderr, "received DATA <block: %d, size: %d>\n",
-                            ntohs(tftphdr->th_block), data_size - 4);
+                    fprintf(stderr, "received DATA <block: %ld, size: %d>\n",
+                            block_number, data_size - 4);
                fseek(fp, (block_number - 1) * (data->data_buffer_size - 4),
                      SEEK_SET);
-               if (fwrite(tftphdr->th_data, 1, data_size - 4, fp) !=
+               if ((int)fwrite(tftphdr->th_data, 1, data_size - 4, fp) !=
                    (data_size - 4))
                {
                     

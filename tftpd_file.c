@@ -107,7 +107,7 @@ int tftpd_receive_file(struct thread_data *data)
      int state = S_BEGIN;
      int timeout_state = state;
      int result;
-     int block_number = 0;
+     long block_number = 0;
      int data_size;
      int sockfd = data->sockfd;
      struct sockaddr_storage *sa = &data->client_info->client;
@@ -122,7 +122,7 @@ int tftpd_receive_file(struct thread_data *data)
      int all_blocks_received = 0; /* temporary kludge */
      int convert = 0;           /* if true, do netascii convertion */
 
-     int prev_block_number = 0; /* needed to support netascii convertion */
+     long prev_block_number = 0; /* needed to support netascii convertion */
      int temp = 0;
 
      /* look for mode option */
@@ -243,7 +243,7 @@ int tftpd_receive_file(struct thread_data *data)
                timeout_state = state;
                tftp_send_ack(sockfd, sa, block_number);
                if (data->trace)
-                    logger(LOG_DEBUG, "sent ACK <block: %d>", block_number);
+                    logger(LOG_DEBUG, "sent ACK <block: %ld>", block_number);
                if (all_blocks_received)
                     state = S_END;
                else
@@ -348,9 +348,10 @@ int tftpd_receive_file(struct thread_data *data)
                break;
           case S_DATA_RECEIVED:
                /* We need to seek to the right place in the file */
-               block_number = ntohs(tftphdr->th_block);
+	       block_number = tftp_rollover_blocknumber(
+		      ntohs(tftphdr->th_block), prev_block_number, 0);
                if (data->trace)
-                    logger(LOG_DEBUG, "received DATA <block: %d, size: %d>",
+                    logger(LOG_DEBUG, "received DATA <block: %ld, size: %d>",
                            block_number, data_size - 4);
 
                if (tftp_file_write(fp, tftphdr->th_data, data->data_buffer_size - 4, block_number,
@@ -407,8 +408,8 @@ int tftpd_send_file(struct thread_data *data)
      int state = S_BEGIN;
      int timeout_state = state;
      int result;
-     int block_number = 0;
-     int last_block = -1;
+     long block_number = 0;
+     long last_block = -1;
      int data_size;
      struct sockaddr_storage *sa = &data->client_info->client;
      struct sockaddr_storage from;
@@ -431,8 +432,8 @@ int tftpd_send_file(struct thread_data *data)
      struct client_info *client_old = NULL;
      struct tftp_opt options[OPT_NUMBER];
 
-     int prev_block_number = 0; /* needed to support netascii convertion */
-     int prev_file_pos = 0;
+     long prev_block_number = 0; /* needed to support netascii convertion */
+     long prev_file_pos = 0;
      int temp = 0;
 
      /* look for mode option */
@@ -565,11 +566,12 @@ int tftpd_send_file(struct thread_data *data)
           logger(LOG_INFO, "blksize option -> %d", result);
      }
 
-     /* Verify that the file can be sent in 2^16 block of BLKSIZE octets */
-     if ((file_stat.st_size / (data->data_buffer_size - 4)) > 65535)
+     /* Verify that the file can be sent in MAXBLOCKS blocks of BLKSIZE octets */
+     if ((file_stat.st_size / (data->data_buffer_size - 4)) > MAXBLOCKS)
      {
           tftp_send_error(sockfd, sa, EUNDEF, data->data_buffer, data->data_buffer_size);
-          logger(LOG_NOTICE, "Requested file to big, increase BLKSIZE");
+          logger(LOG_NOTICE, "Requested file too big, increase BLKSIZE");
+          logger(LOG_NOTICE, "Only %d blocks of %d bytes can be served via multicast", MAXBLOCKS, data->data_buffer_size);
           if (data->trace)
                logger(LOG_DEBUG, "sent ERROR <code: %d, msg: %s>", EUNDEF,
                       tftp_errmsg[EUNDEF]);
@@ -581,6 +583,19 @@ int tftpd_send_file(struct thread_data *data)
      if (data->tftp_options[OPT_MULTICAST].specified &&
          data->tftp_options[OPT_MULTICAST].enabled && !convert)
      {
+	  /* Verify that the file can be sent in 65536 blocks of BLKSIZE octets */
+	  if ((file_stat.st_size / (data->data_buffer_size - 4)) > 65536)
+	  {
+		tftp_send_error(sockfd, sa, EUNDEF, data->data_buffer, data->data_buffer_size);
+		logger(LOG_NOTICE, "Requested file too big, increase BLKSIZE");
+		logger(LOG_NOTICE, "Only %d blocks of %d bytes can be served.", 65536, data->data_buffer_size);
+		if (data->trace)
+		    logger(LOG_DEBUG, "sent ERROR <code: %d, msg: %s>", EUNDEF,
+			    tftp_errmsg[EUNDEF]);
+		fclose(fp);
+		return ERR;
+	  }
+
           /*
            * Find a server with the same options to give up the client.
            */
@@ -753,7 +768,7 @@ int tftpd_send_file(struct thread_data *data)
                                    data_size, data->data_buffer);
                }
                if (data->trace)
-                    logger(LOG_DEBUG, "sent DATA <block: %d, size %d>",
+                    logger(LOG_DEBUG, "sent DATA <block: %ld, size %d>",
                            block_number + 1, data_size - 4);
                state = S_WAIT_PACKET;
                break;
@@ -880,9 +895,15 @@ int tftpd_send_file(struct thread_data *data)
                     }
                     /* The ACK is from the current client */
                     number_of_timeout = 0;
-                    block_number = ntohs(tftphdr->th_block);
+		    if (multicast)
+			    block_number = ntohs(tftphdr->th_block);
+		    else
+		    {
+			    block_number = tftp_rollover_blocknumber(
+				ntohs(tftphdr->th_block), prev_block_number, 0);
+		    }
                     if (data->trace)
-                         logger(LOG_DEBUG, "received ACK <block: %d>",
+                         logger(LOG_DEBUG, "received ACK <block: %ld>",
                                 block_number);
                     if ((last_block != -1) && (block_number > last_block))
                     {

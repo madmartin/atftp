@@ -97,13 +97,13 @@ int tftp_send_request(int socket, struct sockaddr_storage *sa, short type,
  *| Opcode  | Block # |
  * -------------------
  */
-int tftp_send_ack(int socket, struct sockaddr_storage *sa, short block_number)
+int tftp_send_ack(int socket, struct sockaddr_storage *sa, long block_number)
 {
      struct tftphdr tftphdr;
      int result;
 
      tftphdr.th_opcode = htons(ACK);
-     tftphdr.th_block = htons(block_number);
+     tftphdr.th_block = htons((short)block_number);
 
      result = sendto(socket, &tftphdr, 4, 0, (struct sockaddr *)sa,
                      sizeof(*sa));
@@ -185,14 +185,14 @@ int tftp_send_error(int socket, struct sockaddr_storage *sa, short err_code,
  *| Opcode  | Block # | Data   |
  * ----------------------------
  */
-int tftp_send_data(int socket, struct sockaddr_storage *sa, short block_number,
+int tftp_send_data(int socket, struct sockaddr_storage *sa, long block_number,
                    int size, char *data)
 {
      struct tftphdr *tftphdr = (struct tftphdr *)data;
      int result;
 
      tftphdr->th_opcode = htons(DATA);
-     tftphdr->th_block = htons(block_number);
+     tftphdr->th_block = htons((short)block_number);
 
      result = sendto(socket, data, size, 0, (struct sockaddr *)sa,
                      sizeof(*sa));
@@ -320,7 +320,7 @@ int tftp_get_packet(int sock1, int sock2, int *sock, struct sockaddr_storage *sa
                memcpy(sa_from, &from, sizeof(from));
 
           /* if sa as never been initialised, port is still 0 */
-          if (sockaddr_get_port(&sa) == 0)
+          if (sockaddr_get_port(sa) == 0)
                memcpy(sa, &from, sizeof(from));
 
 
@@ -350,10 +350,9 @@ int tftp_get_packet(int sock1, int sock2, int *sock, struct sockaddr_storage *sa
 /*
  * Read from file and do netascii conversion if needed
  */
-int tftp_file_read(FILE *fp, char *data_buffer, int data_buffer_size, int block_number,
-                   int convert, int *prev_block_number, int *prev_file_pos, int *temp)
+int tftp_file_read(FILE *fp, char *data_buffer, int data_buffer_size, long block_number,
+                   int convert, long *prev_block_number, long *prev_file_pos, int *temp)
 {
-     int i;
      int c;
      char prevchar = *temp & 0xff;
      char newline = (*temp & 0xff00) >> 8;
@@ -364,9 +363,9 @@ int tftp_file_read(FILE *fp, char *data_buffer, int data_buffer_size, int block_
 	  /* In this case, just read the requested data block.
 	     Anyway, in the multicast case it can be in random
 	     order. */
-	  fseek(fp, block_number * data_buffer_size, SEEK_SET);
+	  if (fseek(fp, block_number * data_buffer_size, SEEK_SET) != 0)
+	        return ERR;
 	  data_size = fread(data_buffer, 1, data_buffer_size, fp);
-          return data_size;
      }
      else
      {
@@ -393,16 +392,18 @@ int tftp_file_read(FILE *fp, char *data_buffer, int data_buffer_size, int block_
 	  if ((block_number != *prev_block_number) && (block_number != *prev_block_number + 1))
 	       return ERR;
 	  if (block_number == *prev_block_number)
-	       fseek(fp, *prev_file_pos, SEEK_SET);
+	  {
+	       if (fseek(fp, *prev_file_pos, SEEK_SET) != 0)
+		     return ERR;
+	  }
 
-	  *prev_block_number = block_number;
 	  *prev_file_pos = ftell(fp);
 
 	  /*
 	   * convert to netascii, based on netkit-tftp-0.17 routine in tftpsubs.c
 	   * i index output buffer
 	   */
-	  for (i = 0; i < data_buffer_size; i++)
+	  for (data_size = 0; data_size < data_buffer_size; data_size++)
 	  {
 	       if (newline)
 	       {
@@ -424,55 +425,53 @@ int tftp_file_read(FILE *fp, char *data_buffer, int data_buffer_size, int block_
 			 newline = 1;
 		    }
 	       }
-               data_buffer[i] = c;
+               data_buffer[data_size] = c;
 	  }
 	  /* save state */
 	  *temp = (newline << 8) | prevchar;
-
-          return i;
      }
+
+     /*
+      * Successfull return.
+      */
+     *prev_block_number = block_number;
+     return data_size;
 }
 
 /*
  * Write to file and do netascii conversion if needed
  */
-int tftp_file_write(FILE *fp, char *data_buffer, int data_buffer_size, int block_number, int data_size,
-                    int convert, int *prev_block_number, int *temp)
+int tftp_file_write(FILE *fp, char *data_buffer, int data_buffer_size, long block_number, int data_size,
+                    int convert, long *prev_block_number, int *temp)
 {
-     int i;
+     int bytes_written;
      int c;
      char prevchar = *temp;
 
      if (!convert)
      {
 	  /* Simple case, just seek and write */
-          if (fseek(fp, (block_number - 1) * data_buffer_size, SEEK_SET) == 0)
-              data_size = fwrite(data_buffer, 1, data_size, fp);
-          else
-              data_size = 0;
-          return data_size;
+          if (fseek(fp, (block_number - 1) * data_buffer_size, SEEK_SET) != 0)
+	      return 0;
+	  bytes_written = fwrite(data_buffer, 1, data_size, fp);
      }
-     else
+     else if (block_number != *prev_block_number)
      {
 	  /* 
 	   * Same principle than for reading, but simpler since when client
            * send same block twice there is no need to rewrite it to the
            * file
 	   */
-	  if ((block_number != *prev_block_number) && (block_number != *prev_block_number + 1))
+	  if (block_number != *prev_block_number + 1)
 	       return ERR;
-	  if (block_number == *prev_block_number)
-	       return data_size;
-
-	  *prev_block_number = block_number;
 
 	  /*
 	   * convert to netascii, based on netkit-tftp-0.17 routine in tftpsubs.c
 	   * i index input buffer
 	   */
-	  for (i = 0; i < data_size; i++)
+	  for (bytes_written = 0; bytes_written < data_size; bytes_written++)
 	  {
-               c = data_buffer[i];
+               c = data_buffer[bytes_written];
                if (prevchar == '\r')
                {
                     if (c == '\n')
@@ -497,7 +496,28 @@ int tftp_file_write(FILE *fp, char *data_buffer, int data_buffer_size, int block
 
 	  /* save state */
 	  *temp = prevchar;
-
-          return i;
      }
+
+     /*
+      * Successful return.
+      */
+     *prev_block_number = block_number;
+     return bytes_written;
+}
+
+/*
+ * Implement block number rollover.  Only applies to unicast.  Wrap_to is
+ * what the block number will become once it overflows.  Normally it is 0,
+ * but some implementations use 1.
+ */
+long tftp_rollover_blocknumber(short block_number, long prev_block_number, unsigned short wrap_to)
+{
+      unsigned short b = (unsigned short)block_number;
+      unsigned short pb = (unsigned short)prev_block_number;
+      long result = b | (prev_block_number & ~0xFFFF);
+      if (b < 0x4000 && pb > 0xC000)
+	  result += 0x10000 + wrap_to;
+      else if (b > 0xC000 && pb < 0x4000 && (prev_block_number & ~0xFFFF))
+	  result -= 0x10000 - wrap_to;
+      return result;
 }

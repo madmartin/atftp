@@ -304,14 +304,14 @@ void opt_request_to_string(struct tftp_opt *options, char *string, int len)
 
      for (i = 0; i < 2; i++)
      {
-          if ((index + strlen(options[i].option) + 2) < len)
+          if ((index + (int)strlen(options[i].option) + 2) < len)
           {
                Strncpy(string + index, options[i].option, len - index);
                index += strlen(options[i].option);
                Strncpy(string + index, ": ", len - index);
                index += 2;
           }
-          if ((index + strlen(options[i].value) + 2) < len)
+          if ((index + (int)strlen(options[i].value) + 2) < len)
           {
                Strncpy(string + index, options[i].value, len - index);
                index += strlen(options[i].value);
@@ -333,14 +333,14 @@ void opt_options_to_string(struct tftp_opt *options, char *string, int len)
      {
           if (options[i].specified && options[i].enabled)
           {
-               if ((index + strlen(options[i].option) + 2) < len)
+               if ((index + (int)strlen(options[i].option) + 2) < len)
                {
                     Strncpy(string + index, options[i].option, len - index);
                     index += strlen(options[i].option);
                     Strncpy(string + index, ": ", len - index);
                     index += 2;
                }
-               if ((index + strlen(options[i].value) + 2) < len)
+               if ((index + (int)strlen(options[i].value) + 2) < len)
                {
                     Strncpy(string + index, options[i].value, len - index);
                     index += strlen(options[i].value);

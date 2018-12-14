@@ -508,8 +508,8 @@ void *tftpd_mtftp_send_file(void *arg)
      int state = S_BEGIN;
      int timeout_state = state;
      int result;
-     int block_number = 0;
-     int last_block = -1;
+     long block_number = 0;
+     long last_block = -1;
      int data_size;
 
      struct mtftp_thread *data = (struct mtftp_thread *)arg;
@@ -557,7 +557,7 @@ void *tftpd_mtftp_send_file(void *arg)
                tftp_send_data(sockfd, sa, block_number + 1,
                               data_size, data->data_buffer);
                if (data->mtftp_data->trace)
-                    logger(LOG_DEBUG, "sent DATA <block: %d, size %d>",
+                    logger(LOG_DEBUG, "sent DATA <block: %ld, size %d>",
                            block_number + 1, data_size - 4);
                state = S_WAIT_PACKET;
                break;
@@ -576,7 +576,7 @@ void *tftpd_mtftp_send_file(void *arg)
                               block_number + 1, data_size,
                               data->data_buffer);
                if (data->mtftp_data->trace)
-                    logger(LOG_DEBUG, "sent DATA <block: %d, size %d>",
+                    logger(LOG_DEBUG, "sent DATA <block: %ld, size %d>",
                            block_number + 1, data_size - 4);
                state = S_WAIT_PACKET;
                break;
@@ -615,7 +615,7 @@ void *tftpd_mtftp_send_file(void *arg)
                          number_of_timeout = 0;
                          block_number = ntohs(tftphdr->th_block);
                          if (data->mtftp_data->trace)
-                              logger(LOG_DEBUG, "received ACK <block: %d>",
+                              logger(LOG_DEBUG, "received ACK <block: %ld>",
                                      block_number);
                          if ((last_block != -1) && (block_number > last_block))
                          {

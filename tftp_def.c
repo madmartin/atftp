@@ -32,7 +32,7 @@
  */
 
 // FIXME: is there a way to use TIMEOUT and SEGSIZE here?
-struct tftp_opt tftp_default_options[OPT_NUMBER] = {
+struct tftp_opt tftp_default_options[OPT_NUMBER + 1] = {
      { "filename", "", 0, 1},   /* file to transfer */
      { "mode", "octet", 0, 1},  /* mode for transfer */
      { "tsize", "0", 0, 1 },    /* RFC1350 options. See RFC2347, */
@@ -67,44 +67,36 @@ char *tftp_errmsg[9] = {
  */ 
 int timeval_diff(struct timeval *res, struct timeval *t1, struct timeval *t0)
 {
+     int neg = 1;
      res->tv_sec = t1->tv_sec - t0->tv_sec;
      res->tv_usec = t1->tv_usec - t0->tv_usec;
      
-     if (res->tv_sec > 0)
+     while (res->tv_sec < 0 || res->tv_usec < 0)
      {
-          if (res->tv_usec >= 0)
-          {
-               return 1;
-          }
-          else
-          {
-               res->tv_sec -= 1;
-               res->tv_usec += 1000000;
-               return 1;
-          }
-     }
-     else if (res->tv_sec < 0)
-     {
-          if (res->tv_usec > 0)
-          {
-               res->tv_sec += 1;
-               res->tv_usec -= 1000000;
-               return -1;
-          }
-          else if (res->tv_usec <= 0);
-          {
-               return -1;
-          }
-     }
-     else
-     {
-          if (res->tv_usec > 0)
-               return 1;
-          else if (res->tv_usec < 0)
-               return -1;
-          else
-               return 0;
-     }
+	  if (res->tv_sec < 0 || (res->tv_sec == 0 && res->tv_usec < 0))
+	  {
+	      neg = -neg;
+	      res->tv_sec = -res->tv_sec;
+	      res->tv_usec = -res->tv_usec;
+	  }
+	  if (res->tv_usec < 0)
+	  {
+	      long s = (res->tv_usec - 999999) / 1000000;
+	      res->tv_sec += s;
+	      res->tv_usec -= s * 1000000;
+	  }
+      }
+      if (res->tv_usec >= 1000000)
+      {
+	  long s = res->tv_usec / 1000000;
+	  res->tv_sec += s;
+	  res->tv_usec -= s * 1000000;
+      }
+      if (res->tv_sec == 0 && res->tv_usec == 0)
+      {
+	  return 0;
+      }
+      return neg;
 }
 
 /*

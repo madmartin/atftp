@@ -27,7 +27,7 @@ struct tftp_opt {
      int enabled;               /* enabled for use by server or client */
 };
 
-extern struct tftp_opt tftp_default_options[OPT_NUMBER];
+extern struct tftp_opt tftp_default_options[OPT_NUMBER + 1];
 
 int opt_parse_request(char *data, int data_size, struct tftp_opt *options);
 int opt_parse_options(char *data, int data_size, struct tftp_opt *options);

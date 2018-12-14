@@ -326,8 +326,18 @@ int main(int argc, char **argv)
 	       }
           }
 
-          setgid(group->gr_gid);
-          setuid(user->pw_uid);
+	  if (setgid(group->gr_gid) != OK) {
+	      logger(LOG_ERR,
+		      "atftpd: failed to setgid to group %d (%s).",
+		      group->gr_gid, group_name);
+	      exit(1);
+	  }
+	  if (setuid(user->pw_uid) != OK) {
+	      logger(LOG_ERR,
+		      "atftpd: failed to setuid to user %d (%s).",
+		      user->pw_uid, user_name);
+	      exit(1);
+	  }
 
           /* Reopen log file now that we changed user, and that we've
            * open and dup2 the socket. */

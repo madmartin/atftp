@@ -42,18 +42,19 @@
 int tftp_send_request(int socket, struct sockaddr_storage *s_inn, short type,
                       char *data_buffer, int data_buffer_size,
                       struct tftp_opt *tftp_options);
-int tftp_send_ack(int socket, struct sockaddr_storage *s_inn, short block_number);
+int tftp_send_ack(int socket, struct sockaddr_storage *s_inn, long block_number);
 int tftp_send_oack(int socket, struct sockaddr_storage *s_inn, struct tftp_opt *tftp_options,
                    char *buffer, int buffer_size);
 int tftp_send_error(int socket, struct sockaddr_storage *s_inn, short err_code,
                     char *buffer, int buffer_size);
-int tftp_send_data(int socket, struct sockaddr_storage *s_inn, short block_number,
+int tftp_send_data(int socket, struct sockaddr_storage *s_inn, long block_number,
                    int size, char *data);
 int tftp_get_packet(int sock1, int sock2, int *sock, struct sockaddr_storage *sa,
                     struct sockaddr_storage *from, struct sockaddr_storage *to,
                     int timeout, int *size, char *data);
-int tftp_file_read(FILE *fp, char *buffer, int buffer_size, int block_number, int convert,
-                   int *prev_block_number, int *prev_file_pos, int *temp);
-int tftp_file_write(FILE *fp, char *data_buffer, int data_buffer_size, int block_number,
-                    int data_size, int convert, int *prev_block_number, int *temp);
+int tftp_file_read(FILE *fp, char *buffer, int buffer_size, long block_number, int convert,
+                   long *prev_block_number, long *prev_file_pos, int *temp);
+int tftp_file_write(FILE *fp, char *data_buffer, int data_buffer_size, long block_number,
+                    int data_size, int convert, long *prev_block_number, int *temp);
+long tftp_rollover_blocknumber(short block_number, long prev_block_number, unsigned short wrap_to);
 #endif
