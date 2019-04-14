@@ -635,9 +635,7 @@ void *tftpd_mtftp_send_file(void *arg)
                     if (sockaddr_equal(sa, &from))
                     {
                          /* Got an ERROR from the current master client */
-                         Strncpy(string, tftphdr->th_msg,
-                                 (((data_size - 4) > MAXLEN) ? MAXLEN :
-                                  (data_size - 4)));
+                         Strncpy(string, tftphdr->th_msg, sizeof(string));
                          if (data->mtftp_data->trace)
                               logger(LOG_DEBUG, "received ERROR <code: %d, msg: %s>",
                                      ntohs(tftphdr->th_code), string);
