@@ -15,7 +15,7 @@ ATFTPD=../atftpd
 # those values are used
 #
 
-: ${HOST:=localhost}
+: ${HOST:=127.0.0.1}
 : ${PORT:=2001}
 : ${TEMPDIR:="/tmp"}
 
@@ -36,6 +36,12 @@ DIRECTORY=$(mktemp -d ${TEMPDIR}/atftp-test.XXXXXX)
 
 SERVER_ARGS="--daemon --no-fork --logfile=/dev/stdout --port=$PORT --verbose=6 $DIRECTORY"
 SERVER_LOG=./atftpd.log
+
+# check if we are root or not root
+# if this test is executed by a normal user, atftpd will fail if we do not use our own user+group
+if [ ${UID} -ne 0 ]; then
+	SERVER_ARGS="--user=$(id -un) --group=$(id -gn) ${SERVER_ARGS}"
+fi
 
 ERROR=0
 
