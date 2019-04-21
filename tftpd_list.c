@@ -49,10 +49,10 @@ pthread_mutex_t thread_list_mutex = PTHREAD_MUTEX_INITIALIZER;
  */
 int tftpd_list_add(struct thread_data *new)
 {
+     pthread_mutex_lock(&thread_list_mutex);
+
      struct thread_data *current = thread_data;
      int ret;
-
-     pthread_mutex_lock(&thread_list_mutex);
 
      number_of_thread++;
      
@@ -81,10 +81,10 @@ int tftpd_list_add(struct thread_data *new)
  */
 int tftpd_list_remove(struct thread_data *old)
 {
+     pthread_mutex_lock(&thread_list_mutex);
+
      struct thread_data *current = thread_data;
      int ret;
-
-     pthread_mutex_lock(&thread_list_mutex);
 
      number_of_thread--;
      ret = number_of_thread;
@@ -137,6 +137,9 @@ int tftpd_list_find_multicast_server_and_add(struct thread_data **thread,
                                              struct thread_data *data,
                                              struct client_info *client)
 {
+     /* lock the whole list before walking it */
+     pthread_mutex_lock(&thread_list_mutex);
+
      struct thread_data *current = thread_data; /* head of the list */
      struct tftp_opt *tftp_options = data->tftp_options;
      struct client_info *tmp;
@@ -150,9 +153,6 @@ int tftpd_list_find_multicast_server_and_add(struct thread_data **thread,
      opt_request_to_string(tftp_options, options, MAXLEN);
      index = strstr(options, "multicast");
      len = (int)((unsigned long)index - (unsigned long)options);
-
-     /* lock the whole list before walking it */
-     pthread_mutex_lock(&thread_list_mutex);
 
      while (current)
      {
@@ -214,9 +214,9 @@ inline void tftpd_clientlist_ready(struct thread_data *thread)
 void tftpd_clientlist_remove(struct thread_data *thread,
                              struct client_info *client)
 {
+     pthread_mutex_lock(&thread->client_mutex);
      struct client_info *tmp = thread->client_info;
 
-     pthread_mutex_lock(&thread->client_mutex);
      while ((tmp->next != client) && (tmp->next != NULL))
           tmp = tmp->next;
      if (tmp->next == NULL)
@@ -230,10 +230,11 @@ void tftpd_clientlist_remove(struct thread_data *thread,
  */
 void tftpd_clientlist_free(struct thread_data *thread)
 {
+     pthread_mutex_lock(&thread->client_mutex);
+
      struct client_info *tmp;
      struct client_info *head = thread->client_info;
 
-     pthread_mutex_lock(&thread->client_mutex);
      while (head)
      {
           tmp = head;
@@ -250,9 +251,9 @@ int tftpd_clientlist_done(struct thread_data *thread,
                           struct client_info *client,
                           struct sockaddr_storage *sock)
 {
-     struct client_info *head = thread->client_info;
-
      pthread_mutex_lock(&thread->client_mutex);
+
+     struct client_info *head = thread->client_info;
 
      if (client)
      {
@@ -334,10 +335,9 @@ int tftpd_clientlist_next(struct thread_data *thread,
 
 void tftpd_list_kill_threads(void)
 {
-     struct thread_data *current = thread_data; /* head of list */
-
      pthread_mutex_lock(&thread_list_mutex);
 
+     struct thread_data *current = thread_data; /* head of list */
 
      while (current != NULL)
      {
