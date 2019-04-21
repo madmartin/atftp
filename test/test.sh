@@ -153,6 +153,7 @@ READ_2K=READ_2K.bin
 READ_BIG=READ_BIG.bin
 READ_128K=READ_128K.bin
 READ_1M=READ_1M.bin
+READ_101M=READ_101M.bin
 WRITE=write.bin
 
 echo -n "Creating test files ... "
@@ -164,6 +165,7 @@ dd if=/dev/urandom of=$DIRECTORY/$READ_2K bs=1 count=2048 2>/dev/null
 dd if=/dev/urandom of=$DIRECTORY/$READ_BIG bs=1 count=51111 2>/dev/null
 dd if=/dev/urandom of=$DIRECTORY/$READ_128K bs=1K count=128 2>/dev/null
 dd if=/dev/urandom of=$DIRECTORY/$READ_1M bs=1M count=1 2>/dev/null
+dd if=/dev/urandom of=$DIRECTORY/$READ_101M bs=1M count=101 2>/dev/null
 echo "done"
 
 start_server
@@ -179,6 +181,7 @@ test_get_put $READ_2K
 test_get_put $READ_BIG
 test_get_put $READ_128K
 test_get_put $READ_1M
+test_get_put $READ_101M
 
 echo
 echo "Testing get and put with misc blocksizes"
