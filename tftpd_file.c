@@ -304,9 +304,7 @@ int tftpd_receive_file(struct thread_data *data)
                          else
                               logger(LOG_WARNING, "source port mismatch, check bypassed");
                     }
-                    Strncpy(string, tftphdr->th_msg,
-                            (((data_size - 4) > MAXLEN) ? MAXLEN :
-                             (data_size - 4)));
+                    Strncpy(string, tftphdr->th_msg, sizeof(string));
                     if (data->trace)
                          logger(LOG_DEBUG, "received ERROR <code: %d, msg: %s>",
                                 ntohs(tftphdr->th_code), string);
@@ -954,9 +952,7 @@ int tftpd_send_file(struct thread_data *data)
                          }
                     }
                     /* Got an ERROR from the current master client */
-                    Strncpy(string, tftphdr->th_msg,
-                            (((data_size - 4) > MAXLEN) ? MAXLEN :
-                             (data_size - 4)));
+                    Strncpy(string, tftphdr->th_msg, sizeof(string));
                     if (data->trace)
                          logger(LOG_DEBUG, "received ERROR <code: %d, msg: %s>",
                                 ntohs(tftphdr->th_code), string);
