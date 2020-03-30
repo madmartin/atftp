@@ -51,7 +51,7 @@ extern char *tftp_errmsg[9];
 
 int timeval_diff(struct timeval *res, struct timeval *t1, struct timeval *t0);
 int print_eng(double value, char *string, int size, char *format);
-inline char *Strncpy(char *to, const char *from, size_t size);
+char *Strncpy(char *to, const char *from, size_t size);
 int Gethostbyname(char *addr, struct hostent *host);
 
 char *sockaddr_print_addr(const struct sockaddr_storage *, char *, size_t);
