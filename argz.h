@@ -168,27 +168,4 @@ extern char *__argz_next (__const char *__restrict __argz, size_t __argz_len,
 extern char *argz_next (__const char *__restrict __argz, size_t __argz_len,
 			__const char *__restrict __entry);
 
-#ifdef __USE_EXTERN_INLINES
-extern inline char *
-__argz_next (__const char *__argz, size_t __argz_len,
-	     __const char *__entry)
-{
-  if (__entry)
-    {
-      if (__entry < __argz + __argz_len)
-	__entry = strchr (__entry, '\0') + 1;
-
-      return __entry >= __argz + __argz_len ? (char *) NULL : (char *) __entry;
-    }
-  else
-    return __argz_len > 0 ? (char *) __argz : 0;
-}
-extern inline char *
-argz_next (__const char *__argz, size_t __argz_len,
-	   __const char *__entry)
-{
-  return __argz_next (__argz, __argz_len, __entry);
-}
-#endif /* Use extern inlines.  */
-
 #endif /* argz.h */
