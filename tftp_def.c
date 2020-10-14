@@ -180,6 +180,15 @@ int Gethostbyname(char *addr, struct hostent *host)
      return OK;
 }
 
+int
+sockaddr_family_supported(const struct sockaddr_storage *ss)
+{
+     if (ss->ss_family == AF_INET || ss->ss_family == AF_INET6)
+          return 1;
+     else
+          return 0;
+}
+
 char *
 sockaddr_print_addr(const struct sockaddr_storage *ss, char *buf, size_t len)
 {
@@ -189,7 +198,7 @@ sockaddr_print_addr(const struct sockaddr_storage *ss, char *buf, size_t len)
      else if (ss->ss_family == AF_INET6)
           addr = &((const struct sockaddr_in6 *)ss)->sin6_addr;
      else
-          assert(!"sockaddr_print: unsupported address family");
+          return "sockaddr_print: unsupported address family";
      return (char *)inet_ntop(ss->ss_family, addr, buf, len);
 }
 

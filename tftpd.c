@@ -644,6 +644,11 @@ void *tftpd_receive_request(void *arg)
      }
 
 #ifdef HAVE_WRAP
+     if (!abort && !sockaddr_family_supported(&data->client_info->client))
+     {
+          logger(LOG_ERR, "Connection from unsupported network address family refused");
+          abort = 1;
+     }
      if (!abort)
      {
           /* Verify the client has access. We don't look for the name but

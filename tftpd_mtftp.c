@@ -393,6 +393,11 @@ void *tftpd_mtftp_server(void *arg)
                                         &data_size, data->data_buffer);
 
 #ifdef HAVE_WRAP
+               if (!sockaddr_family_supported(&sa))
+               {
+                    logger(LOG_ERR, "mtftp: Connection from unsupported network address family refused");
+                    continue;
+               }
                /* Verify the client has access. We don't look for the name but
                   rely only on the IP address for that. */
                sockaddr_print_addr(&sa, addr_str, sizeof(addr_str));
