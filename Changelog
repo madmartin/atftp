@@ -1,4 +1,45 @@
-atftp (0.7.xx)
+atftp-0.7.3
+===========
+f5c2fcd N - Peter Seiderer / tftp.h/tftpd.h: fix musl compile (missing include)
+e7f6fb4 N - Peter Seiderer / argz.h: fix musl compile (add missing defines)
+b39ab6b N - Martin Dummer / Makefile.am: link against libpthread for atftp
+
+68a06c0 N - Martin Dummer / Merge /u/johndemolition/atftp/ branch nvb into master
+b763fce N - Martin Dummer / Merge /u/peterkaestle/atftp/ branch master into master
+f5a229d N - Martin Dummer / support request #5: atftp fails to write to /proc/self/fd/1
+96409ef N - Peter Kaestle / Fix for DoS issue CVE-2020-6097
+d4eac31 E - Rosen Penev / remove inline keyword from definitions
+2834c49 E - Rosen Penev / argz: remove extern inlines
+c480581 E - Rosen Penev / argz: remove sys/cdefs usage
+
+
+atftp-0.7.2
+===========
+52b71f0 N - Martin Dummer / test.sh: add large file test to proof blocknumber rollover is working
+eda2d3d N - Martin Dummer / Merge branch 'master' of ssh://git.code.sf.net/p/atftp/code
+a87ece1 N - Martin Dummer / automake.ac: modernize autoconf file to avoid warning
+7e7c933 N - Martin Dummer / add more files to .gitignore
+ec13942 N - Martin Dummer / fix error handler stack overflow
+f78da6c N - Martin Dummer / fix Concurrency issue denial of service
+3b07980 N - Martin Dummer / test/test.sh: fix test for UID != 0
+abed7d2 N - Martin Dummer / fix error handler stack overflow
+382f76a N - Martin Dummer / fix Concurrency issue denial of service
+cf5a3ef N - Martin Dummer / test/test.sh: fix test for UID != 0
+1bfd65a N - Martin Dummer / import debian code patches
+4d0bff1 N - Martin Dummer / import debian localisation files
+f9dbb96 N - Martin Dummer / configure.ac: fix hard setting of CFLAGS
+
+atftp-0.7.1
+===========
+  * tftpd.c: exit if chown on pidfile fails
+  * logger.c: fix fprintf format warning
+  * logger.c: fix warning: implicit declaration of function
+  * logger.c: fix fprintf format warning
+  * logger.c: fix warning: implicit declaration of function
+  * tftpd.c: fix --user parameter
+  * atftpd.1: fix typos, add more details for options
+  * Documentation review for typos, add git instructions
+  * test/test.sh: restructure head of script
   * atftpd.c: Fixed a potential DoS bug (introduced by the IPv6 patch)
     thankfully taken from Debian atftpd-0.7.dfsg-11
   * Fix Debian Bug #613582 and #258998
@@ -25,10 +66,6 @@ atftp (0.7.xx)
   * Initial Developer + Maintainer  "Jean-Pierre Lefebvre" <helix@step.polymtl.ca>
     gave up maintenance, thanks for all the work!!!
   * New Project home: http://sourceforge.net/projects/atftp/
-  
-
-
-
 
 ========================================================
 debian changelog inserted here for completeness

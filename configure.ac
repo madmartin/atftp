@@ -10,7 +10,7 @@ dnl under the terms of the GNU General Public License as published by the
 dnl Free Software Foundation; either version 2 of the License, or (at your
 dnl option) any later version.
 
-AC_INIT([atftp], [0.7.2])
+AC_INIT([atftp], [0.7.3])
 AC_CONFIG_SRCDIR([tftp.c])
 AM_INIT_AUTOMAKE
 
