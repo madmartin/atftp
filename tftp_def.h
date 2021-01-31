@@ -54,6 +54,7 @@ int print_eng(double value, char *string, int size, char *format);
 inline char *Strncpy(char *to, const char *from, size_t size);
 int Gethostbyname(char *addr, struct hostent *host);
 
+int sockaddr_family_supported(const struct sockaddr_storage *ss);
 char *sockaddr_print_addr(const struct sockaddr_storage *, char *, size_t);
 #define SOCKADDR_PRINT_ADDR_LEN INET6_ADDRSTRLEN
 uint16_t sockaddr_get_port(const struct sockaddr_storage *);
