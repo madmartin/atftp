@@ -93,7 +93,7 @@ int tftpd_list_find_multicast_server_and_add(struct thread_data **thread,
 /*
  * Defined in tftpd_list.c, operation on client structure list.
  */
-inline void tftpd_clientlist_ready(struct thread_data *thread);
+void tftpd_clientlist_ready(struct thread_data *thread);
 void tftpd_clientlist_remove(struct thread_data *thread,
                              struct client_info *client);
 void tftpd_clientlist_free(struct thread_data *thread);
