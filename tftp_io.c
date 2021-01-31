@@ -444,6 +444,7 @@ int tftp_file_read(FILE *fp, char *data_buffer, int data_buffer_size, long block
 int tftp_file_write(FILE *fp, char *data_buffer, int data_buffer_size, long block_number, int data_size,
                     int convert, long *prev_block_number, int *temp)
 {
+     static long filepos;
      int bytes_written;
      int c;
      char prevchar = *temp;
@@ -451,9 +452,14 @@ int tftp_file_write(FILE *fp, char *data_buffer, int data_buffer_size, long bloc
      if (!convert)
      {
 	  /* Simple case, just seek and write */
-          if (fseek(fp, (block_number - 1) * data_buffer_size, SEEK_SET) != 0)
-	      return 0;
+          long position = (block_number - 1)*data_buffer_size;
+          if (position != filepos)
+               if (fseek(fp, position, SEEK_SET) != 0)
+                    return 0;
+               else
+                    filepos = position;
 	  bytes_written = fwrite(data_buffer, 1, data_size, fp);
+          filepos += bytes_written;
      }
      else if (block_number != *prev_block_number)
      {
