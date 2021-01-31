@@ -28,7 +28,7 @@ noinst_HEADERS   = argz.h logger.h options.h stats.h tftp.h tftp_def.h tftp_io.h
 		   tftpd.h tftpd_pcre.h tftpd_mtftp.h
 
 bin_PROGRAMS     = atftp
-atftp_LDADD      = $(LIBTERMCAP) $(LIBREADLINE)
+atftp_LDADD      = $(LIBTERMCAP) $(LIBREADLINE) $(LIBPTHREAD)
 atftp_SOURCES    = tftp.c tftp_io.c logger.c options.c tftp_def.c tftp_file.c \
 		   argz.c tftp_mtftp.c
 
