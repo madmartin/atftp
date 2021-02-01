@@ -2,7 +2,7 @@
 #
 # This script does some testing with atftp server and client
 #
-#
+# It needs ~150MB free diskspace in $TEMPDIR
 
 # assume we are called in the source tree after the build
 # so binaries are one dir up
@@ -29,7 +29,15 @@ ATFTPD=../atftpd
 #   WANT_INTERACTIVE_TESTS=yes ./test.sh
 : ${WANT_INTERACTIVE_TESTS:=no}
 
-
+# When the Tests have been run, should the files be cleaned up?
+# defaults to yes, if you need test output for troubleshooting either set the
+# environment variable CLEANUP=0
+#   or
+# call test.sh with parameter "--nocleanup" (for backward compatibility)
+: ${CLEANUP:=1}
+if [ "$1" == "--nocleanup" ]; then
+	CLEANUP=0
+fi
 
 #####################################################################################
 DIRECTORY=$(mktemp -d ${TEMPDIR}/atftp-test.XXXXXX)
@@ -71,72 +79,72 @@ else
 fi
 
 function start_server() {
-    # start a server
-    echo -n "Starting atftpd server on port $PORT: "
-    $ATFTPD  $SERVER_ARGS > $SERVER_LOG &
-    if [ $? != 0 ]; then
-	echo "Error starting server"
-	exit 1
-    fi
-    sleep 1
-    ATFTPD_PID=$!
-    # test if server process exists
-    ps -p $ATFTPD_PID >/dev/null 2>&1
-    if [ $? != 0 ]; then
-	echo "server process died"
-	exit 1
-    fi
-    echo "PID $ATFTPD_PID"
+	# start a server
+	echo -n "Starting atftpd server on port $PORT: "
+	$ATFTPD  $SERVER_ARGS > $SERVER_LOG &
+	if [ $? != 0 ]; then
+		echo "Error starting server"
+		exit 1
+	fi
+	sleep 1
+	ATFTPD_PID=$!
+	# test if server process exists
+	ps -p $ATFTPD_PID >/dev/null 2>&1
+	if [ $? != 0 ]; then
+		echo "server process died"
+		exit 1
+	fi
+	echo "PID $ATFTPD_PID"
 }
 
 function stop_server() {
-    echo "Stopping atftpd server"
-    kill $ATFTPD_PID
+	echo "Stopping atftpd server"
+	kill $ATFTPD_PID
 }
 
 
 function check_file() {
-    if cmp $1 $2 2>/dev/null ; then
-	echo "OK"
-    else
-	echo "ERROR"
-	ERROR=1
-    fi
+	if cmp $1 $2 2>/dev/null ; then
+		echo "OK"
+	else
+		echo "ERROR - $1 $2 not equal"
+		ERROR=1
+	fi
 }
 
 function test_get_put() {
-    local READFILE="$1"
-    shift
-    echo -n " get, ${READFILE} ($*)... "
-    if [ "$1" = "--option" ]; then
-        $ATFTP "$1" "$2" --get --remote-file ${READFILE} --local-file out.bin $HOST $PORT 2>/dev/null
-    else
-        $ATFTP --get --remote-file ${READFILE} --local-file out.bin $HOST $PORT 2>/dev/null
-    fi
-    check_file $DIRECTORY/${READFILE} out.bin
-    echo -n " put, ${READFILE} ($*)... "
-    if [ "$1" = "--option" ]; then
-        $ATFTP "$1" "$2" --put --remote-file $WRITE --local-file $DIRECTORY/${READFILE} $HOST $PORT 2>/dev/null
-    else
-        $ATFTP --put --remote-file $WRITE --local-file $DIRECTORY/${READFILE} $HOST $PORT 2>/dev/null
-    fi
-    # wait a second
-    # because in some case the server may not have time to close the file
-    # before the file compare.
-    sleep 1
-    check_file $DIRECTORY/${READFILE} $DIRECTORY/$WRITE
-    rm -f $DIRECTORY/$WRITE out.bin
+	local READFILE="$1"
+	shift
+	echo -n " get, ${READFILE} ($*)... "
+	if [ "$1" = "--option" ]; then
+		$ATFTP "$1" "$2" --get --remote-file ${READFILE} --local-file out.bin $HOST $PORT 2>/dev/null
+	else
+		$ATFTP --get --remote-file ${READFILE} --local-file out.bin $HOST $PORT 2>/dev/null
+	fi
+	check_file $DIRECTORY/${READFILE} out.bin
+	echo -n " put, ${READFILE} ($*)... "
+	if [ "$1" = "--option" ]; then
+		$ATFTP "$1" "$2" --put --remote-file $WRITE --local-file $DIRECTORY/${READFILE} $HOST $PORT 2>/dev/null
+	else
+		$ATFTP --put --remote-file $WRITE --local-file $DIRECTORY/${READFILE} $HOST $PORT 2>/dev/null
+	fi
+	# wait a second
+	# because in some case the server may not have time to close the file
+	# before the file compare.
+	sleep 1
+	check_file $DIRECTORY/${READFILE} $DIRECTORY/$WRITE
+	rm -f $DIRECTORY/$WRITE out.bin
 }
 
 function test_blocksize() {
-    echo -n " block size $1 bytes ... "
-    $ATFTP --option "blksize $1" --trace --get -r $READ_128K -l /dev/null $HOST $PORT 2> out
-    if  [ $(grep DATA out | wc -l) -eq $(( 128*1024 / $1 + 1)) ]; then
-	echo "OK"
-    else
-	echo "ERROR"
-	ERROR=1
-    fi
+	echo -n " block size $1 bytes ... "
+	$ATFTP --option "blksize $1" --trace --get -r $READ_128K -l /dev/null $HOST $PORT 2> out
+	if  [ $(grep DATA out | wc -l) -eq $(( 128*1024 / $1 + 1)) ]; then
+		echo "OK"
+	else
+		echo "ERROR"
+		ERROR=1
+	fi
 }
 
 # make sure we have /tftpboot with some files
@@ -144,6 +152,8 @@ if [ ! -d $DIRECTORY ]; then
 	echo "create $DIRECTORY before running this test"
 	exit 1
 fi
+echo "Using directory $DIRECTORY for test files"
+echo "Work directory " $(pwd)
 
 # files needed
 READ_0=READ_0.bin
@@ -203,82 +213,86 @@ test_get_put $READ_1M --option "blksize 65464"
 #
 # testing for invalid file name
 #
+OUTPUTFILE="01-out"
 echo
 echo -n "Test detection of non-existing file name ... "
-$ATFTP --trace --get -r "thisfiledoesntexist" -l /dev/null $HOST $PORT 2> out
-if grep -q "<File not found>" out; then
-    echo OK
+$ATFTP --trace --get -r "thisfiledoesntexist" -l /dev/null $HOST $PORT 2> "$OUTPUTFILE"
+if grep -q "<File not found>" "$OUTPUTFILE"; then
+	echo OK
 else
-    echo ERROR
-    ERROR=1
+	echo ERROR
+	ERROR=1
 fi
 
 #
 # testing for invalid blocksize
 # maximum blocksize is 65464 as described in RCF2348
 #
+OUTPUTFILE="02-out"
 echo
 echo "Testing blksize option ..."
 echo -n " smaller than minimum ... "
-$ATFTP --option "blksize 7" --trace --get -r $READ_2K -l /dev/null $HOST $PORT 2> out
-if grep -q "<Failure to negotiate RFC1782 options>" out; then
-    echo OK
+$ATFTP --option "blksize 7" --trace --get -r $READ_2K -l /dev/null $HOST $PORT 2> "$OUTPUTFILE"
+if grep -q "<Failure to negotiate RFC1782 options>" "$OUTPUTFILE"; then
+	echo OK
 else
-    echo ERROR
-    ERROR=1
+	echo ERROR
+	ERROR=1
 fi
 echo -n " bigger than maximum ... "
-$ATFTP --option "blksize 65465" --trace --get -r $READ_2K -l /dev/null $HOST $PORT 2> out
-if grep -q "<Failure to negotiate RFC1782 options>" out; then
-    echo OK
+$ATFTP --option "blksize 65465" --trace --get -r $READ_2K -l /dev/null $HOST $PORT 2> "$OUTPUTFILE"
+if grep -q "<Failure to negotiate RFC1782 options>" "$OUTPUTFILE"; then
+	echo OK
 else
-    echo ERROR
-    ERROR=1
+	echo ERROR
+	ERROR=1
 fi
-
 
 #
 # testing for tsize
 #
+OUTPUTFILE="03-out"
 echo ""
 echo -n "Testing tsize option... "
-$ATFTP --option "tsize" --trace --get -r $READ_2K -l /dev/null $HOST $PORT 2> out
-TSIZE=$(grep "OACK <tsize:" out | sed -e "s/[^0-9]//g")
+$ATFTP --option "tsize" --trace --get -r $READ_2K -l /dev/null $HOST $PORT 2> "$OUTPUTFILE"
+TSIZE=$(grep "OACK <tsize:" "$OUTPUTFILE" | sed -e "s/[^0-9]//g")
 if [ "$TSIZE" != "2048" ]; then
-    echo "ERROR (server report $TSIZE bytes but it should be 2048)"
-    ERROR=1
+	echo "ERROR (server report $TSIZE bytes but it should be 2048)"
+	ERROR=1
 else
-    echo "OK"
+	echo "OK"
 fi
 
 #
 # testing for timeout
 #
+OUTPUTFILE="04-out"
 echo ""
 echo "Testing timeout option limit..."
 echo -n " minimum ... "
-$ATFTP --option "timeout 0" --trace --get -r $READ_2K -l /dev/null $HOST $PORT 2> out
-if grep -q "<Failure to negotiate RFC1782 options>" out; then
-    echo OK
+$ATFTP --option "timeout 0" --trace --get -r $READ_2K -l /dev/null $HOST $PORT 2> "$OUTPUTFILE"
+if grep -q "<Failure to negotiate RFC1782 options>" "$OUTPUTFILE"; then
+	echo OK
 else
-    echo ERROR
-    ERROR=1
+	echo ERROR
+	ERROR=1
 fi
 echo -n " maximum ... "
-$ATFTP --option "timeout 256" --trace --get -r $READ_2K -l /dev/null $HOST $PORT 2> out
-if grep -q "<Failure to negotiate RFC1782 options>" out; then
-    echo OK
+$ATFTP --option "timeout 256" --trace --get -r $READ_2K -l /dev/null $HOST $PORT 2> "$OUTPUTFILE"
+if grep -q "<Failure to negotiate RFC1782 options>" "$OUTPUTFILE"; then
+	echo OK
 else
-    echo ERROR
-    ERROR=1
+	echo ERROR
+	ERROR=1
 fi
 
 # Test the behaviour when the server is not reached
 # we assume there is no tftp server listening on 127.0.0.77
 # Returncode must be 255
+OUTPUTFILE="05-out"
 echo
 echo -n "Test returncode after timeout when server is unreachable ... "
-$ATFTP --put --local-file "$DIRECTORY/$READ_2K" 127.0.0.77 2>out
+$ATFTP --put --local-file "$DIRECTORY/$READ_2K" 127.0.0.77 2>"$OUTPUTFILE"
 Retval=$?
 echo -n "Returncode $Retval: "
 if [ $Retval -eq 255 ]; then
@@ -340,53 +354,54 @@ fi
 # Test that timeout is well set to 1 sec and works.
 # we need atftp compiled with debug support to do that
 # Restart the server with full logging
+OUTPUTFILE="06-out"
 if $ATFTP --help 2>&1 | grep --quiet -- --delay
 then
-    stop_server
-    OLD_ARGS="$SERVER_ARGS"
-    SERVER_ARGS="$SERVER_ARGS --verbose=7"
-    start_server
+	stop_server
+	OLD_ARGS="$SERVER_ARGS"
+	SERVER_ARGS="$SERVER_ARGS --verbose=7"
+	start_server
 
-    $ATFTP --option "timeout 1" --delay 200 --get -r $READ_2K -l /dev/null $HOST $PORT 2> /dev/null &
-    CPID=$!
-    sleep 1
-    kill -s STOP $CPID
-    echo -n "Testing timeout "
-    for i in $(seq 6); do
+	$ATFTP --option "timeout 1" --delay 200 --get -r $READ_2K -l /dev/null $HOST $PORT 2> /dev/null &
+	CPID=$!
 	sleep 1
-	echo -n "."
-    done
-    kill $CPID
+	kill -s STOP $CPID
+	echo -n "Testing timeout "
+	for i in $(seq 6); do
+		sleep 1
+		echo -n "."
+	done
+	kill $CPID
 
-    stop_server
+	stop_server
 
-    sleep 1
-    grep "timeout: retrying..." $SERVER_LOG | cut -d " " -f 3 > out
-    count=$(wc -l out | cut -d "o" -f1)
-    if [ $count != 5 ]; then
-	ERROR=1
-	echo "ERROR"
-    else
-	prev=0
-	res="OK"
-	while read line; do
-	    hrs=$(echo $line | cut -d ":" -f 1)
-	    min=$(echo $line | cut -d ":" -f 2)
-	    sec=$(echo $line | cut -d ":" -f 3)
-	    cur=$(( 24*60*10#$hrs + 60*10#$min + 10#$sec ))
+	sleep 1
+	grep "timeout: retrying..." $SERVER_LOG | cut -d " " -f 3 > "$OUTPUTFILE"
+	count=$(wc -l "$OUTPUTFILE" | cut -d "o" -f1)
+	if [ $count != 5 ]; then
+		ERROR=1
+		echo "ERROR"
+	else
+		prev=0
+		res="OK"
+		while read line; do
+			hrs=$(echo $line | cut -d ":" -f 1)
+			min=$(echo $line | cut -d ":" -f 2)
+			sec=$(echo $line | cut -d ":" -f 3)
+			cur=$(( 24*60*10#$hrs + 60*10#$min + 10#$sec ))
 	
-	    if [ $prev -gt 0 ]; then
-		if [ $(($cur - $prev)) != 1 ]; then
-		    res="ERROR"
-		    ERROR=1
-		fi
-	    fi
-	    prev=$cur
-	done < out
-	echo " $res"
-    fi
-    SERVER_ARGS="$OLD_ARGS"
-    start_server
+			if [ $prev -gt 0 ]; then
+				if [ $(($cur - $prev)) != 1 ]; then
+					res="ERROR"
+					ERROR=1
+				fi
+			fi
+			prev=$cur
+		done < "$OUTPUTFILE"
+		echo " $res"
+	fi
+	SERVER_ARGS="$OLD_ARGS"
+	start_server
 else
 	echo
 	echo "Detailed timeout test could not be done"
@@ -404,8 +419,8 @@ fi
 #echo ""
 #echo -n "Testing multicast option  "
 #for i in $(seq 10); do
-#    echo -n "."
-#    atftp --blksize=8 --multicast -d --get -r $READ_BIG -l out.$i.bin $HOST $PORT 2> /dev/null&
+#	echo -n "."
+#	atftp --blksize=8 --multicast -d --get -r $READ_BIG -l out.$i.bin $HOST $PORT 2> /dev/null&
 #done
 #echo "OK"
 
@@ -421,64 +436,80 @@ echo
 echo "Testing high server load"
 echo -n "  starting $NBSERVER simultaneous atftp get processes ... "
 #( for i in $(seq 1 $NBSERVER); do
-#    ($ATFTP --get --remote-file $READ_1M --local-file /dev/null $HOST $PORT 2> out.$i) &
-#    echo -n "+"
+#	($ATFTP --get --remote-file $READ_1M --local-file /dev/null $HOST $PORT 2> out.$i) &
+#	echo -n "+"
 #done )
 for i in $(seq 1 $NBSERVER)
 do
-    $ATFTP --get --remote-file $READ_1M --local-file /dev/null $HOST $PORT 2> out.$i &
+	$ATFTP --get --remote-file $READ_1M --local-file /dev/null $HOST $PORT 2> "$DIRECTORY/high-server-load-out.$i" &
 done
 echo "done"
 let CHECKCOUNTER=0
-let MAXCHECKS=30
+let MAXCHECKS=90
 while [[ $CHECKCOUNTER -lt $MAXCHECKS ]]; do
-    PIDCOUNT=$(pidof $ATFTP|wc -w)
-    if [ $PIDCOUNT -gt 0 ]; then
-        echo "  wait for atftp processes to complete: $PIDCOUNT running"
-        let CHECKCOUNTER+=1
-        sleep 1
-    else
-        let CHECKCOUNTER=$MAXCHECKS+1
-    fi
+	PIDCOUNT=$(pidof $ATFTP|wc -w)
+	if [ $PIDCOUNT -gt 0 ]; then
+		echo "  wait for atftp processes to complete: $PIDCOUNT running"
+		let CHECKCOUNTER+=1
+		sleep 1
+	else
+		let CHECKCOUNTER=$MAXCHECKS+1
+	fi
 done
-error=0;
+
+#
+# high server load test passed, now examine the results
+#
+>"$DIRECTORY/high-server-load-out.result"
 for i in $(seq 1 $NBSERVER); do
-    if grep -q "timeout: retrying..." out.$i; then
-	error=1;
-    else
-        rm out.$i
-    fi
+	# merge all output together
+	cat "$DIRECTORY/high-server-load-out.$i" >>"$DIRECTORY/high-server-load-out.result"
 done
-if [ "$error" -eq "1" ]; then
-    echo ERROR;
-    ERROR=1
+
+# remove timeout/retry messages, they are no error indicator
+grep -v "timeout: retrying..." <"$DIRECTORY/high-server-load-out.result" >"$DIRECTORY/high-server-load-out.clean-result"
+
+# the remaining output is considered as error messages
+error_cnt=$(wc -l <"$DIRECTORY/high-server-load-out.clean-result")
+
+# print out error summary
+if [ "$error_cnt" -gt "0" ]; then
+	echo "Errors occurred during high server load test, # lines output: $error_cnt"
+	echo "======================================================"
+	cat "$DIRECTORY/high-server-load-out.clean-result"
+	echo "======================================================"
+	ERROR=1
 else
-    echo OK
+	echo "High server load test: OK"
 fi
+
+# remove all empty output files
+find "$DIRECTORY" -name "high-server-load-out.*" -size 0 -delete
 
 stop_server
 
 echo
+
 # cleanup
-if [ "$1" == "--nocleanup" ]; then  
-    echo "No Cleanup, keep files from test in $DIRECTORY"
+if [ $CLEANUP -ne 1 ]; then
+	echo "No cleanup, files from test are left in $DIRECTORY"
 else
-    echo "Cleanup test files"
-    rm -f out
-    rm -f $SERVER_LOG $DIRECTORY/$READ_0 $DIRECTORY/$READ_511 $DIRECTORY/$READ_512
-    rm -f $DIRECTORY/$READ_2K $DIRECTORY/$READ_BIG $DIRECTORY/$READ_128K $DIRECTORY/$READ_1M
-    rm -f $DIRECTORY/$WRITE
-    rmdir $DIRECTORY
+	echo "Cleaning up test files"
+	rm -f ??-out $SERVER_LOG
+	cd "$DIRECTORY"
+	rm -f $READ_0 $READ_511 $READ_512 $READ_2K $READ_BIG $READ_128K $READ_1M $READ_101M $WRITE high-server-load-out.*
+	cd ..
+	rmdir "$DIRECTORY"
 fi
 
 echo -n "Overall Test status: "
 # Exit with proper error status
 if [ $ERROR -eq 1 ]; then
-    echo "Errors have occurred"
-    exit 1
+	echo "Errors have occurred"
+	exit 1
 else
-    echo "OK"
-    exit 0
+	echo "OK"
+	exit 0
 fi
 
 # vim: ts=4:sw=4:autoindent
