@@ -1,5 +1,12 @@
+atftp-0.7.4
+===========
+4f2f95c N - Martin Dummer / test.sh: rework test script
+5008879 N - Martin Dummer / rework .gitignore files
+
+
 atftp-0.7.3
 ===========
+e1fc418 N - Martin Dummer / Version 0.7.3 (Bugfix Release)
 f5c2fcd N - Peter Seiderer / tftp.h/tftpd.h: fix musl compile (missing include)
 e7f6fb4 N - Peter Seiderer / argz.h: fix musl compile (add missing defines)
 b39ab6b N - Martin Dummer / Makefile.am: link against libpthread for atftp
