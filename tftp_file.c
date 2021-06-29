@@ -49,6 +49,7 @@
 #define NB_BLOCK        2048
 
 extern int tftp_cancel;
+extern int tftp_prevent_sas;
 
 /*
  * Find a hole in the file bitmap.
@@ -629,6 +630,7 @@ int tftp_send_file(struct client_data *data)
      int timeout_state = state; /* what state should we go on when timeout */
      int result;
      long block_number = 0;
+     long last_requested_block = -1;
      long last_block = -1;
      int data_size;             /* size of data received */
      int sockfd = data->sockfd; /* just to simplify calls */
@@ -791,6 +793,18 @@ int tftp_send_file(struct client_data *data)
                     }
 		    block_number = tftp_rollover_blocknumber(
 			ntohs(tftphdr->th_block), prev_block_number, 0);
+
+                    /* if turned on, check whether the block request isn't already fulfilled */
+                    if (tftp_prevent_sas) {
+                         if (last_requested_block >= block_number) {
+                              if (data->trace)
+                                   fprintf(stderr, "received duplicated ACK <block: %ld >= %ld>\n",
+                                           last_requested_block, block_number);
+                              break;
+                         } else
+                              last_requested_block = block_number;
+                    }
+
                     if (data->trace)
                          fprintf(stderr, "received ACK <block: %ld>\n",
                                  block_number);

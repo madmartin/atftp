@@ -88,6 +88,14 @@ to configure client side port to use.
 See atftpd's man page.
 
 .TP
+.B \-\-prevent\-sas
+Address the Sorcerer's Apprentice Syndrome situation as requested by RFC 1350.
+This RFC requires repeated responses to a single packet to be
+rejected. Thus a block will only get retransmitted on a timeout.
+For backward compatibility, the default stays to ignore this RFC.
+So blocks get transmitted on every request.
+
+.TP
 .B \-\-verbose
 Instruct atftp to be verbose. It will print more information about
 what's going on.

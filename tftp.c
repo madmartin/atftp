@@ -58,6 +58,7 @@
 /* defined as extern in tftp_file.c and mtftp_file.c, set by the signal
    handler */
 int tftp_cancel = 0;
+int tftp_prevent_sas = 0;
 
 /* local flags */
 int interactive = 1;            /* if false, we run in batch mode */
@@ -1009,6 +1010,7 @@ int tftp_cmd_line_options(int argc, char **argv)
 #endif
           { "mtftp", 1, NULL, '1'},
           { "no-source-port-checking", 0, NULL, '0'},
+          { "prevent-sas", 0, NULL, 'X'},
           { "verbose", 0, NULL, 'v'},
           { "trace", 0, NULL, 'd'},
 #if DEBUG
@@ -1117,6 +1119,9 @@ int tftp_cmd_line_options(int argc, char **argv)
 #endif
           case '0':
                data.checkport = 0;
+               break;
+          case 'X':
+               tftp_prevent_sas = 1;
                break;
           case 'v':
                snprintf(string, sizeof(string), "verbose on");
@@ -1229,6 +1234,7 @@ void tftp_usage(void)
              "  --mtftp <\"name value\">   : set mtftp variable to value\n"
 #endif
              "  --no-source-port-checking: violate RFC, see man page\n"
+             "  --prevent-sas            : prevent Sorcerer's Apprentice Syndrome\n"
              "  --verbose                : set verbose mode on\n"
              "  --trace                  : set trace mode on\n"
 #if DEBUG

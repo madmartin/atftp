@@ -55,6 +55,7 @@
 extern char directory[MAXLEN];
 /* read only except for the main thread */
 extern int tftpd_cancel;
+extern int tftpd_prevent_sas;
 
 #ifdef HAVE_PCRE
 extern tftpd_pcre_self_t *pcre_top;
@@ -407,6 +408,7 @@ int tftpd_send_file(struct thread_data *data)
      int timeout_state = state;
      int result;
      long block_number = 0;
+     long last_requested_block = -1;
      long last_block = -1;
      int data_size;
      struct sockaddr_storage *sa = &data->client_info->client;
@@ -818,6 +820,10 @@ int tftpd_send_file(struct thread_data *data)
                                           sockaddr_get_port(
                                                &client_info->client));
                                    sa = &client_info->client;
+
+                                   /* rewind the last_requested_block counter */
+                                   last_requested_block = -1;
+
                                    state = S_SEND_OACK;
                                    break;
                               }
@@ -903,6 +909,28 @@ int tftpd_send_file(struct thread_data *data)
                     if (data->trace)
                          logger(LOG_DEBUG, "received ACK <block: %ld>",
                                 block_number);
+
+                    /* if turned on, check whether the block request isn't already fulfilled */
+                    if (tftpd_prevent_sas) {
+                         /* multicast, block numbers could contain gaps */
+                         if (multicast) {
+                              if (last_requested_block >= block_number) {
+                                   if (data->trace)
+                                        logger(LOG_DEBUG, "received duplicated ACK <block: %d >= %d>", last_requested_block, block_number);
+                                   break;
+                              } else
+                                   last_requested_block = block_number;
+                              /* unicast, blocks should be requested one after another */
+                         } else {
+                              if (last_requested_block + 1 != block_number && last_requested_block != -1) {
+                                   if (data->trace)
+                                        logger(LOG_DEBUG, "received out of order ACK <block: %d != %d>", last_requested_block + 1, block_number);
+                                   break;
+                              } else
+                                   last_requested_block = block_number;
+                         }
+                    }
+
                     if ((last_block != -1) && (block_number > last_block))
                     {
                          state = S_END;
@@ -1001,6 +1029,8 @@ int tftpd_send_file(struct thread_data *data)
                          /* nedd to send an oack to that client */
                          state = S_SEND_OACK;                
                          fseek(fp, 0, SEEK_SET);
+			 /* reset the last block received counter */
+			 last_requested_block = -1;
                     }
                     else
                     {

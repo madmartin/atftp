@@ -65,6 +65,7 @@ int listen_local = 0;
 
 int tftpd_daemon = 0;           /* By default we are started by inetd */
 int tftpd_daemon_no_fork = 0;   /* For who want a false daemon mode */
+int tftpd_prevent_sas = 0;      /* For who don't want the sorcerer's apprentice syndrome */
 int drop_privs = 0;             /* whether it was explicitly requested to switch to another user. */
 short tftpd_port = 69;          /* Port atftpd listen to */
 char tftpd_addr[MAXLEN] = "";   /* IP address atftpd binds to */
@@ -953,6 +954,7 @@ int tftpd_cmd_line_options(int argc, char **argv)
           { "mtftp", 1, NULL, OPT_MTFTP },
           { "mtftp-port", 1, NULL, OPT_MTFTP_PORT },
 #endif
+          { "prevent-sas", 0, NULL, 'X' },
           { "no-source-port-checking", 0, NULL, OPT_PORT_CHECK },
           { "mcast-switch-client", 0, NULL, OPT_MCAST_SWITCH },
           { "version", 0, NULL, 'V' },
@@ -1021,6 +1023,9 @@ int tftpd_cmd_line_options(int argc, char **argv)
                break;
           case 'N':
                tftpd_daemon_no_fork = 1;
+               break;
+          case 'X':
+               tftpd_prevent_sas = 1;
                break;
           case 'U':
                tmp = strtok(optarg, ".");
@@ -1256,6 +1261,7 @@ void tftpd_usage(void)
             "  --listen-local             : force listen on local network address\n"
             "  --daemon                   : run atftpd standalone (no inetd)\n"
             "  --no-fork                  : run as a daemon, don't fork\n"
+            "  --prevent-sas              : prevent Sorcerer's Apprentice Syndrome\n"
             "  --user <user[.group]>      : default is nobody\n"
             "  --group <group>            : default is nogroup\n"
             "  --port <port>              : port on which atftp listen\n"

@@ -181,6 +181,14 @@ implication. Be aware that this option violate the RFC1350. This
 option has effect only for non-multicast transfer.
 
 .TP
+.B \-\-prevent\-sas
+Address the Sorcerer's Apprentice Syndrome situation as requested by RFC 1350.
+This RFC requires repeated responses to a single packet to be
+rejected. Thus a block will only get retransmitted on a timeout.
+For backward compatibility, the default stays to ignore this RFC.
+So blocks get transmitted on every request.
+
+.TP
 .B \-\-mcast\-switch\-client
 This option allow the server to proceed with the next multicast client
 as soon as the current client timeout. When the current master client
