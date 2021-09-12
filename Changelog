@@ -1,3 +1,27 @@
+to be released:
+===============
+48939af N - Martin Dummer / fix some compiler warnings
+d255bf9 N - Martin Dummer / fix buffer overflow in atftpd
+a8190d2 N - Martin Dummer / insert typos.patch
+f04cab8 N - Martin Dummer / insert atftp-0.7-ack_heuristic.patch
+8dce19d N - Martin Dummer / insert atftp-0.7-server_receive_race.patch
+127bc42 N - Martin Dummer / insert patch atftp-0.7-sorcerers_apprentice.patch
+c546e94 N - Martin Dummer / test.sh: check for root no longer necessary
+
+Merge commits from https://github.com/srett/atftp
+=================================================
+313e010 N - Simon Rettberg / tftpd.c: Only drop privs if requested or running as root + check for failure
+c5f4236 N - Simon Rettberg / fix invalid read of 1 byte in tftp_send_request.
+cef874a N - Simon Rettberg / Check return value of fseek(), abort if != 0
+10bfe5f N - Simon Rettberg / options.c: Proper fix for the read-past-end-of-array
+4db65ee N - Simon Rettberg / configure.ac: Add -std=gnu89 if gcc/clang is detected
+5471a07 N - Simon Rettberg / tftpd.c: Fix memleak if thread spawning fails
+7ab8575 N - Simon Rettberg / atftp: Check return value of fgets, buffer might be uninitialized on NULL
+d8390a1 N - Simon Rettberg / Fix check for argz support (HAVE_ARGZ -> HAVE_ARGZ_H)
+
+bf22cca N - Martin Dummer / replace LICENSE with current version
+
+
 atftp-0.7.4
 ===========
 4f2f95c N - Martin Dummer / test.sh: rework test script
