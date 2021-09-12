@@ -168,11 +168,24 @@ int tftpd_receive_file(struct thread_data *data)
           logger(LOG_DEBUG, "timeout option -> %d", timeout);
      }
 
-     /* blksize options */
+     /*
+      *  blksize option, must be the last option evaluated,
+      *  because data->data_buffer_size may be modified here,
+      *  and may be smaller than the buffer containing options
+      */
      if ((result = opt_get_blksize(data->tftp_options)) > -1)
      {
-          if ((result < 8) || (result > 65464))
+          /*
+           *  If we receive more options, we have to make sure our buffer for
+           *  the OACK is not too small.  Use the string representation of
+           *  the options here for simplicity, which puts us on the save side.
+           *  FIXME: Use independent buffers for OACK and data.
+           */
+          opt_options_to_string(data->tftp_options, string, MAXLEN);
+          if ((result < strlen(string)-2) || (result > 65464))
           {
+               logger(LOG_NOTICE, "options <%s> require roughly a blksize of %d for the OACK.",
+                      string, strlen(string)-2);
                tftp_send_error(sockfd, sa, EOPTNEG, data->data_buffer, data->data_buffer_size);
                if (data->trace)
                     logger(LOG_DEBUG, "sent ERROR <code: %d, msg: %s>", EOPTNEG,
@@ -531,11 +544,24 @@ int tftpd_send_file(struct thread_data *data)
           logger(LOG_INFO, "timeout option -> %d", timeout);
      }
 
-     /* blksize options */
+     /*
+      *  blksize option, must be the last option evaluated,
+      *  because data->data_buffer_size may be modified here,
+      *  and may be smaller than the buffer containing options
+      */
      if ((result = opt_get_blksize(data->tftp_options)) > -1)
      {
-          if ((result < 8) || (result > 65464))
+          /*
+           *  If we receive more options, we have to make sure our buffer for
+           *  the OACK is not too small.  Use the string representation of
+           *  the options here for simplicity, which puts us on the save side.
+           *  FIXME: Use independent buffers for OACK and data.
+           */
+          opt_options_to_string(data->tftp_options, string, MAXLEN);
+          if ((result < strlen(string)-2) || (result > 65464))
           {
+               logger(LOG_NOTICE, "options <%s> require roughly a blksize of %d for the OACK.",
+                      string, strlen(string)-2);
                tftp_send_error(sockfd, sa, EOPTNEG, data->data_buffer, data->data_buffer_size);
                if (data->trace)
                     logger(LOG_DEBUG, "sent ERROR <code: %d, msg: %s>", EOPTNEG,
