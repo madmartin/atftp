@@ -709,9 +709,9 @@ int get_file(int argc, char **argv)
                {
                     fclose(fp);
 #if HAVE_READLINE
-                    string = readline("Overwite local file [y/n]? ");
+                    string = readline("Overwrite local file [y/n]? ");
 #else
-                    fprintf(stderr, "Overwite local file [y/n]? ");
+                    fprintf(stderr, "Overwrite local file [y/n]? ");
                     if (fgets(string, MAXLEN, stdin) == NULL) {
                          string[0] = 0;
                     } else {
@@ -912,7 +912,7 @@ int status(int argc, char **argv)
           if (tftp_result == OK)
           {
                print_eng((double)data.file_size, string, sizeof(string), "%3.3f%cB");
-               fprintf(stderr, "  Bytes transfered:  %s\n", string);
+               fprintf(stderr, "  Bytes transferred:  %s\n", string);
                fprintf(stderr, "  Time of transfer: %8.3fs\n",
                        (double)(tmp.tv_sec + tmp.tv_usec * 1e-6));
                fprintf(stderr, "  Throughput:        ");

@@ -87,7 +87,7 @@ void open_logger(char *ident, char *filename, int priority)
 }
 
 /*
- * Same as syslog but allow to format a string, like printf, when logging to
+ * Same as syslog but allows one to format a string, like printf, when logging to
  * file. This fonction will either call syslog or fprintf depending of the
  * previous call to open_logger().
  */

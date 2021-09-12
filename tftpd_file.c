@@ -121,16 +121,16 @@ int tftpd_receive_file(struct thread_data *data)
      int timeout = data->timeout;
      int number_of_timeout = 0;
      int all_blocks_received = 0; /* temporary kludge */
-     int convert = 0;           /* if true, do netascii convertion */
+     int convert = 0;           /* if true, do netascii conversion */
 
-     long prev_block_number = 0; /* needed to support netascii convertion */
+     long prev_block_number = 0; /* needed to support netascii conversion */
      int temp = 0;
 
      /* look for mode option */
      if (strcasecmp(data->tftp_options[OPT_MODE].value, "netascii") == 0)
      {
           convert = 1;
-          logger(LOG_DEBUG, "will do netascii convertion");
+          logger(LOG_DEBUG, "will do netascii conversion");
      }
 
      /* file name verification */
@@ -429,7 +429,7 @@ int tftpd_send_file(struct thread_data *data)
      struct client_info *client_old = NULL;
      struct tftp_opt options[OPT_NUMBER];
 
-     long prev_block_number = 0; /* needed to support netascii convertion */
+     long prev_block_number = 0; /* needed to support netascii conversion */
      long prev_file_pos = 0;
      int temp = 0;
 
@@ -442,7 +442,7 @@ int tftpd_send_file(struct thread_data *data)
      if (strcasecmp(data->tftp_options[OPT_MODE].value, "netascii") == 0)
      {
           convert = 1;
-          logger(LOG_DEBUG, "will do netascii convertion");
+          logger(LOG_DEBUG, "will do netascii conversion");
      }
 
      /* file name verification */
@@ -635,7 +635,7 @@ int tftpd_send_file(struct thread_data *data)
                               data->data_buffer, data->data_buffer_size);
 
                /* We are done */
-               logger(LOG_INFO, "Client transfered to %p", thread);
+               logger(LOG_INFO, "Client transferred to %p", thread);
                fclose(fp);
                return OK;
           }
@@ -1097,7 +1097,7 @@ int tftpd_send_file(struct thread_data *data)
                     }
                     else
                     {
-                         logger(LOG_INFO, "No more client, end of tranfers");
+                         logger(LOG_INFO, "No more client, end of transfers");
                          fclose(fp);
                          return OK;
                     }

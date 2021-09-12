@@ -6,7 +6,7 @@ of your personnal setup. Here's an explanation of what they mean and
 how to tune them.
 
 --tftpd-timeout controls how much time the server will wait for an
-incomming connection before killing the main thread. If you use small
+incoming connection before killing the main thread. If you use small
 number, the server will be respawned by inetd when a new query
 arrives. If number is high, atftpd will behave more like a standalone
 server in that it will always receive queries directly. When booting a

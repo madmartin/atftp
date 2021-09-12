@@ -44,7 +44,7 @@ struct server_stats {
      int number_of_err;         /* send or receive that return with error */
      int num_file_send;
      int num_file_recv;
-     int byte_send;             /* total byte transfered to client (file) */
+     int byte_send;             /* total byte transferred to client (file) */
      int byte_recv;             /* total byte read from client (file) */
 };
 

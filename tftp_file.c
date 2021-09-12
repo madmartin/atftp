@@ -125,7 +125,7 @@ int tftp_receive_file(struct client_data *data)
      struct tftphdr *tftphdr = (struct tftphdr *)data->data_buffer;
      FILE *fp = NULL;           /* the local file pointer */
      int number_of_timeout = 0;
-     int convert = 0;           /* if true, do netascii convertion */
+     int convert = 0;           /* if true, do netascii conversion */
 
      int oacks = 0;             /* count OACK for improved error checking */
      int multicast = 0;         /* set to 1 if multicast */
@@ -141,7 +141,7 @@ int tftp_receive_file(struct client_data *data)
      int prev_bitmap_hole = -1; /* the previous hole found in the bitmap */
      char string[MAXLEN];
 
-     long prev_block_number = 0; /* needed to support netascii convertion */
+     long prev_block_number = 0; /* needed to support netascii conversion */
      int temp = 0;
      int err;
 
@@ -642,10 +642,10 @@ int tftp_send_file(struct client_data *data)
      FILE *fp;                  /* the local file pointer */
      int number_of_timeout = 0;
      struct stat file_stat;
-     int convert = 0;           /* if true, do netascii convertion */
+     int convert = 0;           /* if true, do netascii conversion */
      char string[MAXLEN];
 
-     long prev_block_number = 0; /* needed to support netascii convertion */
+     long prev_block_number = 0; /* needed to support netascii conversion */
      long prev_file_pos = 0;
      int temp = 0;
 

@@ -20,7 +20,7 @@ atftpd \- Trivial File Transfer Protocol Server.
 .SH DESCRIPTION
 .B atftpd
 is a TFTP (RFC1350) server. By default it is started by inetd on most
-sytems, but may run as a stand alone daemon. This server is
+systems, but may run as a stand alone daemon. This server is
 multi-threaded and supports all options described in RFC2347 (option
 extension), RFC2348 (blksize), RFC2349 (tsize and timeout) and RFC2090
 (multicast option). It also supports mtftp as defined in the PXE
@@ -151,7 +151,7 @@ value is "1758".
 
 .TP
 .B \-\-pcre <file>
-Specify a pattern/replacement file to use. This allow to replace
+Specify a pattern/replacement file to use. This allows one to replace
 requested file name based on Perl Compatible Regular Expression. See
 README.PCRE.
 
@@ -169,7 +169,7 @@ example file is provided in the source distribution.
 
 .TP
 .B \-\-mtftp\-port <port>
-Port the mtftp server shall listen to for incomming request.
+Port the mtftp server shall listen to for incoming request.
 
 .TP
 .B \-\-no\-source\-port\-checking
@@ -190,14 +190,14 @@ So blocks get transmitted on every request.
 
 .TP
 .B \-\-mcast\-switch\-client
-This option allow the server to proceed with the next multicast client
+This option allows the server to proceed with the next multicast client
 as soon as the current client timeout. When the current master client
 fails to send an acknowledge (ACK) to the server, the server will send
 an option acknowledge (OACK) to the master client with the field MC
 (master client) set to false and send an OACK to the next multicast
 client with MC set to true. Without this option, the server will retry
 the current master client up to 5 times and then mark it done,
-proceding with the next one.
+proceeding with the next one.
 
 .TP
 .B \-V, \-\-version

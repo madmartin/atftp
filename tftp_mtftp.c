@@ -148,7 +148,7 @@ int tftp_mtftp_receive_file(struct client_data *data)
 
      /* check to see if conversion is requiered */
      if (strcasecmp(data->tftp_options[OPT_MODE].value, "netascii") == 0)
-          fprintf(stderr, "netascii convertion ignored\n");
+          fprintf(stderr, "netascii conversion ignored\n");
 
      /* make sure the data buffer is SEGSIZE + 4 bytes */
      if (data->data_buffer_size != (SEGSIZE + 4))

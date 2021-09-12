@@ -188,12 +188,12 @@ int main(int argc, char **argv)
      }
 
      /*
-      * Can't be started from the prompt without explicitely specifying
+      * Can't be started from the prompt without explicitly specifying
       * the --daemon option.
       */
      if (isatty(0) && !(tftpd_daemon))
      {
-	  printf("Can't be started from the prompt without explicitely "
+	  printf("Can't be started from the prompt without explicitly "
 		 "specifying the --daemon option.\n");
           tftpd_usage();
           exit(1);
@@ -369,7 +369,7 @@ int main(int argc, char **argv)
      }
 
 #if defined(SOL_IP) && defined(IP_PKTINFO)
-     /* We need to retieve some information from incomming packets */
+     /* We need to retieve some information from incoming packets */
      if (setsockopt(0, SOL_IP, IP_PKTINFO, &one, sizeof(one)) != 0)
      {
           logger(LOG_WARNING, "Failed to set socket option: %s", strerror(errno));
@@ -453,7 +453,7 @@ int main(int argc, char **argv)
           }
 #endif
 
-          /* A timeout of 0 is interpreted as infinity. Wait for incomming
+          /* A timeout of 0 is interpreted as infinity. Wait for incoming
              packets */
           if (!tftpd_cancel)
           {
