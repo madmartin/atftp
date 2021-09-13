@@ -1,4 +1,4 @@
-Atftp supports multicast transfer. This feature allows the server to
+﻿Atftp supports multicast transfer. This feature allows the server to
 send a file to many clients at once. There are two ways of doing
 multicast TFTP. One is documented in RFC2090 and the other is known
 as MTFTP and documented in Intel's PXE specification. Atftp supports

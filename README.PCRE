@@ -1,4 +1,4 @@
-File name mangling with PCRE in atftpd
+﻿File name mangling with PCRE in atftpd
 ======================================
 
 Here is an attempt at using PCRE (Perl Compatible Regular Expressions)

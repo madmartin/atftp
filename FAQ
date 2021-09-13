@@ -1,4 +1,4 @@
-1) What are the best values for --tftpd-timeout, --retry-timeout and
+﻿1) What are the best values for --tftpd-timeout, --retry-timeout and
     --max-thread ?
 
 There is no absolute answer to that question. It is highly dependent
