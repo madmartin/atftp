@@ -1,7 +1,9 @@
-﻿to be released:
-===============
+﻿atftp-0.7.5
+===========
+e3dfc46 N - Martin Dummer / README: update contributors list
+694f872 N - Martin Dummer / text files: mark/convert all textfiles to UTF-8
 48939af N - Martin Dummer / fix some compiler warnings
-d255bf9 N - Martin Dummer / fix buffer overflow in atftpd
+d255bf9 N - Martin Dummer / fix buffer overflow in atftpd (CVE-2021-41054)
 a8190d2 N - Martin Dummer / insert typos.patch
 f04cab8 N - Martin Dummer / insert atftp-0.7-ack_heuristic.patch
 8dce19d N - Martin Dummer / insert atftp-0.7-server_receive_race.patch
