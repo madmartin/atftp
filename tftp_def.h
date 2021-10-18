@@ -35,14 +35,15 @@
 #define	MAXBLOCKS     ((1 << (32 - 9)) - 1)  /* Maximum blocks we will xfer */
 
 /* definition to use tftp_options structure */
-#define OPT_FILENAME  0
-#define OPT_MODE      1
-#define OPT_TSIZE     2
-#define OPT_TIMEOUT   3
-#define OPT_BLKSIZE   4
-#define OPT_MULTICAST 5
-#define OPT_PASSWORD  6
-#define OPT_NUMBER    7         /* number of OPT_xx options */
+#define OPT_FILENAME   0
+#define OPT_MODE       1
+#define OPT_TSIZE      2
+#define OPT_TIMEOUT    3
+#define OPT_BLKSIZE    4
+#define OPT_MULTICAST  5
+#define OPT_PASSWORD   6
+#define OPT_WINDOWSIZE 7
+#define OPT_NUMBER     8         /* number of OPT_xx options */
 
 #define OPT_SIZE     12
 #define VAL_SIZE     MAXLEN

@@ -930,6 +930,7 @@ int tftpd_cmd_line_options(int argc, char **argv)
           { "no-timeout", 0, NULL, 'T' },
           { "no-tsize", 0, NULL, 'S' },
           { "no-blksize", 0, NULL, 'B' },
+          { "no-windowsize", 0, NULL, 'W' },
           { "no-multicast", 0, NULL, 'M' },
           { "logfile", 1, NULL, 'L' },
           { "pidfile", 1, NULL, 'I'},
@@ -1005,6 +1006,9 @@ int tftpd_cmd_line_options(int argc, char **argv)
                break;
           case 'B':
                tftp_default_options[OPT_BLKSIZE].enabled = 0;
+               break;
+          case 'W':
+               tftp_default_options[OPT_WINDOWSIZE].enabled = 0;
                break;
           case 'M':
                tftp_default_options[OPT_MULTICAST].enabled = 0;
@@ -1169,16 +1173,18 @@ void tftpd_log_options(void)
      else
           logger(LOG_INFO, "  request per minute limit: ---");
 #endif
-     logger(LOG_INFO, "  option timeout:   %s",
+     logger(LOG_INFO, "  option timeout:    %s",
             tftp_default_options[OPT_TIMEOUT].enabled ? "enabled":"disabled");
-     logger(LOG_INFO, "  option tzise:     %s",
+     logger(LOG_INFO, "  option tzise:      %s",
             tftp_default_options[OPT_TSIZE].enabled ? "enabled":"disabled");
-     logger(LOG_INFO, "  option blksize:   %s",
+     logger(LOG_INFO, "  option blksize:    %s",
             tftp_default_options[OPT_BLKSIZE].enabled ? "enabled":"disabled");
-     logger(LOG_INFO, "  option multicast: %s",
+     logger(LOG_INFO, "  option windowsize: %s",
+            tftp_default_options[OPT_WINDOWSIZE].enabled ? "enabled":"disabled");
+     logger(LOG_INFO, "  option multicast:  %s",
             tftp_default_options[OPT_MULTICAST].enabled ? "enabled":"disabled");
-     logger(LOG_INFO, "     address range: %s", mcast_addr);
-     logger(LOG_INFO, "     port range:    %s", mcast_port);
+     logger(LOG_INFO, "     address range:  %s", mcast_addr);
+     logger(LOG_INFO, "     port range:     %s", mcast_port);
 #ifdef HAVE_PCRE
      if (pcre_top)
           logger(LOG_INFO, "  PCRE: using file: %s", pcre_file);
@@ -1255,6 +1261,7 @@ void tftpd_usage(void)
             "  --no-timeout               : disable 'timeout' from RFC2349\n"
             "  --no-tsize                 : disable 'tsize' from RFC2349\n"
             "  --no-blksize               : disable 'blksize' from RFC2348\n"
+            "  --no-windowsize            : disable 'windowsize' from RFC7440\n"
             "  --no-multicast             : disable 'multicast' from RFC2090\n"
             "  --logfile <file>           : logfile to log logs to ;-) (use - for stdout)\n"
             "  --pidfile <file>           : write PID to this file\n"

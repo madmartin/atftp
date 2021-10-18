@@ -35,14 +35,19 @@ int opt_set_options(struct tftp_opt *options, char *name, char *value);
 int opt_get_options(struct tftp_opt *options, char *name, char *value);
 int opt_disable_options(struct tftp_opt *options, char *name);
 int opt_support_options(struct tftp_opt *options);
+
 int opt_get_tsize(struct tftp_opt *options);
 int opt_get_timeout(struct tftp_opt *options);
 int opt_get_blksize(struct tftp_opt *options);
+int opt_get_windowsize(struct tftp_opt *options);
 int opt_get_multicast(struct tftp_opt *options, char *addr, int *port, int *mc);
+
 void opt_set_tsize(int tsize, struct tftp_opt *options);
 void opt_set_timeout(int timeout, struct tftp_opt *options);
 void opt_set_blksize(int blksize, struct tftp_opt *options);
+void opt_set_windowsize(int windowsize, struct tftp_opt *options);
 void opt_set_multicast(struct tftp_opt *options, char *addr, int port, int mc);
+
 void opt_request_to_string(struct tftp_opt *options, char *string, int len);
 void opt_options_to_string(struct tftp_opt *options, char *string, int len);
 

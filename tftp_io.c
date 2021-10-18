@@ -235,7 +235,8 @@ int tftp_get_packet(int sock1, int sock2, int *sock, struct sockaddr_storage *sa
 
      /* Wait up to five seconds. */
      tv.tv_sec = timeout;
-     tv.tv_usec = 0;
+     /* FIXME: Non zero value (not too small) is needed, why? */
+     tv.tv_usec = 10;
 
      /* Watch socket to see when it has input. */
      FD_ZERO(&rfds);

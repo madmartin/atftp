@@ -33,13 +33,14 @@
 
 // FIXME: is there a way to use TIMEOUT and SEGSIZE here?
 struct tftp_opt tftp_default_options[OPT_NUMBER + 1] = {
-     { "filename", "", 0, 1},   /* file to transfer */
-     { "mode", "octet", 0, 1},  /* mode for transfer */
-     { "tsize", "0", 0, 1 },    /* RFC1350 options. See RFC2347, */
-     { "timeout", "5", 0, 1 },  /* 2348, 2349, 2090.  */
-     { "blksize", "512", 0, 1 }, /* This is the default option */
-     { "multicast", "", 0, 1 }, /* structure */
-     { "password", "", 0, 1},   /* password */
+     { "filename", "", 0, 1},     /* file to transfer */
+     { "mode", "octet", 0, 1},    /* mode for transfer */
+     { "tsize", "0", 0, 1 },      /* RFC1350 options. See RFC2347, */
+     { "timeout", "5", 0, 1 },    /* 2348, 2349, 2090.  */
+     { "blksize", "512", 0, 1 },  /* This is the default option */
+     { "multicast", "", 0, 1 },   /* structure */
+     { "password", "", 0, 1},     /* password */
+     { "windowsize", "1", 0, 1 }, /* Default without RFC7440 */
      { "", "", 0, 0}
 };
 

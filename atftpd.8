@@ -74,6 +74,11 @@ disable 'blksize' from RFC2348. This will prevent the server from
 acknowledging the 'blksize' request by the client.
 
 .TP
+.B \-\-no\-windowsize
+disable 'windowsize' from RFC7440. This will prevent the server from
+acknowledging the 'windowsize' request by the client.
+
+.TP
 .B \-\-no\-multicast
 disable 'multicast' from RFC2090. This will prevent the server from
 acknowledging the 'multicast' request by the client.
@@ -133,7 +138,6 @@ of 1 is used. Note that TTL has a special meaning in multicast as it
 is used to determine the scope of the packets. The value of 1 means
 the packets don't leave the local network, see ip(4). Scope may also
 be determine by the address as described RFC2365.
-
 
 .TP
 .B \-\-mcast\-addr

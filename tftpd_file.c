@@ -107,8 +107,11 @@ int tftpd_receive_file(struct thread_data *data)
 {
      int state = S_BEGIN;
      int timeout_state = state;
+     int windowblock = 0;         /* number of block in a window, c.f. RFC7440 */
+     int windowsize = 1;          /* c.f. RFC7440 */
      int result;
      long block_number = 0;
+     long last_received_block = 0;
      int data_size;
      int sockfd = data->sockfd;
      struct sockaddr_storage *sa = &data->client_info->client;
@@ -238,16 +241,18 @@ int tftpd_receive_file(struct thread_data *data)
                     state = S_SEND_ACK;
                break;
           case S_SEND_ACK:
+               windowblock = 0;
                timeout_state = state;
-               tftp_send_ack(sockfd, sa, block_number);
+               tftp_send_ack(sockfd, sa, last_received_block);
                if (data->trace)
-                    logger(LOG_DEBUG, "sent ACK <block: %ld>", block_number);
+                    logger(LOG_DEBUG, "sent ACK <block: %ld>", last_received_block);
                if (all_blocks_received)
                     state = S_END;
                else
                     state = S_WAIT_PACKET;
                break;
           case S_SEND_OACK:
+               windowblock = 0;
                timeout_state = state;
                tftp_send_oack(sockfd, sa, data->tftp_options,
                               data->data_buffer, data->data_buffer_size);
@@ -360,10 +365,21 @@ int tftpd_receive_file(struct thread_data *data)
                /* We need to seek to the right place in the file */
 	       block_number = tftp_rollover_blocknumber(
 		      ntohs(tftphdr->th_block), prev_block_number, 0);
+               /* The first data package acknowledges the OACK */
+               if ((last_received_block < windowsize) && (timeout_state = S_SEND_OACK))
+                    timeout_state = S_SEND_ACK;
+               if (last_received_block + 1 != block_number)
+               {
+                    /* We got a wrong block from the client, send ACK for last block again */
+                    logger(LOG_DEBUG, "got wrong block <block: %ld>", block_number);
+                    state = S_SEND_ACK;
+                    break;
+               }
+               windowblock++;
                if (data->trace)
-                    logger(LOG_DEBUG, "received DATA <block: %ld, size: %d>",
-                           block_number, data_size - 4);
-
+                    logger(LOG_DEBUG, "received %d. DATA <block: %ld, size %d>, update last received block: %ld → %ld>",
+                           windowblock, block_number, data_size - 4, last_received_block, block_number);
+               last_received_block = block_number;
                if (tftp_file_write(fp, tftphdr->th_data, data->data_buffer_size - 4, block_number,
                                    data_size - 4, convert, &prev_block_number, &temp)
                    != data_size - 4)
@@ -382,7 +398,10 @@ int tftpd_receive_file(struct thread_data *data)
                     all_blocks_received = 1;
                else
                     all_blocks_received = 0;
-               state = S_SEND_ACK;
+               if ((windowblock >= windowsize) || (all_blocks_received))
+                    state = S_SEND_ACK;
+               else
+                    state = S_WAIT_PACKET;
                break;
           case S_END:
                if (fp != NULL) fclose(fp);
@@ -419,6 +438,7 @@ int tftpd_send_file(struct thread_data *data)
      int timeout_state = state;
      int result;
      long block_number = 0;
+     long last_ackd_block = -1;
      long last_block = -1;
      int data_size;
      struct sockaddr_storage *sa = &data->client_info->client;
@@ -430,6 +450,9 @@ int tftpd_send_file(struct thread_data *data)
      char filename[MAXLEN];
      char string[MAXLEN];
      int timeout = data->timeout;
+     int windowblock = 0;
+     int windowsize = 1;
+     int in_window_ack = -1;
      int number_of_timeout = 0;
      int mcast_switch = data->mcast_switch_client;
      struct stat file_stat;
@@ -446,7 +469,6 @@ int tftpd_send_file(struct thread_data *data)
      long prev_file_pos = 0;
      int temp = 0;
 
-     long prev_sent_block = -1;
      int prev_sent_count = 0;
      int prev_ack_count = 0;
      int curr_sent_count = 0;
@@ -544,6 +566,22 @@ int tftpd_send_file(struct thread_data *data)
           logger(LOG_INFO, "timeout option -> %d", timeout);
      }
 
+     /* windowsize option */
+     if ((result = opt_get_windowsize(data->tftp_options)) > -1)
+     {
+          if ((result < 1) || (result > 65535))
+          {
+               tftp_send_error(sockfd, sa, EOPTNEG, data->data_buffer, data->data_buffer_size);
+               if (data->trace)
+                    logger(LOG_DEBUG, "sent ERROR <code: %d, msg: %s>", EOPTNEG,
+                           tftp_errmsg[EOPTNEG]);
+               fclose(fp);
+               return ERR;
+          }
+          windowsize = result;
+          opt_set_windowsize(windowsize, data->tftp_options);
+          logger(LOG_INFO, "windowsize option -> %d", windowsize);
+     }
      /*
       *  blksize option, must be the last option evaluated,
       *  because data->data_buffer_size may be modified here,
@@ -774,6 +812,7 @@ int tftpd_send_file(struct thread_data *data)
                state = S_WAIT_PACKET;
                break;
           case S_SEND_DATA:
+               windowblock++;
                timeout_state = state;
 
                data_size = tftp_file_read(fp, tftphdr->th_data, data->data_buffer_size - 4, block_number,
@@ -796,19 +835,35 @@ int tftpd_send_file(struct thread_data *data)
                                    data_size, data->data_buffer);
                }
                if (data->trace)
-                    logger(LOG_DEBUG, "sent DATA <block: %ld, size %d>",
-                           block_number + 1, data_size - 4);
+                    logger(LOG_DEBUG, "sent %d. DATA <block: %ld, size %d>",
+                           windowblock, block_number + 1, data_size - 4);
                state = S_WAIT_PACKET;
                break;
           case S_WAIT_PACKET:
                data_size = data->data_buffer_size;
-               result = tftp_get_packet(sockfd, -1, NULL, sa, &from, NULL,
-                                        timeout, &data_size, data->data_buffer);
+               if ((windowblock >= windowsize) || (last_ackd_block == -1) || (last_block != -1)) {
+                    /* we wait for the ACK */
+                    result = tftp_get_packet(sockfd, -1, NULL, sa, &from, NULL,
+                                             timeout, &data_size, data->data_buffer);
+                    in_window_ack = 0;
+               } else {
+                    /* we check if an unsolicitated ACK arrived */
+                    result = tftp_get_packet(sockfd, -1, NULL, sa, &from, NULL,
+                                             0, &data_size, data->data_buffer);
+                    if (result == GET_TIMEOUT) {
+                         /* we send the next block */
+                         block_number = tftp_rollover_blocknumber(
+                              ntohs(tftphdr->th_block), prev_block_number, 0);
+                         state = S_SEND_DATA;
+                         break;
+                    }
+                    in_window_ack++;
+               }
                switch (result)
                {
                case GET_TIMEOUT:
                     number_of_timeout++;
-                    
+                    windowblock = 0;
                     if (number_of_timeout > NB_OF_RETRY)
                     {
                          logger(LOG_INFO, "client (%s) not responding",
@@ -849,8 +904,8 @@ int tftpd_send_file(struct thread_data *data)
                                                &client_info->client));
                                    sa = &client_info->client;
 
-                                   /* rewind the prev_sent_block counter */
-                                   prev_sent_block = -1;
+                                   /* rewind the last_ackd_block counter */
+                                   last_ackd_block = -1;
 
                                    state = S_SEND_OACK;
                                    break;
@@ -865,7 +920,9 @@ int tftpd_send_file(struct thread_data *data)
                                    break;
                               }
                          }
-                         logger(LOG_WARNING, "timeout: retrying...");
+                         logger(LOG_WARNING, "timeout block %ld: retrying ...", block_number);
+                         /* rewind the block_number to the last block we received */
+                         block_number = last_ackd_block;
                          state = timeout_state;
                     }
                     break;
@@ -944,19 +1001,19 @@ int tftpd_send_file(struct thread_data *data)
                     /* multicast, block numbers could contain gaps */
                     if (multicast) {
                          /* if turned on, check whether the block request isn't already fulfilled */
-                         if (tftpd_prevent_sas) {
-                              if (prev_sent_block >= block_number) {
+                         if (data->tftp_options[OPT_WINDOWSIZE].enabled || tftpd_prevent_sas) {
+                              if ((last_ackd_block >= block_number) || (in_window_ack > 1)) {
                                    if (data->trace)
-                                        logger(LOG_DEBUG, "received duplicated ACK <block: %d >= %d>", prev_sent_block, block_number);
+                                        logger(LOG_DEBUG, "received outdated/duplicate ACK block: %ld", block_number);
                                    break;
                               } else
-                                   prev_sent_block = block_number;
+                                   last_ackd_block = block_number;
                          }
                          /* don't prevent thes SAS */
                          /* use a heuristic suggested by Vladimir Nadvornik */
                          else {
                               /* here comes the ACK again */
-                              if (prev_sent_block == block_number) {
+                              if (last_ackd_block == block_number) {
                                    /* drop if number of ACKs == times of previous block sending */
                                    if (++prev_ack_count == prev_sent_count) {
                                         logger(LOG_DEBUG, "ACK count (%d) == previous block transmission count -> dropping ACK", prev_ack_count);
@@ -966,8 +1023,8 @@ int tftpd_send_file(struct thread_data *data)
                                    logger(LOG_DEBUG, "resending block %d", block_number + 1);
                               }
                               /* received ACK to sent block -> move on to next block */
-                              else if (prev_sent_block < block_number) {
-                                   prev_sent_block = block_number;
+                              else if (last_ackd_block < block_number) {
+                                   last_ackd_block = block_number;
                                    prev_sent_count = curr_sent_count;
                                    curr_sent_count = 0;
                                    prev_ack_count = 1;
@@ -978,23 +1035,26 @@ int tftpd_send_file(struct thread_data *data)
                                    break;
                               }
                          }
-                         /* unicast, blocks should be requested one after another */
                     } else {
+                         /* unicast, blocks should be requested one after another */
                          /* if turned on, check whether the block request isn't already fulfilled */
-                         if (tftpd_prevent_sas) {
-                              if (prev_sent_block + 1 != block_number) {
-                                   logger(LOG_WARNING, "timeout: retrying...");
+                         if (data->tftp_options[OPT_WINDOWSIZE].enabled || tftpd_prevent_sas) {
+                              if ((last_ackd_block > block_number) || (in_window_ack > 1)) {
                                    if (data->trace)
-                                        logger(LOG_DEBUG, "received out of order ACK <block: %d != %d>", prev_sent_block + 1, block_number);
+                                        logger(LOG_DEBUG, "ignore outdated/duplicate ACK: %ld", block_number);
                                    break;
-                              } else {
-                                   prev_sent_block = block_number;
                               }
+                              if ((last_ackd_block + windowsize != block_number) && (last_ackd_block != -1) && (last_block == -1))
+                                   logger(LOG_WARNING, "window block %ld not complete/ordered: %ld/%d valid",
+                                          block_number, block_number - last_ackd_block, windowsize);
+                              if (data->trace)
+                                   logger(LOG_DEBUG, "update last ACK'd <block: %ld → %ld>", last_ackd_block, block_number);
+                              last_ackd_block = block_number;
+                         } else {
                               /* don't prevent thes SAS */
                               /* use a heuristic suggested by Vladimir Nadvornik */
-                              } else {
                               /* here comes the ACK again */
-                              if (prev_sent_block == block_number) {
+                              if (last_ackd_block == block_number) {
                                    /* drop if number of ACKs == times of previous block sending */
                                    if (++prev_ack_count == prev_sent_count) {
                                         logger(LOG_DEBUG, "ACK count (%d) == previous block transmission count -> dropping ACK", prev_ack_count);
@@ -1004,8 +1064,8 @@ int tftpd_send_file(struct thread_data *data)
                                    logger(LOG_DEBUG, "resending block %d", block_number + 1);
                               }
                               /* received ACK to sent block -> move on to next block */
-                              else if (prev_sent_block < block_number) {
-                                   prev_sent_block = block_number;
+                              else if (last_ackd_block < block_number) {
+                                   last_ackd_block = block_number;
                                    prev_sent_count = curr_sent_count;
                                    curr_sent_count = 0;
                                    prev_ack_count = 1;
@@ -1023,7 +1083,7 @@ int tftpd_send_file(struct thread_data *data)
                          state = S_END;
                          break;
                     }
-
+                    windowblock = 0;
                     curr_sent_count++;
                     state = S_SEND_DATA;
                     break;
@@ -1119,7 +1179,7 @@ int tftpd_send_file(struct thread_data *data)
                          state = S_SEND_OACK;                
                          fseek(fp, 0, SEEK_SET);
 			 /* reset the last block received counter */
-			 prev_sent_block = -1;
+			 last_ackd_block = -1;
                     }
                     else
                     {
