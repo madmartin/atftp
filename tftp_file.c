@@ -419,8 +419,7 @@ int tftp_receive_file(struct client_data *data)
                     if (data->trace)
                          fprintf(stderr, "received OACK <");
                     /* tsize: funny, now we know the file size */
-                    if ((result = opt_get_tsize(data->tftp_options_reply)) >
-                        -1)
+                    if ((result = opt_get_tsize(data->tftp_options_reply)) > -1)
                     {
                          if (data->trace)
                               fprintf(stderr, "tsize: %d, ", result);
@@ -433,21 +432,18 @@ int tftp_receive_file(struct client_data *data)
                          windowsize = result;
                     }
                     /* timeout */
-                    if ((result = opt_get_timeout(data->tftp_options_reply))
-                        > -1)
+                    if ((result = opt_get_timeout(data->tftp_options_reply)) > -1)
                     {
                          if (data->trace)
                               fprintf(stderr, "timeout: %d, ", result);
                     }
                     /* blksize: resize the buffer please */
-                    if ((result = opt_get_blksize(data->tftp_options_reply))
-                        > -1)
+                    if ((result = opt_get_blksize(data->tftp_options_reply)) > -1)
                     {
                          if (data->trace)
                               fprintf(stderr, "blksize: %d, ", result);
 
-                         data->data_buffer = realloc(data->data_buffer,
-                                                     result + 4);
+                         data->data_buffer = realloc(data->data_buffer, result + 4);
                          tftphdr = (struct tftphdr *)data->data_buffer;
                          if (data->data_buffer == NULL)
                          {

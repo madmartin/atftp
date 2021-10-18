@@ -106,7 +106,7 @@ int opt_parse_options(char *data, int data_size, struct tftp_opt *options)
 /*
  * Set an option by name in the structure.
  * name is the name of the option as in tftp_def.c.
- * name is it's new value, that must comply with the rfc's.
+ * value is it's new value, that must comply with the rfc's.
  * When setting an option, it is marked as specified.
  * 
  */

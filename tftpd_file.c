@@ -99,7 +99,7 @@ int tftpd_rules_check(char *filename)
  *
  *     1) send a ACK or OACK
  *     2) wait replay
- *          - if DATA packet, read it, send an acknoledge, goto 2
+ *          - if DATA packet, read it, send an acknowledge, goto 2
  *          - if ERROR abort
  *          - if TIMEOUT goto previous state
  */
@@ -171,11 +171,7 @@ int tftpd_receive_file(struct thread_data *data)
           logger(LOG_DEBUG, "timeout option -> %d", timeout);
      }
 
-     /*
-      *  blksize option, must be the last option evaluated,
-      *  because data->data_buffer_size may be modified here,
-      *  and may be smaller than the buffer containing options
-      */
+     /* blksize */
      if ((result = opt_get_blksize(data->tftp_options)) > -1)
      {
           /*
@@ -256,9 +252,10 @@ int tftpd_receive_file(struct thread_data *data)
                timeout_state = state;
                tftp_send_oack(sockfd, sa, data->tftp_options,
                               data->data_buffer, data->data_buffer_size);
-               opt_options_to_string(data->tftp_options, string, MAXLEN);
-               if (data->trace)
+               if (data->trace) {
+                    opt_options_to_string(data->tftp_options, string, MAXLEN);
                     logger(LOG_DEBUG, "sent OACK <%s>", string);
+               }
                state = S_WAIT_PACKET;
                break;
           case S_WAIT_PACKET:
@@ -279,7 +276,7 @@ int tftpd_receive_file(struct thread_data *data)
                     }
                     else
                     {
-                         logger(LOG_WARNING, "timeout: retrying...");
+                         logger(LOG_WARNING, "timeout: retrying ...");
                          state = timeout_state;
                     }
                     break;
@@ -363,8 +360,7 @@ int tftpd_receive_file(struct thread_data *data)
                }
 
                /* We need to seek to the right place in the file */
-	       block_number = tftp_rollover_blocknumber(
-		      ntohs(tftphdr->th_block), prev_block_number, 0);
+               block_number = tftp_rollover_blocknumber(ntohs(tftphdr->th_block), prev_block_number, 0);
                /* The first data package acknowledges the OACK */
                if ((last_received_block < windowsize) && (timeout_state = S_SEND_OACK))
                     timeout_state = S_SEND_ACK;
@@ -381,8 +377,7 @@ int tftpd_receive_file(struct thread_data *data)
                            windowblock, block_number, data_size - 4, last_received_block, block_number);
                last_received_block = block_number;
                if (tftp_file_write(fp, tftphdr->th_data, data->data_buffer_size - 4, block_number,
-                                   data_size - 4, convert, &prev_block_number, &temp)
-                   != data_size - 4)
+                                   data_size - 4, convert, &prev_block_number, &temp) != data_size - 4)
                {
                     logger(LOG_ERR, "%s: %d: error writing to file %s",
                            __FILE__, __LINE__, filename);
@@ -582,11 +577,8 @@ int tftpd_send_file(struct thread_data *data)
           opt_set_windowsize(windowsize, data->tftp_options);
           logger(LOG_INFO, "windowsize option -> %d", windowsize);
      }
-     /*
-      *  blksize option, must be the last option evaluated,
-      *  because data->data_buffer_size may be modified here,
-      *  and may be smaller than the buffer containing options
-      */
+
+     /* blksize */
      if ((result = opt_get_blksize(data->tftp_options)) > -1)
      {
           /*
@@ -692,9 +684,11 @@ int tftpd_send_file(struct thread_data *data)
                   not be a problem: the client thread will receive a second OACK and fall
                   back to non master mode. Then the server will timeout and either resend
                   OACK or continu with the next client */
-               opt_options_to_string(data->tftp_options, string, MAXLEN);
                if (data->trace)
+               {
+                    opt_options_to_string(data->tftp_options, string, MAXLEN);
                     logger(LOG_DEBUG, "sent OACK <%s>", string);
+               }
                tftp_send_oack(thread->sockfd, sa, data->tftp_options,
                               data->data_buffer, data->data_buffer_size);
 
@@ -804,9 +798,10 @@ int tftpd_send_file(struct thread_data *data)
                break;
           case S_SEND_OACK:
                timeout_state = state;
-               opt_options_to_string(data->tftp_options, string, MAXLEN);
-               if (data->trace)
+               if (data->trace) {
+                    opt_options_to_string(data->tftp_options, string, MAXLEN);
                     logger(LOG_DEBUG, "sent OACK <%s>", string);
+               }
                tftp_send_oack(sockfd, sa, data->tftp_options,
                               data->data_buffer, data->data_buffer_size);
                state = S_WAIT_PACKET;
@@ -814,7 +809,6 @@ int tftpd_send_file(struct thread_data *data)
           case S_SEND_DATA:
                windowblock++;
                timeout_state = state;
-
                data_size = tftp_file_read(fp, tftphdr->th_data, data->data_buffer_size - 4, block_number,
                                           convert, &prev_block_number, &prev_file_pos, &temp);
                data_size += 4;  /* need to consider tftp header */
@@ -886,10 +880,12 @@ int tftpd_send_file(struct thread_data *data)
                               {
                                    /* Send an OACK to the old client remove is
                                       master client status */
-                                   opt_options_to_string(options,
-                                                         string, MAXLEN);
+
                                    if (data->trace)
+                                   {
+                                        opt_options_to_string(options, string, MAXLEN);
                                         logger(LOG_DEBUG, "sent OACK <%s>", string);
+                                   }
                                    tftp_send_oack(sockfd, sa, options,
                                                   data->data_buffer, data->data_buffer_size);
 
@@ -953,15 +949,15 @@ int tftpd_send_file(struct thread_data *data)
                               else
                                    /* If not, send and OACK with mc=0 to shut it up. */
                               {
-                                   opt_options_to_string(options,
-                                                         string, MAXLEN);
                                    if (data->trace)
+                                   {
+                                        opt_options_to_string(options, string, MAXLEN);
                                         logger(LOG_DEBUG, "sent OACK <%s>", string);
+                                   }
                                    tftp_send_oack(sockfd, &from, options,
                                                   data->data_buffer, data->data_buffer_size);
                               }
                               break;
-                              
                          }
                     }
                     else
@@ -978,8 +974,7 @@ int tftpd_send_file(struct thread_data *data)
                                    break;
                               }
                               else
-                                   logger(LOG_WARNING,
-                                          "source port mismatch, check bypassed");
+                                   logger(LOG_WARNING, "source port mismatch, check bypassed");
                          }
                     }
 
@@ -988,19 +983,14 @@ int tftpd_send_file(struct thread_data *data)
 		    if (multicast)
 			    block_number = ntohs(tftphdr->th_block);
 		    else
-		    {
-			    block_number = tftp_rollover_blocknumber(
-				ntohs(tftphdr->th_block), prev_block_number, 0);
-		    }
+			    block_number = tftp_rollover_blocknumber(ntohs(tftphdr->th_block), prev_block_number, 0);
                     if (data->trace)
-                         logger(LOG_DEBUG, "received ACK <block: %ld>",
-                                block_number);
+                         logger(LOG_DEBUG, "received ACK <block: %ld>", block_number);
 
                     /* Now check the ACK number and possibly ignore the request */
-
-                    /* multicast, block numbers could contain gaps */
                     if (multicast) {
-                         /* if turned on, check whether the block request isn't already fulfilled */
+                         /* multicast, block numbers could contain gaps */
+                         /* check whether the block request isn't already fulfilled */
                          if (data->tftp_options[OPT_WINDOWSIZE].enabled || tftpd_prevent_sas) {
                               if ((last_ackd_block >= block_number) || (in_window_ack > 1)) {
                                    if (data->trace)
@@ -1008,10 +998,9 @@ int tftpd_send_file(struct thread_data *data)
                                    break;
                               } else
                                    last_ackd_block = block_number;
-                         }
-                         /* don't prevent thes SAS */
-                         /* use a heuristic suggested by Vladimir Nadvornik */
-                         else {
+                         } else {
+                              /* don't prevent the SAS */
+                              /* use a heuristic suggested by Vladimir Nadvornik */
                               /* here comes the ACK again */
                               if (last_ackd_block == block_number) {
                                    /* drop if number of ACKs == times of previous block sending */
@@ -1037,8 +1026,8 @@ int tftpd_send_file(struct thread_data *data)
                          }
                     } else {
                          /* unicast, blocks should be requested one after another */
-                         /* if turned on, check whether the block request isn't already fulfilled */
                          if (data->tftp_options[OPT_WINDOWSIZE].enabled || tftpd_prevent_sas) {
+                              /* check whether the block request isn't already fulfilled */
                               if ((last_ackd_block > block_number) || (in_window_ack > 1)) {
                                    if (data->trace)
                                         logger(LOG_DEBUG, "ignore outdated/duplicate ACK: %ld", block_number);
@@ -1051,7 +1040,7 @@ int tftpd_send_file(struct thread_data *data)
                                    logger(LOG_DEBUG, "update last ACK'd <block: %ld → %ld>", last_ackd_block, block_number);
                               last_ackd_block = block_number;
                          } else {
-                              /* don't prevent thes SAS */
+                              /* don't prevent the SAS */
                               /* use a heuristic suggested by Vladimir Nadvornik */
                               /* here comes the ACK again */
                               if (last_ackd_block == block_number) {
@@ -1078,8 +1067,7 @@ int tftpd_send_file(struct thread_data *data)
                          }
                     }
 
-                    if ((last_block != -1) && (block_number > last_block))
-                    {
+                    if ((last_block != -1) && (block_number > last_block)) {
                          state = S_END;
                          break;
                     }
@@ -1129,10 +1117,12 @@ int tftpd_send_file(struct thread_data *data)
                          }
                     }
                     /* Got an ERROR from the current master client */
-                    Strncpy(string, tftphdr->th_msg, sizeof(string));
                     if (data->trace)
+                    {
+                         Strncpy(string, tftphdr->th_msg, sizeof(string));
                          logger(LOG_DEBUG, "received ERROR <code: %d, msg: %s>",
                                 ntohs(tftphdr->th_code), string);
+                    }
                     if (multicast)
                     {
                          logger(LOG_DEBUG, "Marking client as done");
