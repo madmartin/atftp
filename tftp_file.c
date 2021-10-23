@@ -259,7 +259,7 @@ int tftp_receive_file(struct client_data *data)
                if (multicast)
                {
                     result = tftp_get_packet(sockfd, mcast_sockfd, NULL, &sa, &from,
-                                             NULL, data->timeout, &data_size,
+                                             NULL, data->timeout, 0, &data_size,
                                              data->data_buffer);
                     /* RFC2090 state we should verify source address as well
                        as source port */
@@ -272,7 +272,7 @@ int tftp_receive_file(struct client_data *data)
                else
                {
                     result = tftp_get_packet(sockfd, -1, NULL, &sa, &from, NULL,
-                                             data->timeout, &data_size,
+                                             data->timeout, 0, &data_size,
                                              data->data_buffer);
                     /* Check that source port match */
                     if ((sockaddr_get_port(&sa) != sockaddr_get_port(&from)) &&
@@ -649,6 +649,7 @@ int tftp_send_file(struct client_data *data)
      int timeout_state = state; /* what state should we go on when timeout */
      int windowblock = 0;       /* number of block in a window, c.f. RFC7440 */
      int windowsize = 1;        /* c.f. RFC7440 */
+     int delay = 0;             /* delay between datagrams in a window */
      int result;
      long block_number = 0;
      long last_requested_block = -1;
@@ -789,13 +790,13 @@ int tftp_send_file(struct client_data *data)
                     windowblock = 0;
                     /* we wait for the ACK */
                     result = tftp_get_packet(sockfd, -1, NULL, &sa, &from, NULL,
-                                             data->timeout, &data_size, data->data_buffer);
+                                             data->timeout, 0, &data_size, data->data_buffer);
                }
                else
                {
                     /* we check if an unsolicitated ACK arrived */
                     result = tftp_get_packet(sockfd, -1, NULL, &sa, &from, NULL,
-                                             0, &data_size, data->data_buffer);
+                                             0, delay, &data_size, data->data_buffer);
                     if (result == GET_TIMEOUT)
                     {
                          /* we send the next block */

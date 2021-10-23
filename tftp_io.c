@@ -207,7 +207,7 @@ int tftp_send_data(int socket, struct sockaddr_storage *sa, long block_number,
  */
 int tftp_get_packet(int sock1, int sock2, int *sock, struct sockaddr_storage *sa,
                     struct sockaddr_storage *sa_from, struct sockaddr_storage *sa_to,
-                    int timeout, int *size, char *data)
+                    int timeout, int timeout_usec, int *size, char *data)
 {
      int result;
      struct timeval tv;
@@ -235,8 +235,8 @@ int tftp_get_packet(int sock1, int sock2, int *sock, struct sockaddr_storage *sa
 
      /* Wait up to five seconds. */
      tv.tv_sec = timeout;
-     /* FIXME: Non zero value (not too small) is needed, why? */
-     tv.tv_usec = 10;
+     /* Delay between datagrams in a window. */
+     tv.tv_usec = timeout_usec;
 
      /* Watch socket to see when it has input. */
      FD_ZERO(&rfds);

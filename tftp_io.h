@@ -51,7 +51,7 @@ int tftp_send_data(int socket, struct sockaddr_storage *s_inn, long block_number
                    int size, char *data);
 int tftp_get_packet(int sock1, int sock2, int *sock, struct sockaddr_storage *sa,
                     struct sockaddr_storage *from, struct sockaddr_storage *to,
-                    int timeout, int *size, char *data);
+                    int timeout, int timeout_usec, int *size, char *data);
 int tftp_file_read(FILE *fp, char *buffer, int buffer_size, long block_number, int convert,
                    long *prev_block_number, long *prev_file_pos, int *temp);
 int tftp_file_write(FILE *fp, char *data_buffer, int data_buffer_size, long block_number,

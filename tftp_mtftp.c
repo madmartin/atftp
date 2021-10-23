@@ -328,7 +328,7 @@ int tftp_mtftp_receive_file(struct client_data *data)
                data_size = data->data_buffer_size;
                /* receive the data */
                result = tftp_get_packet(sockfd, mcast_sockfd, &sock, &sa, &from,
-					NULL, timeout, &data_size,
+					NULL, timeout, 0, &data_size,
 					data->data_buffer);
                switch (result)
                {

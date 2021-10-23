@@ -389,7 +389,7 @@ void *tftpd_mtftp_server(void *arg)
                memset(&sa, 0, sizeof(sa)); /* this will hold the client info */
                data_size = data->data_buffer_size;
                retval = tftp_get_packet(sockfd, -1, NULL, &sa, NULL, NULL,
-                                        data->timeout,
+                                        data->timeout, 0,
                                         &data_size, data->data_buffer);
 
 #ifdef HAVE_WRAP
@@ -596,7 +596,7 @@ void *tftpd_mtftp_send_file(void *arg)
           case S_WAIT_PACKET:
                data_size = data->data_buffer_size;
                result = tftp_get_packet(sockfd, -1, NULL, sa, &from, NULL,
-                                        data->mtftp_data->timeout,
+                                        data->mtftp_data->timeout, 0,
                                         &data_size, data->data_buffer);
 
                switch (result)

@@ -652,7 +652,7 @@ void *tftpd_receive_request(void *arg)
      /* Read the first packet from stdin. */
      data_size = data->data_buffer_size;
      retval = tftp_get_packet(0, -1, NULL, &data->client_info->client, NULL,
-                              &to, data->timeout, &data_size,
+                              &to, data->timeout, 0, &data_size,
                               data->data_buffer);
      if (retval == ERR) {
           logger(LOG_NOTICE, "Invalid request in 1st packet");

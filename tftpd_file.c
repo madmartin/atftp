@@ -261,7 +261,7 @@ int tftpd_receive_file(struct thread_data *data)
           case S_WAIT_PACKET:
                data_size = data->data_buffer_size;
                result = tftp_get_packet(sockfd, -1, NULL, sa, &from, NULL,
-                                        timeout, &data_size, data->data_buffer);
+                                        timeout, 0, &data_size, data->data_buffer);
                
                switch (result)
                {
@@ -448,6 +448,7 @@ int tftpd_send_file(struct thread_data *data)
      int windowblock = 0;
      int windowsize = 1;
      int in_window_ack = -1;
+     int delay = 0;             /* delay between datagrams in a window */
      int number_of_timeout = 0;
      int mcast_switch = data->mcast_switch_client;
      struct stat file_stat;
@@ -838,12 +839,14 @@ int tftpd_send_file(struct thread_data *data)
                if ((windowblock >= windowsize) || (last_ackd_block == -1) || (last_block != -1)) {
                     /* we wait for the ACK */
                     result = tftp_get_packet(sockfd, -1, NULL, sa, &from, NULL,
-                                             timeout, &data_size, data->data_buffer);
+                                             timeout, 0, &data_size, data->data_buffer);
+                    if ((delay > 0) && (in_window_ack == 0))
+                         delay--;
                     in_window_ack = 0;
                } else {
                     /* we check if an unsolicitated ACK arrived */
                     result = tftp_get_packet(sockfd, -1, NULL, sa, &from, NULL,
-                                             0, &data_size, data->data_buffer);
+                                             0, delay, &data_size, data->data_buffer);
                     if (result == GET_TIMEOUT) {
                          /* we send the next block */
                          block_number = tftp_rollover_blocknumber(
@@ -1033,9 +1036,13 @@ int tftpd_send_file(struct thread_data *data)
                                         logger(LOG_DEBUG, "ignore outdated/duplicate ACK: %ld", block_number);
                                    break;
                               }
-                              if ((last_ackd_block + windowsize != block_number) && (last_ackd_block != -1) && (last_block == -1))
-                                   logger(LOG_WARNING, "window block %ld not complete/ordered: %ld/%d valid",
-                                          block_number, block_number - last_ackd_block, windowsize);
+                              if ((last_ackd_block + windowsize != block_number) &&
+                                  (last_ackd_block != -1) && (last_block == -1)) {
+                                   logger(LOG_WARNING, "window block %ld not complete/ordered: %ld/%d valid, delay: %d usec",
+                                          block_number, block_number - last_ackd_block, windowsize, delay);
+                                   if (delay < timeout * 1000 / windowsize)
+                                        delay += 10;
+                              }
                               if (data->trace)
                                    logger(LOG_DEBUG, "update last ACK'd <block: %ld → %ld>", last_ackd_block, block_number);
                               last_ackd_block = block_number;
