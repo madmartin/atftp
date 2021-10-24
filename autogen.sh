@@ -92,5 +92,5 @@ fi
 
 aclocal
 autoheader
-automake --add-missing
+automake --add-missing --copy --foreign --force-missing
 autoconf
