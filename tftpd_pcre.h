@@ -20,7 +20,8 @@
 #ifndef TFTPD_PCRE_H
 #define TFTPD_PCRE_H
 #include <pthread.h>
-#include <pcre.h>
+#define PCRE2_CODE_UNIT_WIDTH 8
+#include <pcre2.h>
 
 #include "tftpd.h"
 
@@ -46,10 +47,9 @@
 struct tftpd_pcre_pattern
 {
      unsigned int linenum;
-     char *pattern;
-     pcre *left_re;
-     pcre_extra *left_pe;
-     char *right_str;
+     PCRE2_UCHAR *pattern;
+     PCRE2_UCHAR *right_str;
+     pcre2_code *left_re;
      struct tftpd_pcre_pattern *next;
 };
 

@@ -169,7 +169,7 @@ if test x$libwrap = xtrue; then
    AC_SUBST(LIBWRAP)
 fi
 
-dnl If we want to compile pcre stuff, check for libraries
+dnl If we want to compile pcre2 stuff, check for libraries
 if test x$libpcre = xtrue; then
    dnl Checking to pcre.
    AC_CHECK_LIB(pcre, pcre_version,
@@ -191,7 +191,7 @@ if test x$libwrap = xtrue; then
 AC_CHECK_HEADERS(tcpd.h)
 fi
 if test x$libpcre = xtrue; then
-AC_CHECK_HEADERS(pcre.h)
+AC_CHECK_HEADERS([pcre2.h],[],[],[#define PCRE2_CODE_UNIT_WIDTH 8])
 fi
 
 dnl Checks for typedefs, structures, and compiler characteristics.

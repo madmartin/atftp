@@ -34,33 +34,21 @@
 
 #include "tftpd_pcre.h"
 
-
-/* 
- * number of elements in vector to hold substring info
- */
-#define OVECCOUNT 30
-
-/*
- * define the pattern for substitutions
- *    $0 whole string
- *    $1 to $9 substring 1 - 9
- */
-
 /* create a pattern list from a file */
 /* return 0 on success, -1 otherwise */
 tftpd_pcre_self_t *tftpd_pcre_open(char *filename)
 {
      int linecount;
-     int erroffset;
+     PCRE2_SIZE erroffset;
+     PCRE2_SIZE *len;
+     int errnumber;
      int matches;
-     int ovector[OVECCOUNT];
      char line[MAXLEN];
-     const char *error;
      FILE *fh;
      int subnum;
-     char **substrlist;
-     pcre *file_re;
-     pcre_extra *file_pe;
+     PCRE2_UCHAR **substrlist;
+     pcre2_code *file_re;
+     pcre2_match_data *match_data;
      tftpd_pcre_self_t *self;
      tftpd_pcre_pattern_t *pat, **curpatp;
 
@@ -72,26 +60,19 @@ tftpd_pcre_self_t *tftpd_pcre_open(char *filename)
           return NULL;
      }
 
-     /* compile and study pattern for lines */
+     /* compile pattern for lines */
      logger(LOG_DEBUG, "Using file pattern %s", TFTPD_PCRE_FILE_PATTERN);
-     if ((file_re = pcre_compile(TFTPD_PCRE_FILE_PATTERN, 0,
-                                 &error, &erroffset, NULL)) == NULL)
+     if ((file_re = pcre2_compile((PCRE2_SPTR)TFTPD_PCRE_FILE_PATTERN, PCRE2_ZERO_TERMINATED, 0,
+                                 &errnumber, &erroffset, NULL)) == NULL)
      {
           logger(LOG_ERR, "PCRE file pattern failed to compile");
           return NULL;
      }
 
-     file_pe = pcre_study(file_re, 0, &error);
-     if (error != NULL)
-     {
-          logger(LOG_ERR, "PCRE file pattern failed to study");
-          return NULL;
-     }
-    
      /* allocate header  and copy info */
      if ((self = calloc(1, sizeof(tftpd_pcre_self_t))) == NULL)
      {
-          logger(LOG_ERR, "calloc filed");
+          logger(LOG_ERR, "calloc failed");
           return NULL;
      }
      self->lock = (pthread_mutex_t) PTHREAD_MUTEX_INITIALIZER;
@@ -104,9 +85,9 @@ tftpd_pcre_self_t *tftpd_pcre_open(char *filename)
      {
           logger(LOG_DEBUG,"file: %s line: %d value: %s",
                  filename, linecount, line);
-          
+
           /* allocate space for pattern info */
-          if ((pat = (tftpd_pcre_pattern_t *)calloc(1,sizeof(tftpd_pcre_pattern_t))) == NULL) 
+          if ((pat = (tftpd_pcre_pattern_t *)calloc(1,sizeof(tftpd_pcre_pattern_t))) == NULL)
           {
                tftpd_pcre_close(self);
                return NULL;
@@ -114,68 +95,61 @@ tftpd_pcre_self_t *tftpd_pcre_open(char *filename)
           *curpatp = pat;
 
           /* for each pattern read, compile and store the pattern */
-          matches = pcre_exec(file_re, file_pe, line, (int)(strlen(line)),
-                              0, 0, ovector, OVECCOUNT);
+          match_data = pcre2_match_data_create_from_pattern(file_re, NULL);
+          matches = pcre2_match(file_re, (PCRE2_SPTR)line, (int)(strlen(line)),
+                                0, 0, match_data, NULL);
+
           /* log substring to help with debugging */
-          pcre_get_substring_list(line, ovector, matches, (const char ***)&substrlist);
-          for(subnum = 0; subnum <= matches; subnum++)
+          pcre2_substring_list_get(match_data, &substrlist, NULL);
+          for(subnum = 0; subnum < matches; subnum++)
           {
                logger(LOG_DEBUG,"file: %s line: %d substring: %d value: %s",
                       filename, linecount, subnum, substrlist[subnum]);
           }
-          pcre_free_substring_list((const char **)substrlist);
-    
-          if (matches < 2)
+          pcre2_substring_list_free((const PCRE2_UCHAR **)substrlist);
+
+          if (matches != 3)
           {
                logger(LOG_ERR, "error with pattern in file \"%s\" line %d",
                       filename, linecount);
                tftpd_pcre_close(self);
-               pcre_free(file_re);
-               pcre_free(file_pe);
+               pcre2_match_data_free(match_data);
+               pcre2_code_free(file_re);
                return NULL;
           }
           /* remember line number */
           pat->linenum = linecount;
-          
           /* extract left side */
-          pcre_get_substring(line, ovector, matches, 1, (const char **)&pat->pattern);
-    
+          pcre2_substring_get_bynumber(match_data, 1,
+                                       (PCRE2_UCHAR **)&pat->pattern, (PCRE2_SIZE *)&len);
           /* extract right side */
-          pcre_get_substring(line, ovector, matches, 2, (const char **)&pat->right_str);
+          pcre2_substring_get_bynumber(match_data, 2,
+                                       (PCRE2_UCHAR **)&pat->right_str, (PCRE2_SIZE *)&len);
+
           logger(LOG_DEBUG,"pattern: %s right_str: %s", pat->pattern, pat->right_str);
-          
-          if ((pat->left_re = pcre_compile(pat->pattern, 0,
-                                           &error, &erroffset, NULL)) == NULL)
+
+          if ((pat->left_re = pcre2_compile((PCRE2_SPTR)pat->pattern, PCRE2_ZERO_TERMINATED, 0,
+                                           &errnumber, &erroffset, NULL)) == NULL)
           {
                /* compilation failed*/
+               PCRE2_UCHAR buffer[256];
+               pcre2_get_error_message(errnumber, buffer, sizeof(buffer));
                logger(LOG_ERR,
                       "PCRE compilation failed in file \"%s\" line %d at %d: %s",
                       filename, linecount,
-                      erroffset, error);
+                      erroffset, buffer);
                /* close file */
                fclose(fh);
                /* clean up */
-               tftpd_pcre_close(self);
-               return NULL;
-          }
-          /* we're going to be using this pattern a fair bit so lets study it */
-          pat->left_pe = pcre_study(pat->left_re, 0, &error);
-          if (error != NULL)
-          {
-               logger(LOG_ERR,
-                      "PCRE study failed in file \"%s\" line %d: %s",
-                      filename, linecount,
-                      error);
-               /* close file */
-               fclose(fh);
-               /* cleanup */
+               pcre2_code_free(file_re);
+               pcre2_match_data_free(match_data);
                tftpd_pcre_close(self);
                return NULL;
           }
      }
      /* clean up */
-     pcre_free(file_re);
-     pcre_free(file_pe);
+     pcre2_code_free(file_re);
+     pcre2_match_data_free(match_data);
      /* close file */
      fclose(fh);
      return self;
@@ -191,80 +165,29 @@ char *tftpd_pcre_getfilename(tftpd_pcre_self_t *self)
      return self->filename;
 }
 
-/* this is a utility function used to make the actual substitution*/
-int tftpd_pcre_makesub(struct tftpd_pcre_pattern *pat,
-		       char *outstr, int outsize,
-		       char *str,
-		       int *ovector, int matches)
-{
-     char *chp, *outchp;
-     const char *tmpstr;
-     int rc;
-     
-     /* $0  - whole string, $1-$9 substring 1-9   */                       
-     for (chp = pat->right_str, outchp = outstr;
-          (*chp != '\0') && (outchp - outstr < outsize);
-          chp++)
-     {
-          if ((*chp == '$') && (*(chp+1) >= '0') && (*(chp+1) <= '9'))
-          {
-               chp++; /* point to value indicating substring */
-               rc = pcre_get_substring(str, ovector, matches, *chp - 0x30, &tmpstr);
-               /* found string */
-               if (rc > 0 && outchp - outstr + rc+1 < outsize)
-               {
-                    Strncpy(outchp, tmpstr, rc+1);
-                    outchp += rc;
-                    pcre_free_substring(tmpstr);
-                    continue;
-               }
-               /* erro condition */
-               switch (rc)
-               {
-               case PCRE_ERROR_NOMEMORY:
-                    logger(LOG_ERR, "PCRE out of memory");
-                    break;
-               case PCRE_ERROR_NOSUBSTRING:
-                    logger(LOG_ERR,
-                           "PCRE attempted substitution failed for \"%s\" on pattern %d",
-                           str, pat->linenum);
-                    break;
-               }
-          }
-          else
-          {
-               *outchp = *chp;
-               outchp++;
-          }
-     }
-     *outchp = '\0';
-     return 0;
-}
-
-/* search for a replacement and return a string after substituation */
+/* search for a replacement and return a string after substitution */
 /* if no match is found return -1 */
 int tftpd_pcre_sub(tftpd_pcre_self_t *self, char *outstr, int outlen, char *str)
 {
-     int ovector[OVECCOUNT];
      int matches;
+     pcre2_match_data *match_data;
      tftpd_pcre_pattern_t *pat;
-     
+
      /* lock for duration */
      pthread_mutex_lock(&self->lock);
-     
+
      logger(LOG_DEBUG, "Looking to match \"%s\"", str);
      /* interate over pattern list */
      for(pat = self->list; pat != NULL; pat = pat->next)
      {
           logger(LOG_DEBUG,"Attempting to match \"%s\"", pat->pattern);
+
           /* attempt match */
-          matches = pcre_exec(pat->left_re, pat->left_pe,
-                              str, (int)(strlen(str)),
-                              0, 0,
-                              ovector, OVECCOUNT);
-          
+          match_data = pcre2_match_data_create_from_pattern(pat->left_re, NULL);
+          matches = pcre2_match(pat->left_re, (PCRE2_SPTR)str, (int)(strlen(str)),
+                                0, 0, match_data, NULL);
           /* no match so we try again */
-          if (matches == PCRE_ERROR_NOMATCH)
+          if (matches == PCRE2_ERROR_NOMATCH)
                continue;
           /* error in making a match - log and attempt to continue */
           if (matches < 0)
@@ -275,15 +198,17 @@ int tftpd_pcre_sub(tftpd_pcre_self_t *self, char *outstr, int outlen, char *str)
           }
           /* we have a match  - carry out substitution */
           logger(LOG_DEBUG,"Pattern \"%s\" matches", pat->pattern);
-          tftpd_pcre_makesub(pat,
-                                  outstr, outlen,
-                                  str,
-                                  ovector, matches);
+          pcre2_substitute(pat->left_re, (PCRE2_SPTR)str, (PCRE2_SIZE)(strlen(str)),
+                           0, 0, match_data, NULL, (PCRE2_SPTR)pat->right_str,
+                           (PCRE2_SIZE)(strlen((const char *)pat->right_str)),
+                           (PCRE2_UCHAR *)outstr, (PCRE2_SIZE *)&outlen);
           logger(LOG_DEBUG,"outstr: \"%s\"", outstr);
+          pcre2_match_data_free(match_data);
           pthread_mutex_unlock(&self->lock);
           return 0;
      }
      logger(LOG_DEBUG, "Failed to match \"%s\"", str);
+     pcre2_match_data_free(match_data);
      pthread_mutex_unlock(&self->lock);
      return -1;
 }
@@ -295,15 +220,14 @@ void tftpd_pcre_close(tftpd_pcre_self_t *self)
 
      /* free up list */
      pthread_mutex_lock(&self->lock);
-     
+
      cur = self->list;
      while (cur != NULL)
      {
           next = cur->next;
-          pcre_free_substring(cur->pattern);
-          pcre_free(cur->left_re);
-          pcre_free(cur->left_pe);
-          pcre_free_substring(cur->right_str);
+          pcre2_substring_free(cur->pattern);
+          pcre2_substring_free(cur->right_str);
+          pcre2_code_free(cur->left_re);
           free(cur);
           cur = next;
      }
