@@ -10,19 +10,19 @@ dnl under the terms of the GNU General Public License as published by the
 dnl Free Software Foundation; either version 2 of the License, or (at your
 dnl option) any later version.
 
-AC_INIT([atftp], [0.7.5])
+AC_INIT([atftp],[0.7.5])
 AC_CONFIG_SRCDIR([tftp.c])
 AM_INIT_AUTOMAKE
 
 AC_SUBST(VERSION)
-AM_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADERS(config.h)
 
 ISODATE=`date +%Y-%m-%d`
 AC_SUBST(ISODATE)
 
 dnl canonicalize the host
 AC_CANONICAL_HOST
-dnl AC_CANONICAL_TARGET 
+dnl AC_CANONICAL_TARGET
 PLATFORM="${host_vendor}-${host_cpu}-${host_os}"
 AC_SUBST(PLATFORM)
 
@@ -42,7 +42,7 @@ AC_ARG_ENABLE(libwrap,
 	  esac], [libwrap=true])
 
 AC_ARG_ENABLE(libpcre,
-	[  --enable-libpcre        enable libpcre support in server],
+	[  --enable-libpcre        enable libpcre2 support in server],
 	[ case "${enableval}" in
 		yes) libpcre=true ;;
 		no) libpcre=false ;;
@@ -171,11 +171,11 @@ fi
 
 dnl If we want to compile pcre2 stuff, check for libraries
 if test x$libpcre = xtrue; then
-   dnl Checking to pcre.
-   AC_CHECK_LIB(pcre, pcre_version,
-	        [LIBPCRE=-lpcre]
+   dnl Checking to pcre2.
+   AC_CHECK_LIB(pcre2-8, pcre2_config_8,
+	        [LIBPCRE=-lpcre2-8]
 		[AC_DEFINE([HAVE_PCRE], 1,
-		"Support for libpcre pattern subsitution")])
+		"Support for libpcre2 pattern substitution")])
    AC_SUBST(LIBPCRE)
 fi
 
