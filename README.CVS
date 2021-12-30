@@ -1,12 +1,15 @@
 ﻿atftp-0.7.1 and later
 =====================
 
-Development of atftp has switched over to a sourceforge project. 
+Development of atftp has switched over to a sourceforge project, with a mirror
+on github.com
 A git repository is used for the source code.
 
 A copy of the repository can be fetched with the command
 
   git clone git://atftp.git.sourceforge.net/gitroot/atftp/atftp
+    - or -
+  git clone https://github.com/madmartin/atftp.git
 
 Please read the file INSTALL for further instructions.
 

@@ -2,7 +2,7 @@
     --max-thread ?
 
 There is no absolute answer to that question. It is highly dependent
-of your personnal setup. Here's an explanation of what they mean and
+of your personal setup. Here's an explanation of what they mean and
 how to tune them.
 
 --tftpd-timeout controls how much time the server will wait for an
@@ -23,13 +23,13 @@ value. Note that the client's delay must be taken into
 consideration. The client can set the server delay too, and it
 overides the --retry-timeout value.
 
---max-thread controls how many simultaneous client may be served. This
+--max-thread controls how many simultaneous clients may be served. This
 limit depends on your server's performance. It also depends on the
-maximum load you are willing to put on the server. For exemple, this
+maximum load you are willing to put on the server. For example, this
 server may have other things to do, and you want to limit the number
 of clients booting at the same time to 10. The maximum number of
 threads is also throttled by the available bandwidth of the network
-and server, because packet cannot be processed fast enough and there is
+and server, because packets cannot be processed fast enough and there is
 a maximum rate at which servers may be started. But this is not a desirable
 condition and --maxthread should be set to avoid that.
 
@@ -44,16 +44,16 @@ packets fast enough. What happens is the following:
 	- client and server thread A both exit normally
 	- server finally starts a second thread (B) for the second RRQ
 	- the server thread sends a DATA packet to the client
-	- the client isn't listenning anymore, we got a connection refused.
+	- the client isn't listening anymore, we got a connection refused.
 
 Solution:
 	a) increase timeout on client and server side
-	b) reduce the number of concurrent thread allowed
-	c) do nothing, it's not harmfull at all.
+	b) reduce the number of concurrent threads allowed
+	c) do nothing, it's not harmful at all.
 
 3) How can I boot a simple image from the network?
 
-A boot from LAN setup requires the following on the server side: a dhcp 
+A boot from LAN setup requires the following on the server side: a dhcp
 server, a tftp server (atftpd), a working pxelinux config, a kernel image
 and a root file system image.
 
@@ -93,12 +93,12 @@ Try putting log verbosity at high in the concerned programs on the server side
 and see if something fails or if you get the requests at all. You should see
 dhcpd give a lease to the client, if it doesn't, your dhcp configuration is
 faulty. You can also monitor the activity on the network to track down the
-problem using tools like tcpdump or ethereal.
+problem using tools like tcpdump or ethereal/wireshark.
 
 5) How do I setup multicast stuff?
 
  - Make sure your client and server support multicast.
- - Make sure you server routing table know what to do with multicast addresses.
+ - Make sure you server routing table knows what to do with multicast addresses.
    You need to do something like this:
 	route add -net 224.0.0.0 netmask 240.0.0.0 dev eth0
  - Make sure your network is working by testing with atftp client against
