@@ -48,22 +48,22 @@ struct thread_data {
      struct sockaddr_storage sa_mcast;
      union ip_mreq_storage mcastaddr;
      u_char mcast_ttl;
-     
+
      /*
       * Self can read/write until client_ready is set. Then only allowed to read.
       * Other thread can read it only when client_ready is set. Remember that access
-      * to client_ready bellow is protected by a mutex.
+      * to client_ready below is protected by a mutex.
       */
      struct tftp_opt *tftp_options;
- 
-     /* 
-      * Must lock to insert in the list or search, but not to read or write 
+
+     /*
+      * Must lock to insert in the list or search, but not to read or write
       * in the client_info structure, since only the propriotary thread do it.
       */
      pthread_mutex_t client_mutex;
      struct client_info *client_info;
      int client_ready;        /* one if other thread may add client */
- 
+
      /* must be lock (list lock) to update */
      struct thread_data *prev;
      struct thread_data *next;

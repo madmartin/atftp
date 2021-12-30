@@ -26,7 +26,7 @@
 /* new opcode */
 #define OACK   06
 /* new error code */
-#define EOPTNEG 8               /* error in option negociation */
+#define EOPTNEG 8               /* error in option negotiation */
 
 /* return value of tftp_get_packet */
 #define GET_DISCARD 0
@@ -38,7 +38,7 @@
 #define GET_ERROR   6
 #define GET_DATA    7
 
-/* functions prototype */
+/* function prototypes */
 int tftp_send_request(int socket, struct sockaddr_storage *s_inn, short type,
                       char *data_buffer, int data_buffer_size,
                       struct tftp_opt *tftp_options);

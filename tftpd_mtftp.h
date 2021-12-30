@@ -24,8 +24,8 @@
 #include "options.h"
 
 /*
- * This structure hold information on mtftp configuration
- * 
+ * This structure holds information on mtftp configuration
+ *
  */
 struct mtftp_data {
      struct mtftp_thread *thread_data;
@@ -71,7 +71,7 @@ struct mtftp_thread {
      /* For options access */
      struct mtftp_data *mtftp_data;
 
-     struct mtftp_thread *next;     
+     struct mtftp_thread *next;
 };
 
 /*

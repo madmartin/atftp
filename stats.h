@@ -27,7 +27,7 @@ struct server_stats {
      struct timeval start_time;
      struct timeval end_time;
      struct tms tms;
-     
+
      /* connection statistics, updated by main thread */
      int max_simul_threads;     /* maximum number of simultaneous server */
      struct timeval min_time;   /* time between connection stats */
