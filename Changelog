@@ -1,5 +1,15 @@
-﻿atftp-0.7.5
+﻿unreleased
 ===========
+c68a89b N - Martin Dummer / autoconf: modify autogen.sh
+94521a8 N - Martin Dummer / atftp.1: add more examples for options
+4400071 N - Andreas B. Mundt / Add a simple congestion control
+bc41116 N - Andreas B. Mundt / Do some cosmetic changes
+8d301ce N - Andreas B. Mundt / Add windowsize option as described in RFC7440
+
+
+atftp-0.7.5
+===========
+00921e7 N - Martin Dummer / Version 0.7.5 (Bugfix, Security Fix Release)
 e3dfc46 N - Martin Dummer / README: update contributors list
 694f872 N - Martin Dummer / text files: mark/convert all textfiles to UTF-8
 48939af N - Martin Dummer / fix some compiler warnings
