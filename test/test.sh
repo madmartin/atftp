@@ -10,8 +10,16 @@ set -e
 # so binaries are one dir up
 ATFTP=../atftp
 ATFTPD=../atftpd
+for EX in ATFTP ATFTPD ; do
+    if [[ ! -x ${!EX} ]] ; then
+        cmd=$(basename ${!EX})
+        eval $EX="$(command -v $cmd)"
+        echo "Using installed $cmd binary."
+    else
+        echo "Using $cmd from build directory."
+    fi
+done
 
-#
 # set some default values for variables used in this script
 # if the variables are already set when this script is started
 # those values are used
@@ -43,36 +51,10 @@ fi
 
 #####################################################################################
 DIRECTORY=$(mktemp -d ${TEMPDIR}/atftp-test.XXXXXX)
-
 SERVER_ARGS="--daemon --no-fork --logfile=/dev/stdout --port=$PORT --verbose=6 $DIRECTORY"
 SERVER_LOG=./atftpd.log
 
 ERROR=0
-
-# verify that atftp and atftpd are executable
-if [ -x "$ATFTP" ]; then
-	echo "Using atftp from build directory"
-else
-	ATFTP=$(which atftp >/dev/null)
-	if [ -x "$ATFTP" ]; then
-		echo "Using $ATFTP"
-	else
-		echo "atftp binary (client) not found - is the PATH setting correct?"
-		exit 1
-	fi
-
-fi
-if [ -x $ATFTPD ]; then
-	echo "Using atftpd from build directory"
-else
-	ATFTPD=$(which atftpd >/dev/null)
-	if [ -x "$ATFTPD" ]; then
-		echo "Using $ATFTPD"
-	else
-		echo "atftpd binary (server) not found - is the PATH setting correct?"
-		exit 1
-	fi
-fi
 
 function start_server() {
 	# start a server
@@ -450,6 +432,43 @@ fi
 #
 # testing PCRE
 #
+echo -en "\nTesting PCRE substitution ... "
+if diff -u <($ATFTPD --pcre-test ./pcre_pattern.txt <<EOF
+nomatch
+ppxelinux.cfg/012345
+ppxelinux.cfg/678
+ppxelinux.cfg/9ABCDE
+pppxelinux.0
+pxelinux.cfg/F
+linux
+something_linux_like
+str
+strong
+validstr
+doreplacethis
+any.conf
+EOF
+            ) <(cat <<EOF
+Substitution: "nomatch" -> ""
+Substitution: "ppxelinux.cfg/012345" -> "pxelinux.cfg/default"
+Substitution: "ppxelinux.cfg/678" -> "pxelinux.cfg/default"
+Substitution: "ppxelinux.cfg/9ABCDE" -> "pxelinux.cfg/default"
+Substitution: "pppxelinux.0" -> "pppxelinux.0"
+Substitution: "pxelinux.cfg/F" -> "pxelinux.cfg/default"
+Substitution: "linux" -> "linux"
+Substitution: "something_linux_like" -> "something_linux_like"
+Substitution: "str" -> "replaced1"
+Substitution: "strong" -> "replaced2ong"
+Substitution: "validstr" -> "validreplaced3"
+Substitution: "doreplacethis" -> "domacethis"
+Substitution: "any.conf" -> "master.conf"
+EOF
+               ) ; then
+    echo OK
+else
+    ERROR=1
+    echo "ERROR"
+fi
 
 #
 # testing multicast
@@ -548,7 +567,8 @@ else
 	echo "Cleaning up test files"
 	rm -f ??-out $SERVER_LOG
 	cd "$DIRECTORY"
-	rm -f $READ_0 $READ_511 $READ_512 $READ_2K $READ_BIG $READ_128K $READ_1M $READ_10M $READ_101M $WRITE high-server-load-out.*
+	rm -f $READ_0 $READ_511 $READ_512 $READ_2K $READ_BIG $READ_128K \
+           $READ_1M $READ_10M $READ_101M $WRITE high-server-load-out.*
 	cd ..
 	rmdir "$DIRECTORY"
 fi
