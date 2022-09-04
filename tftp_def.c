@@ -54,7 +54,7 @@ char *tftp_errmsg[9] = {
      "Unknown transfer ID",
      "File already exists",
      "No such user",
-     "Failure to negotiate RFC1782 options",
+     "Failure to negotiate RFC2347 options",
 };
 
 

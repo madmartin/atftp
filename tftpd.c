@@ -1148,7 +1148,7 @@ void tftpd_log_options(void)
                logger(LOG_INFO, "  bound to IP address %s only", tftpd_addr);
      }
      else
-          logger(LOG_INFO, "  started by inetd");
+          logger(LOG_INFO, "  started by inetd or socket activated");
      logger(LOG_INFO, "  logging level: %d", logging_level);
      if (trace)
           logger(LOG_INFO, "     trace enabled");
