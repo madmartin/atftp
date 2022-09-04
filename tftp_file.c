@@ -860,8 +860,10 @@ int tftp_send_file(struct client_data *data)
                          //connect(sockfd, (struct sockaddr *)&sa, sizeof(sa));
                          connected = 1;
                     }
-		    block_number = tftp_rollover_blocknumber(
-			ntohs(tftphdr->th_block), prev_block_number, 0);
+                    block_number = tftp_rollover_blocknumber(
+                         ntohs(tftphdr->th_block), prev_block_number, 0);
+                    // The last block has been sent, but not received. Reset last_block:
+                    if (block_number < last_block) last_block = -1;
 
                     /* if turned on, check whether the block request isn't already fulfilled */
                     if (tftp_prevent_sas) {

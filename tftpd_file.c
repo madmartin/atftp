@@ -76,7 +76,7 @@ int tftpd_rules_check(char *filename)
      {
           /* Append the prefix directory to the requested file. */
           snprintf(string, sizeof(string), "%s%s",
-                   directory, filename); 
+                   directory, filename);
           Strncpy(filename, string, MAXLEN);
      }
 
@@ -85,7 +85,7 @@ int tftpd_rules_check(char *filename)
      {
           /* Illegal access. */
           logger(LOG_INFO, "File name with /../ are forbidden");
-          return ERR;  
+          return ERR;
      }
      return OK;
 }
@@ -271,7 +271,7 @@ int tftpd_receive_file(struct thread_data *data)
                data_size = data->data_buffer_size;
                result = tftp_get_packet(sockfd, -1, NULL, sa, &from, NULL,
                                         timeout, 0, &data_size, data->data_buffer);
-               
+
                switch (result)
                {
                case GET_TIMEOUT:
@@ -424,9 +424,11 @@ int tftpd_receive_file(struct thread_data *data)
                break;
           case S_END:
                if (fp != NULL) fclose(fp);
+               logger(LOG_DEBUG, "End of transfer");
                return OK;
           case S_ABORT:
                if (fp != NULL) fclose(fp);
+               logger(LOG_DEBUG, "Aborting transfer");
                return ERR;
           default:
                if (fp != NULL) fclose(fp);
@@ -528,7 +530,7 @@ int tftpd_send_file(struct thread_data *data)
                }
                else
                {
-                    logger(LOG_INFO, "PCRE mapped %s -> %s", 
+                    logger(LOG_INFO, "PCRE mapped %s -> %s",
                            data->tftp_options[OPT_FILENAME].value, string);
                     Strncpy(filename, string, MAXLEN);
                     /* recheck those rules */
@@ -768,13 +770,13 @@ int tftpd_send_file(struct thread_data *data)
                else
                     setsockopt(data->sockfd, IPPROTO_IPV6, IPV6_MULTICAST_HOPS,
                                &data->mcast_ttl, sizeof(data->mcast_ttl));
-               
+
                /* set options data for OACK */
                opt_set_multicast(data->tftp_options, data->mc_addr,
                                  data->mc_port, 1);
                logger(LOG_INFO, "multicast option -> %s,%d,%d", data->mc_addr,
                       data->mc_port, 1);
-            
+
                /* the socket must be unconnected for multicast */
                sa->ss_family = AF_UNSPEC;
                connect(sockfd, (struct sockaddr *)sa, sizeof(*sa));
@@ -1007,10 +1009,13 @@ int tftpd_send_file(struct thread_data *data)
 
                     /* The ACK is from the current client */
                     number_of_timeout = 0;
-		    if (multicast)
-			    block_number = ntohs(tftphdr->th_block);
-		    else
-			    block_number = tftp_rollover_blocknumber(ntohs(tftphdr->th_block), prev_block_number, 0);
+                    if (multicast) {
+                         block_number = ntohs(tftphdr->th_block);
+                    } else {
+                         block_number = tftp_rollover_blocknumber(ntohs(tftphdr->th_block), prev_block_number, 0);
+                         // The last block has been sent, but not received. Reset last_block:
+                         if (block_number < last_block) last_block = -1;
+                    }
                     if (data->trace)
                          logger(LOG_DEBUG, "received ACK <block: %ld>", block_number);
 
@@ -1197,7 +1202,7 @@ int tftpd_send_file(struct thread_data *data)
                          /* client is a new client structure */
                          sa =  &client_info->client;
                          /* nedd to send an oack to that client */
-                         state = S_SEND_OACK;                
+                         state = S_SEND_OACK;
                          fseek(fp, 0, SEEK_SET);
 			 /* reset the last block received counter */
 			 last_ackd_block = -1;
