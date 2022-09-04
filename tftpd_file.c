@@ -112,6 +112,7 @@ int tftpd_receive_file(struct thread_data *data)
      int result;
      long block_number = 0;
      long last_received_block = 0;
+     int extra_ack = 0;           /* number of additional ACKs */
      int data_size;
      int sockfd = data->sockfd;
      struct sockaddr_storage *sa = &data->client_info->client;
@@ -372,13 +373,28 @@ int tftpd_receive_file(struct thread_data *data)
                /* The first data package acknowledges the OACK */
                if ((last_received_block < windowsize) && (timeout_state = S_SEND_OACK))
                     timeout_state = S_SEND_ACK;
-               if (last_received_block + 1 != block_number)
-               {
+
+               /* The sequence of blocks may contain a gap, i.e. (block_number > last_received_block + 1).
+                  Send an extra ACK for the last block before the gap once.
+
+                  The ACK of a received window gets lost.  The sender times out and starts
+                  sending all blocks of that window again, i.e. (block_number < last_received_block + 1).
+                  Again, send the extra ACK. */
+               if (block_number != last_received_block + 1) {
                     /* We got a wrong block from the client, send ACK for last block again */
-                    logger(LOG_DEBUG, "got wrong block <block: %ld>", block_number);
-                    state = S_SEND_ACK;
+                    if (extra_ack < 1) {
+                         logger(LOG_DEBUG, "got wrong block <block: %ld>, sending extra ACK for <block: %ld>",
+                                block_number, last_received_block);
+                         extra_ack++;
+                         state = S_SEND_ACK;
+                    } else {
+                         logger(LOG_DEBUG, "got wrong block <block: %ld>, ignoring", block_number);
+                         state = S_WAIT_PACKET;
+                    }
                     break;
                }
+               extra_ack = 0;
+
                windowblock++;
                if (data->trace)
                     logger(LOG_DEBUG, "received %d. DATA <block: %ld, size %d>, update last received block: %ld → %ld>",

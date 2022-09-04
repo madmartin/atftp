@@ -119,6 +119,8 @@ int tftp_receive_file(struct client_data *data)
      long block_number = 0;
      long last_received_block = 0;
      long last_block_number = -1;  /* block number of last block for multicast */
+     int extra_ack = 0;            /* number of additional ACKs */
+     //int debug = 0;              /* used for simulating datagram losses */
      int data_size;                /* size of data received */
      int sockfd = data->sockfd;    /* just to simplify calls */
      struct sockaddr_storage sa;   /* a copy of data.sa_peer */
@@ -245,9 +247,17 @@ int tftp_receive_file(struct client_data *data)
                          tftp_find_bitmap_hole(prev_bitmap_hole, file_bitmap);
                     block_number = prev_bitmap_hole;
                }
+               /* This might be used for simulating a lost ACK (with windowsize=32):
+               if ((last_received_block != 320) || (debug != 0)) {
+                    tftp_send_ack(sockfd, &sa, last_received_block);
+               } else {
+                    debug++;
+               }
+                  Comment the next line if debugging is activated! */
+               tftp_send_ack(sockfd, &sa, last_received_block);
                if (data->trace)
                     fprintf(stderr, "sent ACK <block: %ld>\n", last_received_block);
-               tftp_send_ack(sockfd, &sa, last_received_block);
+
                /* if we just ACK the last block we are done */
                if (block_number == last_block_number)
                     state = S_END;
@@ -293,7 +303,8 @@ int tftp_receive_file(struct client_data *data)
                {
                case GET_TIMEOUT:
                     number_of_timeout++;
-                    fprintf(stderr, "timeout: retrying...\n");
+                    extra_ack = 0;
+                    fprintf(stderr, "timeout: retrying ...\n");
                     if (number_of_timeout > NB_OF_RETRY)
                          state = S_ABORT;
                     else
@@ -547,12 +558,27 @@ int tftp_receive_file(struct client_data *data)
 	       }
                if ((last_received_block < windowsize) && (timeout_state = S_SEND_OACK))
                     timeout_state = S_SEND_ACK;
-               if (last_received_block + 1 != block_number)
-               {
-                    fprintf(stderr, "got wrong block <block: %ld>\n", block_number);
-                    state = S_SEND_ACK;
+
+               /* The sequence of blocks may contain a gap, i.e. (block_number > last_received_block + 1).
+                  Send an extra ACK for the last block before the gap once.
+
+                  The ACK of a received window gets lost.  The sender times out and starts
+                  sending all blocks of that window again, i.e. (block_number < last_received_block + 1).
+                  Again, send the extra ACK. */
+               if (block_number != last_received_block + 1) {
+                    if (extra_ack < 1) {
+                         fprintf(stderr, "got wrong block <block: %ld>, sending extra ACK for <block: %ld>\n",
+                                 block_number, last_received_block);
+                         extra_ack++;
+                         state = S_SEND_ACK;
+                    } else {
+                         fprintf(stderr, "got wrong block <block: %ld>, ignoring\n", block_number);
+                         state = S_WAIT_PACKET;
+                    }
                     break;
                }
+               extra_ack = 0;
+
                windowblock++;
                if (data->trace)
                     fprintf(stderr, "received %d. DATA <block: %ld, size %d>, update last received block: %ld → %ld\n",
@@ -819,7 +845,7 @@ int tftp_send_file(struct client_data *data)
                {
                case GET_TIMEOUT:
                     number_of_timeout++;
-                    fprintf(stderr, "timeout: retrying...\n");
+                    fprintf(stderr, "timeout: retrying ...\n");
                     if (number_of_timeout > NB_OF_RETRY)
                          state = S_ABORT;
                     else
