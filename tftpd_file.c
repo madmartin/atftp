@@ -155,6 +155,14 @@ int tftpd_receive_file(struct thread_data *data)
           logger(LOG_DEBUG, "tsize option -> %d", result);
      }
 
+     /* windowsize */
+     if ((result = opt_get_windowsize(data->tftp_options)) > -1)
+     {
+          windowsize = result;
+          opt_set_windowsize(result, data->tftp_options);
+          logger(LOG_DEBUG, "windowsize option -> %d", result);
+     }
+
      /* timeout option */
      if ((result = opt_get_timeout(data->tftp_options)) > -1)
      {
@@ -177,7 +185,7 @@ int tftpd_receive_file(struct thread_data *data)
           /*
            *  If we receive more options, we have to make sure our buffer for
            *  the OACK is not too small.  Use the string representation of
-           *  the options here for simplicity, which puts us on the save side.
+           *  the options here for simplicity, which puts us on the safe side.
            *  FIXME: Use independent buffers for OACK and data.
            */
           opt_options_to_string(data->tftp_options, string, MAXLEN);
@@ -585,7 +593,7 @@ int tftpd_send_file(struct thread_data *data)
           /*
            *  If we receive more options, we have to make sure our buffer for
            *  the OACK is not too small.  Use the string representation of
-           *  the options here for simplicity, which puts us on the save side.
+           *  the options here for simplicity, which puts us on the safe side.
            *  FIXME: Use independent buffers for OACK and data.
            */
           opt_options_to_string(data->tftp_options, string, MAXLEN);
