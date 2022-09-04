@@ -119,7 +119,7 @@ int tftp_mtftp_receive_file(struct client_data *data)
      FILE *fp = NULL;           /* the local file pointer */
      int number_of_timeout = 0;
      int timeout = 0;
-
+     long last_ackd_block = -1;
      struct sockaddr_storage sa_mcast_group;
      int mcast_sockfd = 0;
      struct sockaddr_storage sa_mcast;
@@ -175,24 +175,23 @@ int tftp_mtftp_receive_file(struct client_data *data)
      /* if valid, update s_inn structure */
      memset(&hints, 0, sizeof(hints));
      hints.ai_socktype = SOCK_DGRAM;
-     if (!getaddrinfo(data->mtftp_mcast_ip, NULL, &hints, &addrinfo) &&
-         !sockaddr_set_addrinfo(&sa_mcast_group, addrinfo))
+     hints.ai_flags = AI_NUMERICHOST;
+     if (getaddrinfo(data->mtftp_mcast_ip, NULL, &hints, &addrinfo) ||
+         sockaddr_set_addrinfo(&sa_mcast_group, addrinfo))
      {
-          freeaddrinfo(addrinfo);
-          if (!sockaddr_is_multicast(&sa_mcast_group))
-	  {
-	       fprintf(stderr,
-		       "mtftp: bad multicast address %s\n",
-		       data->mtftp_mcast_ip);
-	       exit(1);
-	  }
-     } 
-     else
+          fprintf(stderr,
+                  "mtftp: bad address %s\n", data->mtftp_mcast_ip);
+          exit(1);
+     }
+     freeaddrinfo(addrinfo);
+
+     if (!sockaddr_is_multicast(&sa_mcast_group))
      {
-	  fprintf(stderr, "atftp: bad multicast address %s",
+	  fprintf(stderr, "atftp: bad multicast address %s\n",
 		  data->mtftp_mcast_ip);
 	  exit(1);
      }
+     
      /* we need to open a new socket for multicast */
      if ((mcast_sockfd = socket(AF_INET, SOCK_DGRAM, 0))<0)
      {
@@ -201,7 +200,7 @@ int tftp_mtftp_receive_file(struct client_data *data)
      }                   
      memset(&sa_mcast, 0, sizeof(sa_mcast));
      sa_mcast.ss_family = sa_mcast_group.ss_family;
-     sockaddr_set_port(&sa, data->mtftp_client_port);
+     sockaddr_set_port(&sa_mcast, data->mtftp_client_port);
                          
      if (bind(mcast_sockfd, (struct sockaddr *)&sa_mcast,
 	      sizeof(sa_mcast)) < 0)
@@ -315,9 +314,14 @@ int tftp_mtftp_receive_file(struct client_data *data)
                //tftp_find_bitmap_hole(prev_bitmap_hole, file_bitmap);
                //block_number = prev_bitmap_hole;
 
-               if (data->trace)
-                    fprintf(stderr, "sent ACK <block: %ld>\n", block_number);
-               tftp_send_ack(sockfd, &sa, block_number);
+               /* only send a single ack for the first block, although we get
+                  a unicast and a multicast datagram: */
+               if (last_ackd_block != block_number) {
+                    if (data->trace)
+                         fprintf(stderr, "sent ACK <block: %ld>\n", block_number);
+                    tftp_send_ack(sockfd, &sa, block_number);
+                    last_ackd_block = block_number;
+               }
                /* if we just ACK the last block we are done */
                if (block_number == last_block_number)
                     state = S_END;

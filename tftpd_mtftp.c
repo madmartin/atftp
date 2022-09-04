@@ -206,24 +206,31 @@ struct mtftp_data *tftpd_mtftp_init(char *filename)
                       thread->client_port, filename, line);
                fclose(thread->fp);
                continue;
-          } 
+          }
           /* verify IP is valid */
           memset(&hints, 0, sizeof(hints));
           hints.ai_socktype = SOCK_DGRAM;
-          if (!getaddrinfo(thread->mcast_ip, thread->client_port,
-                           &hints, &addrinfo) &&
-              !sockaddr_set_addrinfo(&thread->sa_mcast, addrinfo))
+          hints.ai_flags = AI_NUMERICHOST;
+          if (getaddrinfo(thread->mcast_ip, NULL, &hints, &addrinfo) ||
+              sockaddr_set_addrinfo(&thread->sa_mcast, addrinfo))
           {
-               thread->mcast_port = sockaddr_get_port(&thread->sa_mcast);
-               freeaddrinfo(addrinfo);
-               if (!sockaddr_is_multicast(&thread->sa_mcast))
-               {
-                    logger(LOG_WARNING, "mtftp: bad multicast address %s\n",
-                           thread->mcast_ip);
-                    fclose(thread->fp);
-                    continue;
-               }
+               logger(LOG_ERR, "bad address %s\n", thread->mcastaddr);
+               fclose(thread->fp);
+               continue;
           }
+          freeaddrinfo(addrinfo);
+          sockaddr_set_port(&thread->sa_mcast, thread->mcast_port);
+          thread->mcast_port = sockaddr_get_port(&thread->sa_mcast);
+
+          /* verify address is multicast */
+          if (!sockaddr_is_multicast(&thread->sa_mcast))
+          {
+               logger(LOG_WARNING, "mtftp: bad multicast address %s\n",
+                      thread->mcast_ip);
+               fclose(thread->fp);
+               continue;
+          }
+
           /* verify IP/port is unique */
           if (tftpd_mtftp_unique(data, thread->file_name, thread->mcast_ip, thread->client_port))
           {
@@ -428,10 +435,11 @@ void *tftpd_mtftp_server(void *arg)
                }
                else
                {
-                    logger(LOG_NOTICE, "Serving %s to %s:%d", filename,
-                           sockaddr_print_addr(&sa, addr_str, sizeof(addr_str)));
                     if (data->trace)
                          logger(LOG_DEBUG, "received RRQ <%s>", string);
+                    logger(LOG_NOTICE, "serving %s to %s:%d", filename,
+                           sockaddr_print_addr(&sa, addr_str, sizeof(addr_str)),
+                           sockaddr_get_port(&sa));
                }
                /* validity check, only octet mode supported */
                if (strcasecmp(data->tftp_options[OPT_MODE].value, "octet") != 0)
@@ -478,10 +486,10 @@ void *tftpd_mtftp_server(void *arg)
                /* configure multicast socket */
                sockaddr_get_mreq(&thread->sa_mcast, &thread->mcastaddr);
                if (thread->sa_mcast.ss_family == AF_INET)
-                    setsockopt(thread->sockfd, IPPROTO_IP, IP_MULTICAST_TTL,
+                    setsockopt(thread->mcast_sockfd, IPPROTO_IP, IP_MULTICAST_TTL,
                                &data->mcast_ttl, sizeof(data->mcast_ttl));
                else
-                    setsockopt(thread->sockfd, IPPROTO_IPV6, IPV6_MULTICAST_HOPS,
+                    setsockopt(thread->mcast_sockfd, IPPROTO_IPV6, IPV6_MULTICAST_HOPS,
                                &data->mcast_ttl, sizeof(data->mcast_ttl));
 
                /* give server thread access to mtftp options */
@@ -565,8 +573,12 @@ void *tftpd_mtftp_send_file(void *arg)
                /* send data to unicast address */
                tftp_send_data(sockfd, sa, block_number + 1,
                               data_size, data->data_buffer);
+               /* in addition, send data to multicast address, so that listening
+                  clients do not miss the first block */
+               tftp_send_data(sockfd, &data->sa_mcast, block_number + 1,
+                              data_size, data->data_buffer);
                if (data->mtftp_data->trace)
-                    logger(LOG_DEBUG, "sent DATA <block: %ld, size %d>",
+                    logger(LOG_DEBUG, "sent DATA <block: %ld, size %d> to multi- and unicast address",
                            block_number + 1, data_size - 4);
                state = S_WAIT_PACKET;
                break;
