@@ -1,109 +1,143 @@
 #!/bin/bash
 #
-# This script does some testing with atftp server and client
-#
+# This script does some testing of atftp server and client.
 # It needs ~150MB free diskspace in $TEMPDIR
+#
+# Some Tests need root access (e.g. to mount a tempfs filesystem)
+# and need sudo for this, so the script might asks for a password.
+# Use:
+#         --interactive
+# as argument or set:
+#         INTERACTIVE="true"
+# in the environment to run these tests.
+# By default, all generated files and directories are removed at the end.
+# To skip this cleanup, use:
+#         --no-cleanup
+# as argument or set:
+#         CLEANUP="false"
+# in the environment.
 
-set -e
+set -eu
 
-# assume we are called in the source tree after the build
-# so binaries are one dir up
+# Assume we are called in the source tree after the build.
+# Binaries are one dir up:
 ATFTP=../atftp
 ATFTPD=../atftpd
+
+# Try installed binaries, if binaries are not available:
 for EX in ATFTP ATFTPD ; do
+    cmd=$(basename ${!EX})
     if [[ ! -x ${!EX} ]] ; then
-        cmd=$(basename ${!EX})
-        eval $EX="$(command -v $cmd)"
-        echo "Using installed $cmd binary."
+        eval $EX="$(command -v "$cmd")"
+        echo "Using installed $cmd binary '${!EX}'."
     else
-        echo "Using $cmd from build directory."
+        echo "Using $cmd from build directory '${!EX}'."
     fi
 done
 
-# set some default values for variables used in this script
-# if the variables are already set when this script is started
-# those values are used
-#
-
-: ${HOST:=127.0.0.1}
-: ${PORT:=2001}
-: ${TEMPDIR:="/tmp"}
+# Set some defaults:
+: "${HOST:=127.0.0.1}"
+: "${PORT:=2001}"
+: "${TEMPDIR:="/tmp"}"
+TDIR=$(mktemp -d ${TEMPDIR}/atftp-test.XXXXXX)
+echo "Server root directory is '$TDIR'."
+SERVER_ARGS="--daemon --no-fork --logfile=/dev/stdout --port=$PORT \
+                      --verbose=6 --pcre $TDIR/PCRE_pattern.txt $TDIR"
+SERVER_LOG=./atftpd.log
+ERROR=0
+WRITE="write.bin"
+OUTBIN="00-out"
 
 # Number of parallel clients for high server load test
-: ${NBSERVER:=200}
+: "${NBSERVER:=200}"
 
-# Some Tests need root access (e.g. to mount a tempfs filesystem)
-# and need sudo for this, so maybe the script asks for a password
-#
-# if these tests should be performed then start test.sh like this:
-#   WANT_INTERACTIVE_TESTS=yes ./test.sh
-: ${WANT_INTERACTIVE_TESTS:=no}
+# Options:
+: "${CLEANUP:=true}"
+: "${INTERACTIVE:=false}"
+: "${MCASTCLNTS:=}"
+[[ "$@" =~ no-cleanup ]] && CLEANUP="false"
+[[ "$@" =~ interactive ]] && INTERACTIVE="true"
 
-# When the Tests have been run, should the files be cleaned up?
-# defaults to yes, if you need test output for troubleshooting either set the
-# environment variable CLEANUP=0
-#   or
-# call test.sh with parameter "--nocleanup" (for backward compatibility)
-: ${CLEANUP:=1}
-if [ "$1" == "--nocleanup" ]; then
-	CLEANUP=0
-fi
+## Some replacement patterns:
+DICT='^[p]?pxelinux.cfg/[0-9A-F]{1,6}$  pxelinux.cfg/default
+^[p]?pxelinux.0$                  pxelinux.0
+linux                             linux
+PCREtest                          2K.bin
+^str$                             replaced1
+^str                              replaced2
+str$                              replaced3
+repl(ace)                         m$1
+^\w*\.conf$                       master.conf
+(PCRE-)(.*)(-test)                $2.bin'
 
-#####################################################################################
-DIRECTORY=$(mktemp -d ${TEMPDIR}/atftp-test.XXXXXX)
-SERVER_ARGS="--daemon --no-fork --logfile=/dev/stdout --port=$PORT --verbose=6 $DIRECTORY"
-SERVER_LOG=./atftpd.log
+echo "$DICT" > "$TDIR/PCRE_pattern.txt"
 
-ERROR=0
+## Some test patterns:
+PAT="stronestr
+PCRE-READ_2K-test
+ppxelinux.cfg/012345
+ppxelinux.cfg/678
+ppxelinux.cfg/9ABCDE
+ppxelinux.cfg/9ABCDEF
+pppxelinux.0
+pxelinux.cfg/F
+linux
+something_linux_like
+str
+strong
+PCREtest
+validstr
+doreplacethis
+any.conf"
 
-function start_server() {
-	# start a server
-	echo -n "Starting atftpd server on port $PORT: "
-	$ATFTPD  $SERVER_ARGS > $SERVER_LOG &
-	if [ $? != 0 ]; then
-		echo "Error starting server"
-		exit 1
-	fi
-	sleep 1
-	ATFTPD_PID=$!
-	# test if server process exists
-	ps -p $ATFTPD_PID >/dev/null 2>&1
-	if [ $? != 0 ]; then
-		echo "server process died"
-		exit 1
-	fi
-	echo "PID $ATFTPD_PID"
+######### Functions #########
+
+start_server() {
+    # start a server
+    echo -n "Starting 'atftpd "${SERVER_ARGS/ \*/ /}"', "
+    $ATFTPD $SERVER_ARGS > $SERVER_LOG &
+    if [ $? != 0 ]; then
+	echo "Error starting server."
+	exit 1
+    fi
+    sleep 1
+    ATFTPD_PID=$!
+    # test if server process exists
+    if ! ps -p $ATFTPD_PID >/dev/null 2>&1 ; then
+	echo "Server process died!"
+	exit 1
+    fi
+    echo "PID: $ATFTPD_PID"
+    trap stop_and_clean EXIT SIGINT SIGTERM
 }
 
-function stop_server() {
+stop_server() {
 	echo "Stopping atftpd server"
 	kill $ATFTPD_PID
 }
 
-
-function check_file() {
-	if cmp $1 $2 2>/dev/null ; then
+check_file() {
+	if cmp "$1" "$2" 2>/dev/null ; then
 		echo "OK"
 	else
-		echo "ERROR - $1 $2 not equal"
+		echo "ERROR - $1 $2 not equal!"
 		ERROR=1
 	fi
 }
 
-function check_trace() {
-    local LOG="$1" FILE="$2"
-    local oack tsize wsize bsize c d e
+check_trace() {
+    local LOG="$1" FILE="$2" oack tsize wsize bsize c d e
     oack=$(grep "OACK" "$LOG")
-    tsize=$(echo $oack | sed -nE "s/.*tsize: ([0-9]+).*/\1/p")
-    wsize=$(echo $oack | sed -nE "s/.*windowsize: ([0-9]+).*/\1/p")
-    bsize=$(echo $oack | sed -nE "s/.*blksize: ([0-9]+).*/\1/p")
-    c=$(grep -E "DATA <block:" "$LOG" | wc -l)
-    d=$(grep "ACK <block:" "$LOG" | wc -l)
-    e=$(grep "sent ACK <block: 0>" "$LOG" | wc -l)
+    tsize=$(echo "$oack" | sed -n -E "s/.*tsize: ([0-9]+).*/\1/p")
+    wsize=$(echo "$oack" | sed -n -E "s/.*windowsize: ([0-9]+).*/\1/p")
+    bsize=$(echo "$oack" | sed -n -E "s/.*blksize: ([0-9]+).*/\1/p")
+    c=$(grep -c "DATA <block:" "$LOG")
+    d=$(grep -c "ACK <block:" "$LOG")
+    e=$(grep -c "sent ACK <block: 0>" "$LOG" || true)
     ## defaults, if not found in OACK:
-    : ${tsize:=$(ls -l $FILE | cut -d ' ' -f5)}
-    : ${wsize:=1}
-    : ${bsize:=512}
+    : "${tsize:=$(stat --format="%s" "${FILE}" | cut -d ' ' -f5)}"
+    : "${wsize:=1}"
+    : "${bsize:=512}"
     ## e is for the ACK of the OACK
     ## the +1 is the last block, it might be empty and ist ACK'd:
     if [[ $((tsize/bsize + 1)) -ne $c ]] || \
@@ -112,474 +146,520 @@ function check_trace() {
         echo "ERROR: expected ACKs: $((tsize/(bsize*wsize) + 1)), sent/received ACKs: $((d-e))"
         ERROR=1
     else
-        echo -n "$c blocks, $((d-e)) ACKs → "
+        echo -en " $c blocks, $((d-e)) ACKs\t→ "
     fi
 }
 
-function test_get_put() {
+get_put() {
     local FILE="$1"
     shift
-    echo -n " get, ${FILE} ($@) ... "
-    if [[ $@ == *--trace* ]] ; then
-        stdout="$DIRECTORY/$WRITE.stdout"
+    echo -en "  get: ${FILE}\t${@//--option/}\t... "
+    if [[ "$@" =~ trace ]] ; then
+        stdout="${TDIR}/${WRITE}.stdout"
     else
         stdout="/dev/null"
     fi
-    $ATFTP "$@" --get --remote-file ${FILE} \
-           --local-file out.bin $HOST $PORT 2> $stdout
+    $ATFTP "$@" --get --remote-file "${FILE}" \
+           --local-file "$OUTBIN" $HOST $PORT 2> $stdout
     if [[ -f "$stdout" ]] ;  then
-        check_trace "$stdout"
+        check_trace "$stdout" "$OUTBIN"
     fi
-    check_file $DIRECTORY/${FILE} out.bin
+    check_file "${TDIR}/${FILE}" "$OUTBIN"
 
-    echo -n " put, ${FILE} ($@) ... "
-    $ATFTP "$@" --put --remote-file $WRITE \
-           --local-file $DIRECTORY/${FILE} $HOST $PORT 2> $stdout
+    echo -en "  put: ${FILE}\t${@//--option/}\t... "
+    $ATFTP "$@" --put --remote-file "$WRITE" \
+           --local-file "${TDIR}/${FILE}" "$HOST" "$PORT" 2> $stdout
     if [[ -f "$stdout" ]] ;  then
-        check_trace "$stdout" "$DIRECTORY/${FILE}"
+        check_trace "$stdout" "${TDIR}/${FILE}"
     fi
     # wait a second because in some case the server may not have time
     # to close the file before the file compare:
-    # sleep ## is this still needed?
-    check_file $DIRECTORY/${FILE} $DIRECTORY/$WRITE
-    rm -f "$DIRECTORY/$WRITE" "$DIRECTORY/$WRITE.stdout" out.bin
+    #sleep 1 ## is this still needed?
+    check_file "${TDIR}/${FILE}" "${TDIR}/${WRITE}"
 }
 
-# make sure we have /tftpboot with some files
-if [ ! -d $DIRECTORY ]; then
-	echo "create $DIRECTORY before running this test"
-	exit 1
-fi
-echo "Using directory $DIRECTORY for test files"
-echo "Work directory " $(pwd)
+perl-replace (){
+    local STR=$1 FILE=$2 P R RES MATCH CMD
+    while read -r LINE; do
+        P="$(echo "$LINE" | sed -nE "s/\s+\S+$//p")"
+        R="$(echo "$LINE" | sed -nE "s/^\S+\s+//p")"
+        RES="$(perl -e "\$x = \"$STR\"; \$x =~ s#$P#$R#; print \"\$x\";")"
+        CMD="perl -e '\$x = \"$STR\"; \$x =~ s#$P#$R#; print \"\$x\\n\";'"
+        MATCH=$(perl -e "if(\"$STR\" =~ m#$P#){print \"yes\";}")
+        if [[ -n "$MATCH" ]] ; then
+            break
+        fi
+    done < "$FILE"
+    echo "$RES|$CMD"
+}
 
-# files needed
-READ_0=READ_0.bin
-READ_511=READ_511.bin
-READ_512=READ_512.bin
-READ_2K=READ_2K.bin
-READ_BIG=READ_BIG.bin
-READ_128K=READ_128K.bin
-READ_1M=READ_1M.bin
-READ_10M=READ_10M.bin
-READ_101M=READ_101M.bin
-WRITE=write.bin
+######### Tests #########
+test_get_put(){
+    echo -e "\n===== Test get and put with standard options:"
+    for FILE in 0 "${TFILE[@]}" ; do
+        get_put "${FILE}.bin"
+    done
 
-echo -n "Creating test files ... "
-touch $DIRECTORY/$READ_0
-touch $DIRECTORY/$WRITE; chmod a+w $DIRECTORY/$WRITE
-dd if=/dev/urandom of=$DIRECTORY/$READ_511 bs=1 count=511 2>/dev/null
-dd if=/dev/urandom of=$DIRECTORY/$READ_512 bs=1 count=512 2>/dev/null
-dd if=/dev/urandom of=$DIRECTORY/$READ_2K bs=1 count=2048 2>/dev/null
-dd if=/dev/urandom of=$DIRECTORY/$READ_BIG bs=1 count=51111 2>/dev/null
-dd if=/dev/urandom of=$DIRECTORY/$READ_128K bs=1K count=128 2>/dev/null
-dd if=/dev/urandom of=$DIRECTORY/$READ_1M bs=1M count=1 2>/dev/null
-dd if=/dev/urandom of=$DIRECTORY/$READ_10M bs=1M count=10 2>/dev/null
-dd if=/dev/urandom of=$DIRECTORY/$READ_101M bs=1M count=101 2>/dev/null
-echo "done"
+    echo -e "\n===== Test get and put with misc blocksizes:"
+    get_put 50K.bin --option "blksize 8"
+    get_put 50K.bin --option "blksize 256"
+    get_put 100M.bin --option "blksize 1428"
+    get_put 1M.bin --option "blksize 1533"
+    get_put 1M.bin --option "blksize 16000"
+    get_put 1M.bin --option "blksize 40000"
+    get_put 1M.bin --option "blksize 65464"
 
-start_server
-trap stop_server EXIT SIGINT SIGTERM
+    echo -e "\n===== Test get and put with misc windowsizes:"
+    ## add some options here to allow trace analysis:
+    get_put 2K.bin --option "windowsize 1" --option "tsize 0" --option "blksize 1024" --trace
+    get_put 2K.bin --option "windowsize 2" --option "tsize 0" --option "blksize 512" --trace
+    get_put 2K.bin --option "windowsize 4" --option "tsize 0" --option "blksize 256" --trace
+    get_put 128K.bin --option "windowsize 8" --option "tsize 0" --option "blksize 1024" --trace
+    get_put 128K.bin --option "windowsize 16" --option "tsize 0" --option "blksize 512" --trace
+    get_put 100M.bin --option "windowsize 32" --option "tsize 0" --option "blksize 1428" --trace
+    get_put 1M.bin --option "windowsize 5" --option "tsize 0" --option "blksize 1428" --trace
 
-#
-# test get and put
-#
-echo "Testing get and put with standard options"
-test_get_put $READ_0
-test_get_put $READ_511
-test_get_put $READ_512
-test_get_put $READ_2K
-test_get_put $READ_BIG
-test_get_put $READ_128K
-test_get_put $READ_1M
-test_get_put $READ_101M
+    echo -e "\n===== Test large file with small blocksize so block numbers will wrap over 65536:"
+    get_put 1M.bin --option "blksize 8" --trace
+}
 
-echo
-echo "Testing get and put with misc blocksizes"
-test_get_put $READ_BIG --option "blksize 8"
-test_get_put $READ_BIG --option "blksize 256"
-test_get_put $READ_1M --option "blksize 1428"
-test_get_put $READ_1M --option "blksize 1533"
-test_get_put $READ_1M --option "blksize 16000"
-test_get_put $READ_1M --option "blksize 40000"
-test_get_put $READ_1M --option "blksize 65464"
-#
-echo
-echo "Testing get and put with misc windowsizes"
-## use some options here to allow trace analysis:
-test_get_put $READ_2K --option "windowsize 1" --option "tsize 0" --option "blksize 1024" --trace
-test_get_put $READ_2K --option "windowsize 2" --option "tsize 0" --option "blksize 512" --trace
-test_get_put $READ_2K --option "windowsize 4" --option "tsize 0" --option "blksize 256" --trace
-test_get_put $READ_128K --option "windowsize 8" --option "tsize 0" --option "blksize 1024" --trace
-test_get_put $READ_128K --option "windowsize 16" --option "tsize 0" --option "blksize 512" --trace
-test_get_put $READ_101M --option "windowsize 32" --option "tsize 0" --option "blksize 1428" --trace
-test_get_put $READ_1M --option "windowsize 5" --option "tsize 0" --option "blksize 1428" --trace
-
-echo
-echo "Testing large file with small blocksize so block numbers will wrap over 65536"
-test_get_put $READ_1M --option "blksize 8" --trace
-
-#
-# testing for invalid file name
-#
-OUTPUTFILE="01-out"
-echo
-echo -n "Test detection of non-existing file name ... "
-set +e
-$ATFTP --trace --get -r "thisfiledoesntexist" -l /dev/null $HOST $PORT 2> "$OUTPUTFILE"
-set -e
-if grep -q "<File not found>" "$OUTPUTFILE"; then
+check_error(){
+    local OUTPUTFILE="$1" EXPECTED="${2:-<Failure to negotiate RFC2347 options>}"
+    if grep -q "$EXPECTED" "$OUTPUTFILE" ; then
 	echo OK
-else
-	echo ERROR
+    else
+	echo ERROR:
 	ERROR=1
-fi
+    fi
+}
 
-#
-# testing for invalid blocksize
-# maximum blocksize is 65464 as described in RCF2348
-#
-OUTPUTFILE="02-out"
-echo
-echo "Testing blksize option ..."
-echo -n " smaller than minimum ... "
-set +e
-$ATFTP --option "blksize 7" --trace --get -r $READ_2K -l /dev/null $HOST $PORT 2> "$OUTPUTFILE"
-set -e
-if grep -q "<Failure to negotiate RFC2347 options>" "$OUTPUTFILE"; then
-	echo OK
-else
-	echo ERROR
-	ERROR=1
-fi
-echo -n " bigger than maximum ... "
-set +e
-$ATFTP --option "blksize 65465" --trace --get -r $READ_2K -l /dev/null $HOST $PORT 2> "$OUTPUTFILE"
-set -e
-if grep -q "<Failure to negotiate RFC2347 options>" "$OUTPUTFILE"; then
-	echo OK
-else
-	echo ERROR
-	ERROR=1
-fi
+test_options(){
+    echo -en "\n===== Test detection of non-existing file name ... "
+    OUTPUTFILE="01-out"
+    set +e
+    $ATFTP --trace --get -r "thisfiledoesntexist" -l /dev/null $HOST $PORT 2> "$OUTPUTFILE"
+    set -e
+    check_error "$OUTPUTFILE" "<File not found>"
 
-#
-# testing for tsize
-#
-OUTPUTFILE="03-out"
-echo ""
-echo -n "Testing tsize option... "
-$ATFTP --option "tsize" --trace --get -r $READ_2K -l /dev/null $HOST $PORT 2> "$OUTPUTFILE"
-TSIZE=$(grep "OACK <tsize:" "$OUTPUTFILE" | sed -e "s/[^0-9]//g")
-if [ "$TSIZE" != "2048" ]; then
-	echo "ERROR (server report $TSIZE bytes but it should be 2048)"
+    echo -e "\n===== Test for invalid blksize options ..."
+    # maximum blocksize is 65464 as described in RCF2348
+    OUTPUTFILE="02-out"
+    echo -n "  smaller than minimum ... "
+    set +e
+    $ATFTP --option "blksize 7" --trace --get -r "2K.bin" -l /dev/null $HOST $PORT 2> "$OUTPUTFILE"
+    set -e
+    check_error "$OUTPUTFILE"
+    echo -n "  bigger than maximum ... "
+    set +e
+    $ATFTP --option "blksize 65465" --trace --get -r "2K.bin" -l /dev/null $HOST $PORT 2> "$OUTPUTFILE"
+    set -e
+    check_error "$OUTPUTFILE"
+
+    echo -e "\n===== Test timeout option limit ... "
+    OUTPUTFILE="04-out"
+    echo -n "  minimum ... "
+    set +e
+    $ATFTP --option "timeout 0" --trace --get -r "2K.bin" -l /dev/null $HOST $PORT 2> "$OUTPUTFILE"
+    set -e
+    check_error "$OUTPUTFILE"
+    echo -n "  maximum ... "
+    set +e
+    $ATFTP --option "timeout 256" --trace --get -r "2K.bin" -l /dev/null $HOST $PORT 2> "$OUTPUTFILE"
+    set -e
+    check_error "$OUTPUTFILE"
+
+    echo -ne "\n===== Test tsize option ... "
+    OUTPUTFILE="03-out"
+    $ATFTP --option "tsize" --trace --get -r "2K.bin" -l /dev/null $HOST $PORT 2> "$OUTPUTFILE"
+    TSIZE=$(grep "OACK <tsize:" "$OUTPUTFILE" | sed -e "s/[^0-9]//g")
+    S="$(stat --format="%s" "$TDIR/2K.bin")"
+    if [ "$TSIZE" != "$S" ]; then
+	echo "ERROR (server report $TSIZE bytes but it should be $S)"
 	ERROR=1
-else
+    else
 	echo "OK"
-fi
+    fi
+}
 
-#
-# testing for timeout
-#
-OUTPUTFILE="04-out"
-echo ""
-echo "Testing timeout option limit..."
-echo -n " minimum ... "
-set +e
-$ATFTP --option "timeout 0" --trace --get -r $READ_2K -l /dev/null $HOST $PORT 2> "$OUTPUTFILE"
-set -e
-if grep -q "<Failure to negotiate RFC2347 options>" "$OUTPUTFILE"; then
-	echo OK
-else
-	echo ERROR
-	ERROR=1
-fi
-echo -n " maximum ... "
-set +e
-$ATFTP --option "timeout 256" --trace --get -r $READ_2K -l /dev/null $HOST $PORT 2> "$OUTPUTFILE"
-set -e
-if grep -q "<Failure to negotiate RFC2347 options>" "$OUTPUTFILE"; then
-	echo OK
-else
-	echo ERROR
-	ERROR=1
-fi
-
-# Test the behaviour when the server is not reached
-# we assume there is no tftp server listening on 127.0.0.77
-# Returncode must be 255
-OUTPUTFILE="05-out"
-echo
-echo -n "Test returncode after timeout when server is unreachable ... "
-set +e
-$ATFTP --put --local-file "$DIRECTORY/$READ_2K" 127.0.0.77 2>"$OUTPUTFILE"
-Retval=$?
-set -e
-echo -n "Returncode $Retval: "
-if [ $Retval -eq 255 ]; then
+test_unreachable(){
+    echo -en "\n===== Test return code after timeout when server is unreachable ... "
+    # We assume there is no tftp server listening on 127.0.0.77, returncode must be 255.
+    local OUTPUTFILE="05-out" RET
+    set +e
+    $ATFTP --put --local-file "2K.bin" 127.0.0.77 2>"$OUTPUTFILE"
+    RET=$?
+    set -e
+    echo -n "return code: $RET → "
+    if [ $RET -eq 255 ]; then
 	echo "OK"
-else
+    else
 	echo "ERROR"
 	ERROR=1
-fi
+    fi
+}
 
-# Test behaviour when disk is full
-#
-# Preparation: create a small ramdisk
-# we need the "sudo" command for that
-if [[ $WANT_INTERACTIVE_TESTS = "yes" ]]; then
-	echo
-	SMALL_FS_DIR="${DIRECTORY}/small_fs"
-	echo "Start disk-out-of-space tests, prepare filesystem in ${SMALL_FS_DIR}  ..."
-	mkdir "$SMALL_FS_DIR"
-	if [[ $(id -u) -eq 0 ]]; then
-		Sudo=""
-	else
-		Sudo="sudo"
-		echo "trying to mount ramdisk, the sudo command may ask for a password on the next line!"
-	fi
-	$Sudo mount -t tmpfs shm "$SMALL_FS_DIR" -o size=500k
-	echo "disk space before test: $(LANG=C df -k -P "${SMALL_FS_DIR}" | grep "${SMALL_FS_DIR}" | awk '{print $4}') kiB"
-	echo
-	echo -n "Put 1M file to server: "
-	$ATFTP --put --local-file "$DIRECTORY/$READ_1M" --remote-file "small_fs/fillup.bin" $HOST $PORT
-	Retval=$?
+test_diskspace(){
+    # Test behaviour when disk is full.
+    # Preparation: Create a small ramdisk. We need the "sudo" command for that.
+    local DIR="${TDIR}/small_fs" FILE="$TDIR/1M.bin" RET SUDO
+    echo -en "\n===== Test disk-out-of-space ...\nPrepare filesystem → "
+    mkdir -v "$DIR"
+    if [[ $(id -u) -eq 0 ]]; then
+	SUDO=""
+    else
+	SUDO="sudo"
+	echo "  Trying to mount ramdisk, 'sudo' may ask for a password!"
+    fi
+    $SUDO mount -t tmpfs shm "$DIR" -o size=500k
+    echo "  Disk space before test: $(LANG=C df -k -P "${DIR}" | grep "${DIR}" | awk '{print $4}') kiB."
+    echo "  Exceed server disk space by uploading '$FILE':"
+    set +e
+    $ATFTP --put --local-file "$FILE" --remote-file "small_fs/fillup.bin" $HOST $PORT
+    RET=$?
+    set -e
+    echo -n "  Return code: $RET → "
+    if [ $RET -ne 0 ]; then
+	echo "OK"
+    else
+	echo "ERROR"
+	ERROR=1
+    fi
+    rm "$TDIR/small_fs/fillup.bin"
+    echo "  Exceed 'local' disk space by downloading '$(basename "$FILE")':"
+    set +e
+    $ATFTP --get --remote-file "$(basename "$FILE")" \
+           --local-file "$TDIR/small_fs/fillup-put.bin" $HOST $PORT
+    RET=$?
+    set -e
+    echo -n "  Return code: $RET → "
+    if [ $RET -ne 0 ]; then
+	echo "OK"
+    else
+	echo "ERROR"
+	ERROR=1
+    fi
+    $SUDO umount "$DIR"
+    rmdir "$DIR"
+}
+
+test_timeout(){
+    local OUTPUTFILE="06-out" OLD_ARGS C
+    echo -en "\n===== Test timeout ...\n  Restart the server with full logging.\n  "
+    stop_server
+    OLD_ARGS="$SERVER_ARGS"
+    SERVER_ARGS="${SERVER_ARGS//--verbose=?/--verbose=7}"
+    SERVER_ARGS="${SERVER_ARGS//--pcre*PCRE_pattern.txt/}"
+    echo -n "  " ; start_server
+    $ATFTP --option "timeout 1" --delay 200 --get -r "2K.bin" \
+           -l /dev/null $HOST $PORT 2> /dev/null &
+    CPID=$!
+    sleep 1
+    kill -s STOP $CPID
+    echo -n "  Running tests "
+    for i in $(seq 6); do
 	sleep 1
-	echo -n "Returncode $Retval: "
-	if [ $Retval -ne 0 ]; then
-		echo "OK"
+	echo -n "."
+    done
+    echo
+    kill $CPID
+    echo -n "  " ; stop_server ; sleep 1
+    C=$(grep "timeout .\+ retrying" $SERVER_LOG | cut -d " " -f 3 | tee "$OUTPUTFILE" | wc -l)
+    SERVER_ARGS="$OLD_ARGS"
+    echo -n "  " ; start_server
+    if [ "$C" = 5 ]; then
+        prev=0
+        res="  → OK"
+        while read -r line; do
+            hrs=$(echo "$line" | cut -d ":" -f 1)
+            min=$(echo "$line" | cut -d ":" -f 2)
+            sec=$(echo "$line" | cut -d ":" -f 3)
+            cur=$(( 24*60*10#$hrs + 60*10#$min + 10#$sec ))
+            if [ $prev -gt 0 ]; then
+                if [ $((cur - prev)) != 1 ]; then
+                    res="  ERROR: delay not one second."
+                    ERROR=1
+                fi
+            fi
+            prev=$cur
+        done < "$OUTPUTFILE"
+        echo "  $res"
+    else
+        ERROR=1
+        echo "    ERROR: $C lines found, expected 5."
+    fi
+}
+
+test_PCRE(){
+    echo -en "\n===== Test PCRE substitution ... "
+    if diff -u <(echo "$PAT" | $ATFTPD --pcre-test <(echo "$DICT") | \
+                     tr -d '"' | cut -d ' ' -f 2-4) \
+            <(for P in $PAT ; do
+                  echo -n "$P -> "
+                  perl-replace "$P" <(echo "$DICT") | cut -d '|' -f1
+              done)
+    then
+        echo OK
+    else
+        ERROR=1
+        echo "ERROR"
+    fi
+
+    # Test a download with pattern matching:
+    echo "  Test PCRE mapped download ... "
+    for F in "PCREtest" "PCRE-512-test" ; do
+        $ATFTP --get -r $F -l /dev/null $HOST $PORT
+        L="$(grep "PCRE mapped" $SERVER_LOG | tail -1 | cut -d ' ' -f6-)"
+        if [[ "$L" =~ 'PCRE mapped PCRE'.*'test -> '.+'.bin' ]] ; then
+            echo "    $L → OK"
+        else
+            ERROR=1
+            echo "    ERROR: $L"
+        fi
+    done
+}
+
+test_highload(){
+    echo -e "\n===== Test high server load ... "
+    echo -n "  Starting $NBSERVER simultaneous atftp get processes "
+    set +e
+    for i in $(seq 1 $NBSERVER) ; do
+        [[ $(( i%10 )) = 0 ]] && echo -n "."
+        $ATFTP --get --remote-file "1M.bin" --local-file /dev/null $HOST $PORT \
+               2> "$TDIR/high-server-load-out.$i" &
+    done
+    set -e
+    echo " done."
+    CHECKCOUNTER=0
+    MAXCHECKS=90
+    while [[ $CHECKCOUNTER -lt $MAXCHECKS ]]; do
+	PIDCOUNT=$(pidof $ATFTP|wc -w)
+	if [ "$PIDCOUNT" -gt 0 ]; then
+	    echo "  Waiting for atftp processes to complete: $PIDCOUNT running."
+	    CHECKCOUNTER=$((CHECKCOUNTER + 1))
+	    sleep 1
 	else
-		echo "ERROR"
-		ERROR=1
+	    CHECKCOUNTER=$((MAXCHECKS + 1))
 	fi
-	rm "$DIRECTORY/small_fs/fillup.bin"
-	echo
-	echo -n "Get 1M file from server: "
-	$ATFTP --get --remote-file "$READ_1M" --local-file "$DIRECTORY/small_fs/fillup-put.bin" $HOST $PORT
-	Retval=$?
-	sleep 1
-	echo -n "Returncode $Retval: "
-	if [ $Retval -ne 0 ]; then
-		echo "OK"
-	else
-		echo "ERROR"
-		ERROR=1
-	fi
-	$Sudo umount "$SMALL_FS_DIR"
-	rmdir "$SMALL_FS_DIR"
+    done
+
+    # high server load test passed, now examine the results
+    true >"$TDIR/high-server-load-out.result"
+    for i in $(seq 1 $NBSERVER); do
+	# merge all output together
+	cat "$TDIR/high-server-load-out.$i" >>"$TDIR/high-server-load-out.result"
+    done
+
+    # remove timeout/retry messages, they are no error indicator
+    grep -v "timeout: retrying..." "$TDIR/high-server-load-out.result" \
+         > "$TDIR/high-server-load-out.clean-result" || true
+
+    # the remaining output is considered as error messages
+    error_cnt=$(wc -l <"$TDIR/high-server-load-out.clean-result")
+
+    # print out error summary
+    if [ "$error_cnt" -gt "0" ]; then
+	echo "Errors occurred during high server load test, # lines output: $error_cnt"
+	echo "======================================================"
+	cat "$TDIR/high-server-load-out.clean-result"
+	echo "======================================================"
+	ERROR=1
+    else
+	echo -e "    → OK"
+    fi
+    # remove all empty output files
+    find "$TDIR" -name "high-server-load-out.*" -size 0 -delete
+}
+
+check-rlogs(){
+    local CLNTS=$1 TOTAL=$2 NAME=$3 RLOG=$4 C
+    echo -en "  Copy log file '$RLOG' from hosts: "
+    for C in $CLNTS ; do
+        echo -n "."
+        scp -q "$C:$RLOG" "$TDIR/${NAME}-${C##*@}.log"
+    done
+    echo
+    T=$(grep "/tmp/" "$TDIR"/${NAME}*.log | wc -l)
+    if [[ $T = $TOTAL ]] ; then
+        echo -e "\n  All $T $NAME downloads registered → OK"
+    else
+        ERROR=1
+        echo "ERROR: Files missing:  $T != $TOTAL."
+        echo "Did you wait long enough?"
+    fi
+    grep --no-filename "/tmp/" "$TDIR/${NAME}"*.log | sort | uniq | \
+        sed -e "s# /tmp/# $TDIR/#" > "$TDIR/MD5SUMS"
+    echo -n "  Check md5sums → "
+    md5sum -c "$TDIR/MD5SUMS" | sed "s#$TDIR/##" | tr '\n' '\t'
+}
+
+
+test_multicast(){
+    local F L M N=0 C NUM=10 FILE=("128K.bin" "50K.bin") NAME='multicast' L="/tmp/multicast.log"
+    echo -e "\n===== Test multicast option ..."
+    echo -en "  Run atftp on hosts: "
+    for C in $MCASTCLNTS ; do
+        echo -n "."
+        F="${FILE[$((N%2))]}"
+        ssh "$C" "rm -f $L ; for N in \$(seq $NUM) ; do ./atftp --option multicast \
+                 --option 'blksize 500' --get -r $F -l /tmp/$F --trace $HOST $PORT 2>&1 \
+                 | grep -C3 OACK >> $L ; md5sum /tmp/$F >> $L ; rm /tmp/$F ; done  " &
+        N=$(( N + 1 ))
+        sleep 0.02
+    done
+    echo ", fetching: ${FILE[@]}"
+    sleep $(( 2*N ))
+    TOTAL=$(( N * NUM ))
+
+    check-rlogs "$MCASTCLNTS" "$TOTAL" "$NAME" "$L"
+
+    ## detailed checks:
+    M=$(grep --no-filename 'received OACK <mc = 1>' "$TDIR"/multicast*.log | wc -l)
+    N=$(grep 'Client transferred to' "$SERVER_LOG" | wc -l)
+    if [[ $M = $N ]] ; then
+        echo -e "\n  Multicast client transfers detected: $M → OK"
+    else
+        ERROR=1
+        echo -e "\nERROR: Multicast client transfers are inconsistent:  $M != $N."
+    fi
+}
+
+test_mtftp(){
+    local F I M N=0 P T C NUM=10 FILE=("linux" "pxelinux.0") MCASTIP=("239.255.1.1" "239.255.1.2")
+    local NAME='mtftp' L="/tmp/multicast.log" TNUM
+    echo -e "\n===== Test mtftp ..."
+    [[ -e "$TDIR/linux" ]] || ln -sf  "$TDIR/128K.bin"  "$TDIR/linux"
+    [[ -e "$TDIR/pxelinux.0" ]] || ln -sf "$TDIR/50K.bin" "$TDIR/pxelinux.0"
+    stop_server
+    OLD_ARGS="$SERVER_ARGS"
+    SERVER_ARGS="${SERVER_ARGS//--verbose=?/--verbose=7}"
+    SERVER_ARGS="${SERVER_ARGS//--pcre*PCRE_pattern.txt/--mtftp mtftp.conf --mtftp-port $((PORT + 1)) --trace}"
+    echo -n "  " ; start_server
+
+    echo -en "  Run atftp on hosts: "
+    for C in $MCASTCLNTS ; do
+        echo -n "."
+        F="${FILE[$((N%2))]}"
+        I="${MCASTIP[$((N%2))]}"
+        ssh "$C" "rm -f $L ; for N in \$(seq $NUM) ; do ./atftp --mtftp 'client-port 3001' \
+                 --mtftp 'mcast-ip $I' --mget -r $F -l /tmp/$F --trace $HOST 2002 2>&1 \
+                 | grep 'got all packets' >> $L ; md5sum /tmp/$F >> $L ; rm /tmp/$F ; done" &
+        sleep 0.02
+        N=$(( N + 1 ))
+    done
+    echo ", fetching: ${FILE[@]}"
+
+    sleep $(( 3 * N ))
+    TOTAL=$(( N * NUM ))
+
+    check-rlogs "$MCASTCLNTS" "$TOTAL" "$NAME" "$L"
+
+    ## detailed checks:
+    M=$(grep --no-filename 'got all packets' "$TDIR"/mtftp*.log | wc -l)
+    N=$(grep 'mtftp: already serving this file' "$SERVER_LOG" | wc -l)
+    P=$(grep 'received RRQ' "$SERVER_LOG" | wc -l)
+    echo -e "\n  RRQs received: $P, but 'already served': $N"
+    echo "  Received by just listening, no RRQ: $M"
+    if [[ $((M+P-N)) = $T ]] ; then
+        echo -e "\n  MTFTP client transfers consistent → OK"
+    else
+        ERROR=1
+        echo -e "\nERROR: Multicast client transfers are inconsistent:  $M != $N."
+    fi
+}
+
+stop_and_clean(){
+    echo "========================================================"
+    stop_server
+    trap - EXIT SIGINT SIGTERM
+    tail -n 14 "$SERVER_LOG" | cut -d ' ' -f6-
+    echo
+    ## +3 is for "Test tsize option ..." and "Test PCRE mapped download ... "
+    ## +2 for diskspace tests:
+    local M=$(grep "/tmp/" "$TDIR"/multicast*.log | wc -l)
+    $INTERACTIVE && D=2
+    cat <<EOF
+Expected:
+   number of errors:         $(( $(grep -c "\s\+check_error" "$0") + ${D:-0} ))
+   number of files sent:     $(( $(grep -c "\s\+get_put" "$0") + ${#TFILE[@]} + NBSERVER + 3 + $M ))
+   number of files received: $(( $(grep -c "\s\+get_put" "$0") + ${#TFILE[@]} ))
+
+EOF
+
+    if ! $CLEANUP ; then
+	echo "No cleanup, files from test are left in $TDIR"
+    else
+    	echo -n "Cleaning up test files and logs ... "
+	rm -fr "$TDIR" "$SERVER_LOG" ./??-out
+        echo "done."
+    fi
+}
+
+############### main #################
+
+echo -n "Generate test files: "
+touch "$TDIR/0.bin"
+TFILE=(511 512 2K 50K 128K 1M 10M 100M)
+for FILE in "${TFILE[@]}" ; do
+    echo -n "${FILE}.bin "
+    dd if=/dev/urandom of="$TDIR/${FILE}.bin" bs="${FILE}" count=1 2>/dev/null
+done
+echo "→ OK"
+start_server
+
+test_get_put
+test_options
+test_unreachable
+test_PCRE
+test_highload
+
+if $INTERACTIVE ; then
+    test_diskspace
 else
-	echo
-	echo "Disk-out-of-space tests not performed, start with \"WANT_INTERACTIVE_TESTS=yes ./test.sh\" if desired."
+    echo -e "\nDisk-out-of-space tests not performed.  Start with '--interactive' if desired."
 fi
 
 # Test that timeout is well set to 1 sec and works.
-# we need atftp compiled with debug support to do that
-# Restart the server with full logging
-OUTPUTFILE="06-out"
-if $ATFTP --help 2>&1 | grep --quiet -- --delay
-then
-	stop_server
-	OLD_ARGS="$SERVER_ARGS"
-	SERVER_ARGS="$SERVER_ARGS --verbose=7"
-	start_server
-
-	$ATFTP --option "timeout 1" --delay 200 --get -r $READ_2K -l /dev/null $HOST $PORT 2> /dev/null &
-	CPID=$!
-	sleep 1
-	kill -s STOP $CPID
-	echo -n "Testing timeout "
-	for i in $(seq 6); do
-		sleep 1
-		echo -n "."
-	done
-	kill $CPID
-
-	stop_server
-
-	sleep 1
-	grep "timeout: retrying..." $SERVER_LOG | cut -d " " -f 3 > "$OUTPUTFILE"
-	count=$(wc -l "$OUTPUTFILE" | cut -d "o" -f1)
-	if [ $count != 5 ]; then
-		ERROR=1
-		echo "ERROR"
-	else
-		prev=0
-		res="OK"
-		while read line; do
-			hrs=$(echo $line | cut -d ":" -f 1)
-			min=$(echo $line | cut -d ":" -f 2)
-			sec=$(echo $line | cut -d ":" -f 3)
-			cur=$(( 24*60*10#$hrs + 60*10#$min + 10#$sec ))
-
-			if [ $prev -gt 0 ]; then
-				if [ $(($cur - $prev)) != 1 ]; then
-					res="ERROR"
-					ERROR=1
-				fi
-			fi
-			prev=$cur
-		done < "$OUTPUTFILE"
-		echo " $res"
-	fi
-	SERVER_ARGS="$OLD_ARGS"
-	start_server
+# We need atftp compiled with debug support to do that.
+if $ATFTP --help 2>&1 | grep --quiet -- --delay ; then
+    test_timeout
 else
-	echo
-	echo "Detailed timeout test could not be done"
-	echo "Compile atftp with debug support for more timeout testing"
+	echo -e "\nDetailed timeout test could not be done."
+	echo "Compile atftp with debug support for more timeout testing."
 fi
 
-#
-# testing PCRE
-#
-echo -en "\nTesting PCRE substitution ... "
-if diff -u <($ATFTPD --pcre-test ./pcre_pattern.txt <<EOF
-nomatch
-ppxelinux.cfg/012345
-ppxelinux.cfg/678
-ppxelinux.cfg/9ABCDE
-pppxelinux.0
-pxelinux.cfg/F
-linux
-something_linux_like
-str
-strong
-validstr
-doreplacethis
-any.conf
-EOF
-            ) <(cat <<EOF
-Substitution: "nomatch" -> ""
-Substitution: "ppxelinux.cfg/012345" -> "pxelinux.cfg/default"
-Substitution: "ppxelinux.cfg/678" -> "pxelinux.cfg/default"
-Substitution: "ppxelinux.cfg/9ABCDE" -> "pxelinux.cfg/default"
-Substitution: "pppxelinux.0" -> "pppxelinux.0"
-Substitution: "pxelinux.cfg/F" -> "pxelinux.cfg/default"
-Substitution: "linux" -> "linux"
-Substitution: "something_linux_like" -> "something_linux_like"
-Substitution: "str" -> "replaced1"
-Substitution: "strong" -> "replaced2ong"
-Substitution: "validstr" -> "validreplaced3"
-Substitution: "doreplacethis" -> "domacethis"
-Substitution: "any.conf" -> "master.conf"
-EOF
-               ) ; then
-    echo OK
+if [[ -n "$MCASTCLNTS" ]] && [[ "$HOST" != "127.0.0.1" ]]  ; then
+    test_multicast
+    test_mtftp
 else
-    ERROR=1
-    echo "ERROR"
+    cat <<EOF
+
+To test multicast (RFC 2090) or MTFTP, you need to prepare some
+hosts in the local network.  Make sure they have atftp available
+and configure ssh pubkey login (without password).
+
+Then run $0 like:
+
+   MCASTCLNTS='user1@host1 … userN@hostN' HOST='192.168.2.100' $0
+
+In addition, consider checking network traffic with tcpdump or
+wireshark when running the command above.
+EOF
 fi
 
-#
-# testing multicast
-#
-
-#echo ""
-#echo -n "Testing multicast option  "
-#for i in $(seq 10); do
-#	echo -n "."
-#	atftp --blksize=8 --multicast -d --get -r $READ_BIG -l out.$i.bin $HOST $PORT 2> /dev/null&
-#done
-#echo "OK"
-
-#
-# testing mtftp
-#
-
-
-#
-# Test for high server load
-#
 echo
-echo "Testing high server load"
-echo -n "  starting $NBSERVER simultaneous atftp get processes "
-#( for i in $(seq 1 $NBSERVER); do
-#	($ATFTP --get --remote-file $READ_1M --local-file /dev/null $HOST $PORT 2> out.$i) &
-#	echo -n "+"
-#done )
-set +e
-for i in $(seq 1 $NBSERVER) ; do
-    echo -n "."
-    $ATFTP --get --remote-file $READ_1M --local-file /dev/null $HOST $PORT 2> "$DIRECTORY/high-server-load-out.$i" &
-done
-set -e
-echo " done"
-CHECKCOUNTER=0
-MAXCHECKS=90
-while [[ $CHECKCOUNTER -lt $MAXCHECKS ]]; do
-	PIDCOUNT=$(pidof $ATFTP|wc -w)
-	if [ $PIDCOUNT -gt 0 ]; then
-		echo "  wait for atftp processes to complete: $PIDCOUNT running"
-		CHECKCOUNTER=$((CHECKCOUNTER + 1))
-		sleep 1
-	else
-		CHECKCOUNTER=$((MAXCHECKS + 1))
-	fi
-done
-#
-# high server load test passed, now examine the results
-#
->"$DIRECTORY/high-server-load-out.result"
-for i in $(seq 1 $NBSERVER); do
-	# merge all output together
-	cat "$DIRECTORY/high-server-load-out.$i" >>"$DIRECTORY/high-server-load-out.result"
-done
+stop_and_clean
 
-# remove timeout/retry messages, they are no error indicator
-grep -v "timeout: retrying..." "$DIRECTORY/high-server-load-out.result" \
-     > "$DIRECTORY/high-server-load-out.clean-result" || true
-
-# the remaining output is considered as error messages
-error_cnt=$(wc -l <"$DIRECTORY/high-server-load-out.clean-result")
-
-# print out error summary
-if [ "$error_cnt" -gt "0" ]; then
-	echo "Errors occurred during high server load test, # lines output: $error_cnt"
-	echo "======================================================"
-	cat "$DIRECTORY/high-server-load-out.clean-result"
-	echo "======================================================"
-	ERROR=1
-else
-	echo -e "High server load test: OK\n"
-fi
-
-# remove all empty output files
-find "$DIRECTORY" -name "high-server-load-out.*" -size 0 -delete
-
-stop_server
-trap - EXIT SIGINT SIGTERM
-tail -n 14 "$SERVER_LOG" | cut -d ' ' -f6-
-echo
-## + 1 is for "Testing tsize option... "
-cat <<EOF
-Expected:
-   number of errors:         $(grep -c '<Failure\s\|<File not\s' $0)
-   number of files sent:     $(( $(grep -c "^test_get_put" $0) + $NBSERVER + 1 ))
-   number of files received: $(grep -c "^test_get_put" $0)
-
-EOF
-
-
-# cleanup
-if [ $CLEANUP -ne 1 ]; then
-	echo "No cleanup, files from test are left in $DIRECTORY"
-else
-	echo "Cleaning up test files"
-	rm -f ??-out $SERVER_LOG
-	cd "$DIRECTORY"
-	rm -f $READ_0 $READ_511 $READ_512 $READ_2K $READ_BIG $READ_128K \
-           $READ_1M $READ_10M $READ_101M $WRITE high-server-load-out.*
-	cd ..
-	rmdir "$DIRECTORY"
-fi
-
-echo -n "Overall Test status: "
-# Exit with proper error status
 if [ $ERROR -eq 1 ]; then
-	echo "Errors have occurred"
-	exit 1
+    echo "Errors have occurred!"
+    exit 1
 else
-	echo "OK"
+    cat <<EOF
+
+     ###########################
+     # Overall Test status: OK #
+     ###########################
+
+EOF
 fi
 
 # vim: ts=4:sw=4:autoindent
