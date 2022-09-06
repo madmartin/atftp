@@ -1,11 +1,24 @@
-﻿unreleased
+﻿atftp-0.8.0
 ===========
+982ba23 N - Andreas B. Mundt / test.sh: add MTFTP tests
+f59bee0 N - Andreas B. Mundt / Fix MTFTP support for atftp
+6df249e N - Andreas B. Mundt / Fix multicast download.
+1ee139b N - Andreas B. Mundt / Fix algorithm in case of packet loss in the last window.
+30603c2 N - Andreas B. Mundt / Improve the robustness of the atftp-client in case of package loss or duplication
+91faa15 N - Andreas B. Mundt / Implement PCRE tests.
+aae7a64 N - Andreas B. Mundt / Improve upstream test script. Include tests for windowsize option.
+75e9ecf N - Andreas B. Mundt / Fix/update minor issues in upstream
+de1e3fd N - Andreas B. Mundt / Fix the 'windowsize' option for write requests
+581703c N - Martin Dummer / FAQ INSTALL README.CVS README.PCRE: cosmetic and spelling fixes
+ca87af5 N - Martin Dummer / *.h: cosmetic and spelling fixes
+fdf479c N - Martin Dummer / configure.ac: more fixes, also for libpcre2 detection
+5739ed9 N - Andreas B. Mundt / Port to maintained PCRE2 API
+3303a93 N - Martin Dummer / Changelog: update the recent changes
 c68a89b N - Martin Dummer / autoconf: modify autogen.sh
 94521a8 N - Martin Dummer / atftp.1: add more examples for options
 4400071 N - Andreas B. Mundt / Add a simple congestion control
 bc41116 N - Andreas B. Mundt / Do some cosmetic changes
 8d301ce N - Andreas B. Mundt / Add windowsize option as described in RFC7440
-
 
 atftp-0.7.5
 ===========
