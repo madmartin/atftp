@@ -115,14 +115,14 @@ void logger(int severity, const char *fmt, ...)
           if (log_fp)
           {
                fprintf(log_fp, "%s %s %s[%d.%li]: %s\n", time_buf, hostname,
-                       log_ident, getpid(), pthread_self(), message);
+                       log_ident, getpid(), (unsigned long int) pthread_self(), message);
                fflush(log_fp);
           }
           else if (log_syslog_is_open)
                syslog(severity, "%s", message);
           else
                fprintf(stderr, "%s %s %s[%d.%li]: %s\n", time_buf, hostname,
-                       log_ident, getpid(), pthread_self(), message);
+                       log_ident, getpid(), (unsigned long int) pthread_self(), message);
      }
      va_end(args);
 }
