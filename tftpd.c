@@ -644,6 +644,9 @@ void *tftpd_receive_request(void *arg)
 
      char addr_str[SOCKADDR_PRINT_ADDR_LEN];
 
+     /* Do not rely on uninitialized data following the https://bugs.debian.org/613582 fix */
+     memset(&to, 0, sizeof(to));
+
      /* Detach ourself. That way the main thread does not have to
       * wait for us with pthread_join. */
      data->tid = pthread_self();
