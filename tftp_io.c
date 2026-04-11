@@ -168,9 +168,9 @@ int tftp_send_error(int socket, struct sockaddr_storage *sa, short err_code,
           return ERR;
      tftphdr->th_opcode = htons(ERROR);
      tftphdr->th_code = htons(err_code);
-     Strncpy(tftphdr->th_msg, tftp_errmsg[err_code], buffer_size - 4);
 
      size = 4 + strlen(tftp_errmsg[err_code]) + 1;
+     memcpy(tftphdr->th_msg, tftp_errmsg[err_code], size - 4);
 
      result = sendto(socket, tftphdr, size, 0, (struct sockaddr *)sa,
                      sizeof(*sa));
