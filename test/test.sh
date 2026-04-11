@@ -576,6 +576,7 @@ stop_and_clean(){
     ## +3 is for "Test tsize option ..." and "Test PCRE mapped download ... "
     ## +2 for diskspace tests:
     local M=$(grep "/tmp/" "$TDIR"/multicast*.log | wc -l)
+    local D
     $INTERACTIVE && D=2
     cat <<EOF
 Expected:
