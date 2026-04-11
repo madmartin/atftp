@@ -1,4 +1,15 @@
-﻿atftp-0.8.0
+﻿unreleased
+===========
+ea66a30 E - Martin / Merge pull request #2 from feckert/pr/20250902-build-fixes
+7964d02 N - Martin Dummer / Fix fortify abort when LTO is enabled
+cd892f2 N - Martin Dummer / Fix uninitialized buffer data.
+7bab93e N - Martin Dummer / Enable listening on IPv6
+b86dfaa N - Martin Dummer / test.sh: redirect stderr to /dev/null when counting lines
+b665f5d N - Martin Dummer / Declare variable D as local in stop_and_clean
+d3fc756 N - Florian Eckert / Fix pthread_t format warning for fprintf
+6a03899 N - Florian Eckert / Fix incompatible-pointer-types for pcre2_substring_list_free
+
+atftp-0.8.0
 ===========
 982ba23 N - Andreas B. Mundt / test.sh: add MTFTP tests
 f59bee0 N - Andreas B. Mundt / Fix MTFTP support for atftp
