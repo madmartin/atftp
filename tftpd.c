@@ -274,7 +274,7 @@ int main(int argc, char **argv)
           if (strlen(tftpd_addr) == 0)
           {
                memset(&sa, 0, sizeof(sa));
-               sa.ss_family = AF_INET;
+               sa.ss_family = AF_INET6;
           }
           sockaddr_set_port(&sa, tftpd_port);
 
