@@ -106,7 +106,7 @@ tftpd_pcre_self_t *tftpd_pcre_open(char *filename)
                logger(LOG_DEBUG,"file: %s line: %d substring: %d value: %s",
                       filename, linecount, subnum, substrlist[subnum]);
           }
-          pcre2_substring_list_free((const PCRE2_UCHAR **)substrlist);
+          pcre2_substring_list_free((PCRE2_UCHAR **)substrlist);
 
           if (matches != 3)
           {
