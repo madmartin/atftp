@@ -1,5 +1,7 @@
-﻿unreleased
+﻿atftp-0.8.1
 ===========
+77524da N - Martin Dummer / update LICENSE from https://www.gnu.org/licenses/
+1aaa2e1 N - Martin Dummer / merge README* to single README.md
 ea66a30 E - Martin / Merge pull request #2 from feckert/pr/20250902-build-fixes
 7964d02 N - Martin Dummer / Fix fortify abort when LTO is enabled
 cd892f2 N - Martin Dummer / Fix uninitialized buffer data.
