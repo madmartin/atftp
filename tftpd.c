@@ -25,6 +25,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <net/if.h>
 #include <getopt.h>
 #include <unistd.h>
 #include <errno.h>
@@ -69,7 +70,7 @@ int tftpd_prevent_sas = 0;      /* For who don't want the sorcerer's apprentice 
 int drop_privs = 0;             /* whether it was explicitly requested to switch to another user. */
 short tftpd_port = 69;          /* Port atftpd listen to */
 char tftpd_addr[MAXLEN] = "";   /* IP address atftpd binds to */
-
+char tftpd_intf[IF_NAMESIZE] = "";   /* Interface atftpd binds to */
 int tftpd_cancel = 0;           /* When true, thread must exit. pthread
                                    cancellation point are not used because
                                    thread id are not tracked. */
@@ -284,6 +285,16 @@ int main(int argc, char **argv)
                logger(LOG_ERR, "atftpd: can't open socket");
                exit(1);
           }
+
+          if (strlen(tftpd_intf) > 0)
+          {
+               if (setsockopt(sockfd, SOL_SOCKET, SO_BINDTODEVICE, tftpd_intf, sizeof(tftpd_intf)) < 0)
+               {
+                    logger(LOG_ERR, "atftpd: can't bind to interface %s", tftpd_intf);
+                    exit(1);
+               }
+          }
+
           /* bind the socket to the desired address and port  */
           if (bind(sockfd, (struct sockaddr*)&sa, sizeof(sa)) < 0)
           {
@@ -733,6 +744,15 @@ void *tftpd_receive_request(void *arg)
 
           if (data->sockfd > 0)
           {
+               if (strlen(tftpd_intf) > 0)
+               {
+                    if (setsockopt(data->sockfd, SOL_SOCKET, SO_BINDTODEVICE, tftpd_intf, sizeof(tftpd_intf)) < 0)
+                    {
+                         logger(LOG_ERR, "atftpd: can't bind to interface %s", tftpd_intf);
+                         retval = ABORT;
+                    }
+               }
+
                /* bind the socket to the interface */
                if (bind(data->sockfd, (struct sockaddr *)&to, len) == -1)
                {
@@ -944,6 +964,7 @@ int tftpd_cmd_line_options(int argc, char **argv)
           { "group", 1, NULL, 'G'},
           { "port", 1, NULL, 'P' },
           { "bind-address", 1, NULL, 'A'},
+          { "interface", 1, NULL, 'i'},
           { "mcast-ttl", 1, NULL, OPT_MCAST_TTL },
           { "mcast_ttl", 1, NULL, OPT_MCAST_TTL },
           { "mcast-addr", 1, NULL, OPT_MCAST_ADDR },
@@ -1052,6 +1073,9 @@ int tftpd_cmd_line_options(int argc, char **argv)
                break;
           case 'A':
                Strncpy(tftpd_addr, optarg, MAXLEN);
+               break;
+          case 'i':
+               Strncpy(tftpd_intf, optarg, IF_NAMESIZE);
                break;
           case OPT_MCAST_TTL:
                mcast_ttl = atoi(optarg);
@@ -1276,6 +1300,7 @@ void tftpd_usage(void)
             "  --group <group>            : default is nogroup\n"
             "  --port <port>              : port on which atftp listen\n"
             "  --bind-address <IP>        : local address atftpd listen to\n"
+            "  --interface <interface>    : interface atftpd bind to\n"
             "  --mcast-ttl                : ttl to used for multicast\n"
             "  --mcast-addr <address list>: list/range of IP address to use\n"
             "  --mcast-port <port range>  : ports to use for multicast"
