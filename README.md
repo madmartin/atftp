@@ -8,7 +8,7 @@ By Jean-Pierre Lefebvre <helix@step.polymtl.ca> / August 20th, 2000
 
  It is called "advanced", by contrast to others TFTP servers, for two reasons.
 
-Firstly, it is intended to be fully compliant with all related RFCs. This include RFC1350, RFC2090, RFC2347, RFC2348, RFC2349 and RFC7440.
+## Firstly, it is intended to be fully compliant with all related RFCs. This include RFC1350, RFC2090, RFC2347, RFC2348, RFC2349 and RFC7440
 
 To my knowledge, there is no TFTP server currently available in the public domain that fulfils this requirement.
 
@@ -152,3 +152,9 @@ Kasparek Tomas <kasparek@fit.vutbr.cz>
 Aurelien Jarno <aurel32@debian.org>
 
 James Cowgill <jcowgill@debian.org>
+
+Dickson Wu <dickson.wu@certik.com>
+
+Helmut Grohne <helmut@subdivi.de>
+
+csersoft <csersoft@gmail.com>
