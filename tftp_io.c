@@ -135,6 +135,12 @@ int tftp_send_oack(int socket, struct sockaddr_storage *sa, struct tftp_opt *tft
      {
           if (tftp_options[i].enabled && tftp_options[i].specified)
           {
+               /* option name + NUL + value + NUL must fit in the OACK buffer;
+                  buffer_size - index can go negative when a long option value
+                  made the caller's size estimate too small. */
+               if (index + (int)strlen(tftp_options[i].option) + 1 +
+                   (int)strlen(tftp_options[i].value) + 1 > buffer_size)
+                    return ERR;
                Strncpy(buffer + index, tftp_options[i].option, buffer_size - index);
                index += strlen(tftp_options[i].option);
                index++;
