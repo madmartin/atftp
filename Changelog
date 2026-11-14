@@ -1,4 +1,11 @@
-﻿atftp-0.8.1
+﻿atftp-0.8.2
+===========
+cd7f419 N - Martin Dummer / README.md: add contributors
+afbd5e8 N - Martin / Merge pull request #3 from csersoft/master / Add --interface option
+62ef9db N - Martin Dummer / configure.ac: Fix FTCBFS: -Wincompatible-pointer-types is an error
+8b89dce N - Martin Dummer / atftpd: one RRQ/WRQ crashes the daemon while building the OACK
+
+atftp-0.8.1
 ===========
 77524da N - Martin Dummer / update LICENSE from https://www.gnu.org/licenses/
 1aaa2e1 N - Martin Dummer / merge README* to single README.md
@@ -119,16 +126,16 @@ atftp-0.7.1
     atftp exits with no error after a get when disk is full
   * Fix Debian Bug #575831
     atftp: error return value when tftp put file
-  * Fix missing default port from Ubuntu bug #972834 
+  * Fix missing default port from Ubuntu bug #972834
   * Merged patches to improve debugging and warning messages
     (from Florian Fainelli <f.fainelli@gmail.com>)
-  * Merged patch from Gentoo distribution: 
+  * Merged patch from Gentoo distribution:
     add support for proprietary password extension necessary for transferring
     files to linksys routers (atftp client)
   * Added patch from Gentoo bug #322601: client fails for filenames containing
     spaces
   * Listening Address configuration fixed
-  * Added Patch "Blksize option can be smaller than SEGSIZE" 
+  * Added Patch "Blksize option can be smaller than SEGSIZE"
     (from Michał Rzechonek <m.rzechonek@kelvatek.com>)
   * Merged Debian patchset 0.7.dfsg-9.3 into main
     see debian changelog below for details
@@ -143,7 +150,7 @@ debian changelog inserted here for completeness
 atftp (0.7.dfsg-9.3) unstable; urgency=low
 
   * Non-maintainer upload.
-  * Apply patch listen on requested port when in daemon mode.  
+  * Apply patch listen on requested port when in daemon mode.
     Thanks to Len Sorensen.  (Closes: #609813)
 
  -- tony mancill <tmancill@debian.org>  Wed, 12 Jan 2011 20:58:05 -0800
@@ -182,7 +189,7 @@ atftp (0.7.dfsg-8) unstable; urgency=low
   * Updated cs.po. Closes: #534959
   * Updated config.sub .guess. Closes: #536295
   * Fixed a typo in the help screen. Closes: #537405
-  * Make sure we have the --daemon option before starting atftpd. 
+  * Make sure we have the --daemon option before starting atftpd.
     Closes: #535604
 
  -- Ludovic Drolez <ldrolez@debian.org>  Tue, 21 Aug 2009 17:03:24 +0200
@@ -221,7 +228,7 @@ atftp (0.7.dfsg-4) unstable; urgency=medium
   * Choosed /var/lib/tftpboot as default tftp directory, and removed
     the provides field. Closes: #455263, #411322
   * Moved the watch file. Closes: #449674
-  * Fixed incorrect options handling thanks to Hollis Blanchard. 
+  * Fixed incorrect options handling thanks to Hollis Blanchard.
     Closes: #332621
   * Updated pt.po. Closes: #443653
 
@@ -272,7 +279,7 @@ atftp (0.7.dfsg-1) unstable; urgency=medium
     Closes: #388295
   * Bump Standards-Version to 3.7.2.
   * Add debconf-updatepo to the rules.
-  * Russian translation of debconf messages thanks to Yuri Kozlov. 
+  * Russian translation of debconf messages thanks to Yuri Kozlov.
     Closes: #368498
 
  -- Ludovic Drolez <ldrolez@debian.org>  Mon,  2 Oct 2006 00:31:23 +0200
@@ -342,7 +349,7 @@ atftp (0.7-5) unstable; urgency=high
   * Ugency=high because of a RC bug fixed.
   * Removed a bashism in the postinst. Closes: #289633
   * Czech po-debconf translation added by Miroslav Kure. Closes: #288014
-  * Danish po-debconf translation added by Morten Brix Pedersen. 
+  * Danish po-debconf translation added by Morten Brix Pedersen.
     Closes: #288133
   * Copyright fixed. Closes: #290062
 
@@ -374,7 +381,7 @@ atftp (0.7-2) unstable; urgency=medium
     Urgency set to medium because of this bug.
   * Typos in description corrected. Closes: #272565
   * Dutch debconf translation added. Closes: #245913
-  * Debconf: removed the initial question and changed priority 
+  * Debconf: removed the initial question and changed priority
     levels. Closes: #266329
 
  -- Ludovic Drolez <ldrolez@debian.org>  Sun, 26 Sep 2004 14:25:40 +0200
@@ -415,7 +422,7 @@ atftp (0.7)
        http://www.securitytracker.com/alerts/2002/Sep/1005231.html
        http://www.netric.org/advisories/netric-adv010.txt
   * Make atftp reply on the same interface as the received request
-  * Add --bind-address option for atftpd to bind to a particular IP 
+  * Add --bind-address option for atftpd to bind to a particular IP
     address only (from Thomas Anders <thomas.anders(at)blue-cable.de>)
   * Implement netascii support
   * Implement --pidfile option (see man page)
