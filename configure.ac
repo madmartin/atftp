@@ -93,7 +93,7 @@ else
 fi
 
 case "$CC" in
-	gcc*|clang*) CFLAGS="$CFLAGS -std=gnu89"
+	gcc*|*-gcc*|clang*) CFLAGS="$CFLAGS -std=gnu89"
 	;;
 esac
 
